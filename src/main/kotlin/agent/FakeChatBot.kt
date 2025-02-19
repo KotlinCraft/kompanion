@@ -2,9 +2,13 @@ package agent
 
 import agent.domain.UserFeedback
 import agent.domain.UserRequest
+import kotlinx.coroutines.delay
 
 class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), onMessage) {
     override suspend fun handleMessage(message: String): String {
+
+        delay(10000)
+
         return """
             Generated Code:
             ```kotlin
@@ -28,5 +32,5 @@ class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), 
 
 private class FakeAgent : CodeAgent {
     override suspend fun process(request: UserRequest) = throw UnsupportedOperationException()
-    override fun addFeedback(feedback: UserFeedback) = throw UnsupportedOperationException()
+    override suspend fun addFeedback(feedback: UserFeedback) = throw UnsupportedOperationException()
 }

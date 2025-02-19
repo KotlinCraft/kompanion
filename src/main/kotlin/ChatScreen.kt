@@ -126,7 +126,7 @@ fun ChatScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(Color.White.copy(alpha = 0.1f))
+                .background(Color.White.copy(alpha = 0.2f))
         )
 
         // Input area
