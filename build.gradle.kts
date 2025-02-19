@@ -22,6 +22,11 @@ dependencies {
     implementation("org.springframework.ai:spring-ai-openai")
     implementation("org.slf4j:slf4j-api:2.0.7")
     implementation("ch.qos.logback:logback-classic:1.4.11")
+    
+    // Arrow
+    implementation(platform("io.arrow-kt:arrow-stack:1.2.1"))
+    implementation("io.arrow-kt:arrow-core")
+    implementation("io.arrow-kt:arrow-fx-coroutines")
 }
 
 compose.desktop {
