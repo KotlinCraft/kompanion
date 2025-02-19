@@ -65,6 +65,18 @@ fun ChatScreen() {
     Column(
         modifier = Modifier.fillMaxSize().background(darkBackground)
     ) {
+        // Messages area
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(messages) { message ->
+                MessageBubble(message)
+            }
+        }
+
         // Working directory selector
         Surface(
             color = darkSecondary,
@@ -107,17 +119,6 @@ fun ChatScreen() {
                             .clickable { isEditingDirectory = true }
                     )
                 }
-            }
-        }
-        // Messages area
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(messages) { message ->
-                MessageBubble(message)
             }
         }
 
