@@ -31,14 +31,29 @@ class CodeGenerationAgent(
             
             if (evaluation.meetsRequirements) {
                 return AgentResponse(
-                    generatedCode = generationResult.code,
+                    generatedCode = generationResult.fileChanges.joinToString("\n\n") { 
+                        when (it) {
+                            is FileChange.CreateFile -> "New File ${it.path}:\n${it.content}"
+                            is FileChange.ModifyFile -> "Modify ${it.path}:\n" + 
+                                it.changes.joinToString("\n") { change -> 
+                                    "- ${change.description}"
+                                }
+                        }
+                    },
                     explanation = generationResult.explanation,
                     nextSteps = evaluation.suggestedImprovements,
                     confidence = evaluation.confidence
                 )
             }
             
-            currentCode = generationResult.code
+            currentCode = generationResult.fileChanges.joinToString("\n") { 
+                when (it) {
+                    is FileChange.CreateFile -> it.content
+                    is FileChange.ModifyFile -> it.changes.joinToString("\n") { 
+                        change -> change.replaceContent 
+                    }
+                }
+            }
             iterations++
         }
         
