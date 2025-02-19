@@ -1,32 +1,37 @@
 package agent
 
 import agent.domain.*
+import org.slf4j.LoggerFactory
 
 class CodeGenerationAgent(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
     private val contextManager: ContextManager
 ) : CodeAgent {
+    private val logger = LoggerFactory.getLogger(this::class.java)
+
     override suspend fun process(request: UserRequest): AgentResponse {
+        logger.info("Processing user request: ${request.instruction}")
         // 1. Analyze request and current context
         val understanding = reasoner.analyzeRequest(request)
 
-        // 2. Generate initial plan
+        logger.debug("Understanding generated: $understanding")
         val plan = reasoner.createPlan(understanding)
 
-        // 3. Execute plan iteratively
+        logger.debug("Generation plan created: $plan")
         var currentCode = ""
         var iterations = 0
         val maxIterations = 3
 
         while (iterations < maxIterations) {
-            // Generate or improve code
+            logger.info("Iteration $iterations: Generating code")
             val generationResult = codeGenerator.generate(plan, currentCode)
 
-            // Evaluate result
+            logger.debug("Generation result: $generationResult")
             val evaluation = reasoner.evaluateCode(generationResult, understanding)
 
             if (evaluation.meetsRequirements) {
+                logger.info("Requirements met. Returning successful response.")
                 return AgentResponse(
                     generatedCode = generationResult.fileChanges.joinToString("\n\n") {
                         when (it) {
@@ -43,6 +48,7 @@ class CodeGenerationAgent(
                 )
             }
 
+            logger.info("Requirements not met. Updating current code and retrying.")
             currentCode = generationResult.fileChanges.joinToString("\n") {
                 when (it) {
                     is FileChange.CreateFile -> it.content
@@ -54,6 +60,7 @@ class CodeGenerationAgent(
             iterations++
         }
 
+        logger.warn("Reached maximum iterations. Returning best attempt.")
         return AgentResponse(
             generatedCode = currentCode,
             explanation = "Reached maximum iterations. Current best attempt provided.",
