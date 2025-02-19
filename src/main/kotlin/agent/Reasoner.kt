@@ -8,4 +8,9 @@ interface Reasoner {
     fun createPlan(understanding: Understanding): GenerationPlan
     fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation
     fun learn(feedback: UserFeedback)
+    
+    // Context management methods
+    fun updateContext(files: List<CodeFile>)
+    fun getRelevantContext(request: UserRequest): List<CodeFile>
+    fun clearContext()
 }
