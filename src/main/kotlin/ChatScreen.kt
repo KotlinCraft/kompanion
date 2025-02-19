@@ -1,5 +1,14 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import agent.ChatBot
+import agent.CodeGenerationAgent
+import agent.DefaultCodeGenerator
+import agent.DefaultReasoner
+import agent.InMemoryContextManager
+import ai.OpenAIModel
+import config.AppConfig
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -27,6 +36,17 @@ fun ChatScreen() {
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    
+    val chatBot = remember {
+        val config = AppConfig.load()
+        val model = OpenAIModel(config)
+        val contextManager = InMemoryContextManager()
+        val reasoner = DefaultReasoner(model, contextManager)
+        val codeGenerator = DefaultCodeGenerator(model, contextManager)
+        val agent = CodeGenerationAgent(reasoner, codeGenerator)
+        ChatBot(agent)
+    }
     
     Column(
         modifier = Modifier.fillMaxSize().background(darkBackground)
@@ -72,9 +92,18 @@ fun ChatScreen() {
                 IconButton(
                     onClick = {
                         if (inputText.isNotBlank()) {
-                            messages = messages + ChatMessage(inputText, true)
-                            messages = messages + ChatMessage("I'm your AI code companion. This is a placeholder response.", false)
+                            val userMessage = inputText
+                            messages = messages + ChatMessage(userMessage, true)
                             inputText = ""
+                            
+                            coroutineScope.launch {
+                                try {
+                                    val response = chatBot.handleMessage(userMessage)
+                                    messages = messages + ChatMessage(response, false)
+                                } catch (e: Exception) {
+                                    messages = messages + ChatMessage("Error: ${e.message}", false)
+                                }
+                            }
                         }
                     }
                 ) {
