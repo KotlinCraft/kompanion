@@ -1,5 +1,17 @@
 package agent.domain
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type"
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = FileChange.CreateFile::class, name = "CreateFile"),
+    JsonSubTypes.Type(value = FileChange.ModifyFile::class, name = "ModifyFile")
+)
 sealed class FileChange {
     data class CreateFile(
         val path: String,
