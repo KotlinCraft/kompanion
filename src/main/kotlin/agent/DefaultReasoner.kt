@@ -10,7 +10,8 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 class DefaultReasoner(
-    private val model: Model
+    private val model: Model,
+    private val contextManager: ContextManager
 ) : Reasoner {
 
     val workingDirectory = "/opt/projects/kotlincraft/kompanion"
@@ -62,7 +63,18 @@ class DefaultReasoner(
 
         return if (filePath.isPresent) {
             val content = Files.readString(filePath.get())
-            RequestFileResponse(true, filePath.get().toString(), content)
+            val path = filePath.get().toString()
+            
+            // Add the file to context manager
+            contextManager.updateFiles(listOf(
+                CodeFile(
+                    path = path,
+                    content = content,
+                    language = path.substringAfterLast('.', "txt")
+                )
+            ))
+            
+            RequestFileResponse(true, path, content)
         } else {
             RequestFileResponse(false, null, null)
         }
