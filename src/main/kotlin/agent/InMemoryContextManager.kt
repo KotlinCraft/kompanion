@@ -1,6 +1,7 @@
 package agent
 
 import agent.domain.CodeFile
+import agent.domain.UserRequest
 
 class InMemoryContextManager : ContextManager {
 
