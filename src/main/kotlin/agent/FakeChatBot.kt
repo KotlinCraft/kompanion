@@ -10,15 +10,15 @@ class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), 
         onResponse: (String) -> Unit,
         onError: (Throwable) -> Unit
     ) {
-        try {
-            delay(2000) // Simulate some initial processing
-            onMessage("Starting to process your request...")
-            
-            delay(2000) // Simulate more processing
-            onMessage("Analyzing code patterns...")
-            
-            delay(2000) // Final delay before response
-            onResponse("""
+        delay(2000) // Simulate some initial processing
+        onMessage("Starting to process your request...")
+
+        delay(2000) // Simulate more processing
+        onMessage("Analyzing code patterns...")
+
+        delay(2000) // Final delay before response
+        onResponse(
+            """
             Generated Code:
             ```kotlin
             fun example() {
@@ -36,10 +36,11 @@ class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), 
             
             Confidence: 95%
         """.trimIndent()
+        )
     }
-}
 
-private class FakeAgent : CodeAgent {
-    override suspend fun process(request: UserRequest) = throw UnsupportedOperationException()
-    override suspend fun addFeedback(feedback: UserFeedback) = throw UnsupportedOperationException()
+    private class FakeAgent : CodeAgent {
+        override suspend fun process(request: UserRequest) = throw UnsupportedOperationException()
+        override suspend fun addFeedback(feedback: UserFeedback) = throw UnsupportedOperationException()
+    }
 }

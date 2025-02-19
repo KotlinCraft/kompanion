@@ -79,7 +79,7 @@ class CodeGenerationAgent(
         )
     }
 
-    override fun addFeedback(feedback: UserFeedback) {
+    override suspend fun addFeedback(feedback: UserFeedback) {
         reasoner.learn(feedback)
     }
 }

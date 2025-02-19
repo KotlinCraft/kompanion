@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class ChatMessage(
     val content: String,
@@ -34,7 +36,7 @@ data class ChatMessage(
 fun ChatScreen() {
     val darkBackground = Color(0xFF343541)
     val darkSecondary = Color(0xFF40414F)
-    
+
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
@@ -43,11 +45,11 @@ fun ChatScreen() {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
-    
+
     val onAgentMessage: (String) -> Unit = { message ->
         messages = messages + ChatMessage(message, false)
     }
-    
+
     val chatBot = remember {
         if (System.getenv("KOMPANION_ENV") == "production") {
             val config = AppConfig.load()
@@ -61,7 +63,7 @@ fun ChatScreen() {
             FakeChatBot(onAgentMessage)
         }
     }
-    
+
     Column(
         modifier = Modifier.fillMaxSize().background(darkBackground)
     ) {
@@ -121,7 +123,7 @@ fun ChatScreen() {
                 }
             }
         }
-        
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -149,12 +151,17 @@ fun ChatScreen() {
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    placeholder = { Text(if (isProcessing) "Thinking really hard..." else "Ask me about your code...", color = Color.Gray) },
+                    placeholder = {
+                        Text(
+                            if (isProcessing) "Thinking really hard..." else "Ask me about your code...",
+                            color = Color.Gray
+                        )
+                    },
                     shape = RoundedCornerShape(8.dp)
                 )
-                
+
                 Spacer(Modifier.width(8.dp))
-                
+
                 if (isProcessing) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
@@ -163,7 +170,7 @@ fun ChatScreen() {
                     )
                     Spacer(Modifier.width(8.dp))
                 }
-                
+
                 IconButton(
                     onClick = {
                         if (isProcessing) {
@@ -176,26 +183,28 @@ fun ChatScreen() {
                             messages = messages + ChatMessage(userMessage, true)
                             inputText = ""
                             isProcessing = true
-                            
+
                             currentJob = coroutineScope.launch {
                                 try {
-                                    chatBot.handleMessage(
-                                        message = userMessage,
-                                        onResponse = { response ->
-                                            messages = messages + ChatMessage(response, false)
-                                            isProcessing = false
-                                            currentJob = null
-                                        },
-                                        onError = { error ->
-                                            if (error is kotlinx.coroutines.CancellationException) {
-                                                // Handled above with the cancellation message
-                                                return@handleMessage
+                                    withContext(Dispatchers.IO) {
+                                        chatBot.handleMessage(
+                                            message = userMessage,
+                                            onResponse = { response ->
+                                                messages = messages + ChatMessage(response, false)
+                                                isProcessing = false
+                                                currentJob = null
+                                            },
+                                            onError = { error ->
+                                                if (error is kotlinx.coroutines.CancellationException) {
+                                                    // Handled above with the cancellation message
+                                                    return@handleMessage
+                                                }
+                                                messages = messages + ChatMessage("Error: ${error.message}", false)
+                                                isProcessing = false
+                                                currentJob = null
                                             }
-                                            messages = messages + ChatMessage("Error: ${error.message}", false)
-                                            isProcessing = false
-                                            currentJob = null
-                                        }
-                                    )
+                                        )
+                                    }
                                 } catch (e: Exception) {
                                     messages = messages + ChatMessage("Error: ${e.message}", false)
                                     isProcessing = false

@@ -4,8 +4,8 @@ import agent.domain.*
 
 // Reasoning component for understanding and planning
 interface Reasoner {
-    fun analyzeRequest(request: UserRequest): Understanding
-    fun createPlan(understanding: Understanding): GenerationPlan
-    fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation
-    fun learn(feedback: UserFeedback)
+    suspend fun analyzeRequest(request: UserRequest): Understanding
+    suspend fun createPlan(understanding: Understanding): GenerationPlan
+    suspend fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation
+    suspend fun learn(feedback: UserFeedback)
 }

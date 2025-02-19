@@ -3,7 +3,7 @@ package ai
 import org.springframework.core.ParameterizedTypeReference
 
 interface Model {
-    fun <T> prompt(
+    suspend fun <T> prompt(
         input: String,
         action: List<Action>,
         temperature: Double,

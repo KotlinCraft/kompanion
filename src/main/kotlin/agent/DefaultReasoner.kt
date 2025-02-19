@@ -4,6 +4,8 @@ import agent.domain.*
 import ai.Action
 import ai.ActionMethod
 import ai.Model
+import arrow.core.Either
+import arrow.core.getOrElse
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
@@ -17,7 +19,7 @@ class DefaultReasoner(
     //TODO: current directory should be dynamic
     val workingDirectory = "/opt/projects/kotlincraft/kompanion"
 
-    override fun analyzeRequest(request: UserRequest): Understanding {
+    override suspend fun analyzeRequest(request: UserRequest): Understanding {
         val context = contextManager.getContext()
         val prompt = """
             
@@ -50,23 +52,27 @@ class DefaultReasoner(
             3. Relevance score (0.0-1.0) for each provided context file
         """.trimIndent()
 
-        return model.prompt(
-            input = prompt,
-            action = listOf(
-                Action(
-                    "request_file_context",
-                    """Provide a file in context for the request. 
+        return Either.catch {
+            model.prompt(
+                input = prompt,
+                action = listOf(
+                    Action(
+                        "request_file_context",
+                        """Provide a file in context for the request. 
                         |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
                         |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
-                    ActionMethod(
-                        ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java),
-                        this
+                        ActionMethod(
+                            ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java),
+                            this
+                        )
                     )
-                )
-            ),
-            temperature = 0.3,
-            parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {}
-        )
+                ),
+                temperature = 0.3,
+                parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {}
+            )
+        }.getOrElse {
+            throw IllegalArgumentException("I'm afraid I was unable to analyze your request.")
+        }
     }
 
     fun requestFileContext(file: String): RequestFileResponse {
@@ -101,7 +107,7 @@ class DefaultReasoner(
         val content: String?
     )
 
-    override fun createPlan(understanding: Understanding): GenerationPlan {
+    override suspend fun createPlan(understanding: Understanding): GenerationPlan {
         val prompt = """
             Based on the following understanding of a code request, create a detailed generation plan.
             
@@ -141,7 +147,7 @@ class DefaultReasoner(
         )
     }
 
-    override fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation {
+    override suspend fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation {
         val prompt = """
             Evaluate the following generated code against the original requirements:
             
@@ -190,7 +196,7 @@ class DefaultReasoner(
         )
     }
 
-    override fun learn(feedback: UserFeedback) {
+    override suspend fun learn(feedback: UserFeedback) {
         TODO("Not yet implemented")
     }
 }

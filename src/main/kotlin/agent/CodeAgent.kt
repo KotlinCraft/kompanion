@@ -6,5 +6,5 @@ import agent.domain.UserRequest
 
 interface CodeAgent {
     suspend fun process(request: UserRequest): CodingAgentResponse
-    fun addFeedback(feedback: UserFeedback)
+    suspend fun addFeedback(feedback: UserFeedback)
 }

@@ -2,6 +2,8 @@ package ai
 
 import arrow.core.Either
 import config.AppConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.messages.UserMessage
@@ -46,7 +48,7 @@ class OpenAIModel(
         return ChatClient.create(createModel())
     }
 
-    override fun <T> prompt(
+    override suspend fun <T> prompt(
         input: String,
         action: List<Action>,
         temperature: Double,
@@ -72,7 +74,7 @@ class OpenAIModel(
             prompt = action.enrichPrompt(prompt)
         }
 
-        val content = prompt.call().content() ?: ""
+        val content = withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
 
 
         return Either.catch {
