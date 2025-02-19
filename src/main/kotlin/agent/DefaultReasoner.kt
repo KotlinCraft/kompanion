@@ -6,6 +6,8 @@ import ai.ActionMethod
 import ai.Model
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.util.ReflectionUtils
+import java.nio.file.Files
+import java.nio.file.Paths
 
 class DefaultReasoner(
     private val model: Model
