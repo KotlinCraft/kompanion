@@ -6,42 +6,33 @@ import org.slf4j.LoggerFactory
 class CodeGenerationAgent(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
-    private val contextManager: ContextManager
 ) : CodeAgent {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    override suspend fun process(request: UserRequest): AgentResponse {
+    override suspend fun process(request: UserRequest): CodingAgentResponse {
         logger.info("Processing user request: ${request.instruction}")
         // 1. Analyze request and current context
         val understanding = reasoner.analyzeRequest(request)
 
-        logger.debug("Understanding generated: $understanding")
+        logger.debug("Understanding generated: {}", understanding)
         val plan = reasoner.createPlan(understanding)
 
-        logger.debug("Generation plan created: $plan")
+        logger.debug("Generation plan created: {}", plan)
         var currentCode = ""
         var iterations = 0
-        val maxIterations = 3
+        val maxIterations = 1
 
         while (iterations < maxIterations) {
             logger.info("Iteration $iterations: Generating code")
             val generationResult = codeGenerator.generate(plan, currentCode)
 
-            logger.debug("Generation result: $generationResult")
+            logger.debug("Generation result: {}", generationResult)
             val evaluation = reasoner.evaluateCode(generationResult, understanding)
 
             if (evaluation.meetsRequirements) {
                 logger.info("Requirements met. Returning successful response.")
-                return AgentResponse(
-                    generatedCode = generationResult.fileChanges.joinToString("\n\n") {
-                        when (it) {
-                            is FileChange.CreateFile -> "New File ${it.path}:\n${it.content}"
-                            is FileChange.ModifyFile -> "Modify ${it.path}:\n" +
-                                    it.changes.joinToString("\n") { change ->
-                                        "- ${change.description}"
-                                    }
-                        }
-                    },
+                return CodingAgentResponse(
+                    fileChanges = generationResult.fileChanges,
                     explanation = generationResult.explanation,
                     nextSteps = evaluation.suggestedImprovements,
                     confidence = evaluation.confidence
@@ -61,8 +52,8 @@ class CodeGenerationAgent(
         }
 
         logger.warn("Reached maximum iterations. Returning best attempt.")
-        return AgentResponse(
-            generatedCode = currentCode,
+        return CodingAgentResponse(
+            fileChanges = generationResult.fileChanges,
             explanation = "Reached maximum iterations. Current best attempt provided.",
             nextSteps = listOf(
                 "Consider providing more specific requirements",
@@ -70,10 +61,6 @@ class CodeGenerationAgent(
             ),
             confidence = 0.7f
         )
-    }
-
-    override fun updateContext(codeFiles: List<CodeFile>) {
-        contextManager.updateFiles(codeFiles)
     }
 
     override fun addFeedback(feedback: UserFeedback) {
