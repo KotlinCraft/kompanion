@@ -1,9 +1,6 @@
 package agent
 
-import agent.domain.AgentResponse
-import agent.domain.CodeFile
-import agent.domain.UserFeedback
-import agent.domain.UserRequest
+import agent.domain.*
 
 class CodeGenerationAgent(
     private val reasoner: Reasoner,
@@ -13,31 +10,31 @@ class CodeGenerationAgent(
     override suspend fun process(request: UserRequest): AgentResponse {
         // 1. Analyze request and current context
         val understanding = reasoner.analyzeRequest(request)
-        
+
         // 2. Generate initial plan
         val plan = reasoner.createPlan(understanding)
-        
+
         // 3. Execute plan iteratively
         var currentCode = ""
         var iterations = 0
         val maxIterations = 3
-        
+
         while (iterations < maxIterations) {
             // Generate or improve code
             val generationResult = codeGenerator.generate(plan, currentCode)
-            
+
             // Evaluate result
             val evaluation = reasoner.evaluateCode(generationResult, understanding)
-            
+
             if (evaluation.meetsRequirements) {
                 return AgentResponse(
-                    generatedCode = generationResult.fileChanges.joinToString("\n\n") { 
+                    generatedCode = generationResult.fileChanges.joinToString("\n\n") {
                         when (it) {
                             is FileChange.CreateFile -> "New File ${it.path}:\n${it.content}"
-                            is FileChange.ModifyFile -> "Modify ${it.path}:\n" + 
-                                it.changes.joinToString("\n") { change -> 
-                                    "- ${change.description}"
-                                }
+                            is FileChange.ModifyFile -> "Modify ${it.path}:\n" +
+                                    it.changes.joinToString("\n") { change ->
+                                        "- ${change.description}"
+                                    }
                         }
                     },
                     explanation = generationResult.explanation,
@@ -45,31 +42,33 @@ class CodeGenerationAgent(
                     confidence = evaluation.confidence
                 )
             }
-            
-            currentCode = generationResult.fileChanges.joinToString("\n") { 
+
+            currentCode = generationResult.fileChanges.joinToString("\n") {
                 when (it) {
                     is FileChange.CreateFile -> it.content
-                    is FileChange.ModifyFile -> it.changes.joinToString("\n") { 
-                        change -> change.replaceContent 
+                    is FileChange.ModifyFile -> it.changes.joinToString("\n") { change ->
+                        change.replaceContent
                     }
                 }
             }
             iterations++
         }
-        
+
         return AgentResponse(
             generatedCode = currentCode,
             explanation = "Reached maximum iterations. Current best attempt provided.",
-            nextSteps = listOf("Consider providing more specific requirements",
-                             "Review current output and provide feedback"),
+            nextSteps = listOf(
+                "Consider providing more specific requirements",
+                "Review current output and provide feedback"
+            ),
             confidence = 0.7f
         )
     }
-    
+
     override fun updateContext(codeFiles: List<CodeFile>) {
         contextManager.updateFiles(codeFiles)
     }
-    
+
     override fun addFeedback(feedback: UserFeedback) {
         reasoner.learn(feedback)
     }
