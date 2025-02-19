@@ -2,7 +2,10 @@ package agent
 
 import agent.domain.UserRequest
 
-open class ChatBot(private val agent: CodeAgent) : AgentMessageCallback {
+open class ChatBot(
+    private val agent: CodeAgent,
+    private val onMessage: ((String) -> Unit)? = null
+) : AgentMessageCallback {
     init {
         if (agent is CodeGenerationAgent) {
             agent.setMessageCallback(this)
@@ -10,8 +13,8 @@ open class ChatBot(private val agent: CodeAgent) : AgentMessageCallback {
     }
 
     override fun onMessage(message: String) {
-        // TODO: In a real implementation, this would need to handle async message display
         println("Agent: $message")
+        onMessage?.invoke(message)
     }
 
     open suspend fun handleMessage(message: String): String {

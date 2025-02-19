@@ -34,6 +34,10 @@ fun ChatScreen() {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     
+    val onAgentMessage: (String) -> Unit = { message ->
+        messages = messages + ChatMessage(message, false)
+    }
+    
     val chatBot = remember {
         if (System.getenv("KOMPANION_ENV") == "production") {
             val config = AppConfig.load()
@@ -42,9 +46,9 @@ fun ChatScreen() {
             val reasoner = DefaultReasoner(model, contextManager)
             val codeGenerator = DefaultCodeGenerator(model, contextManager)
             val agent = CodeGenerationAgent(reasoner, codeGenerator)
-            ChatBot(agent)
+            ChatBot(agent, onAgentMessage)
         } else {
-            FakeChatBot()
+            FakeChatBot(onAgentMessage)
         }
     }
     
