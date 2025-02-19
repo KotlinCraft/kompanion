@@ -179,15 +179,25 @@ fun ChatScreen() {
                             
                             currentJob = coroutineScope.launch {
                                 try {
-                                    val response = chatBot.handleMessage(userMessage)
-                                    messages = messages + ChatMessage(response, false)
+                                    chatBot.handleMessage(
+                                        message = userMessage,
+                                        onResponse = { response ->
+                                            messages = messages + ChatMessage(response, false)
+                                            isProcessing = false
+                                            currentJob = null
+                                        },
+                                        onError = { error ->
+                                            if (error is kotlinx.coroutines.CancellationException) {
+                                                // Handled above with the cancellation message
+                                                return@handleMessage
+                                            }
+                                            messages = messages + ChatMessage("Error: ${error.message}", false)
+                                            isProcessing = false
+                                            currentJob = null
+                                        }
+                                    )
                                 } catch (e: Exception) {
-                                    if (e is kotlinx.coroutines.CancellationException) {
-                                        // Handled above with the cancellation message
-                                        return@launch
-                                    }
                                     messages = messages + ChatMessage("Error: ${e.message}", false)
-                                } finally {
                                     isProcessing = false
                                     currentJob = null
                                 }

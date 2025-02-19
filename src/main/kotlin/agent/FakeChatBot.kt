@@ -5,11 +5,20 @@ import agent.domain.UserRequest
 import kotlinx.coroutines.delay
 
 class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), onMessage) {
-    override suspend fun handleMessage(message: String): String {
-
-        delay(10000)
-
-        return """
+    override suspend fun handleMessage(
+        message: String,
+        onResponse: (String) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        try {
+            delay(2000) // Simulate some initial processing
+            onMessage("Starting to process your request...")
+            
+            delay(2000) // Simulate more processing
+            onMessage("Analyzing code patterns...")
+            
+            delay(2000) // Final delay before response
+            onResponse("""
             Generated Code:
             ```kotlin
             fun example() {

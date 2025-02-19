@@ -18,28 +18,36 @@ open class ChatBot(
         onMessage?.invoke(message)
     }
 
-    open suspend fun handleMessage(message: String): String {
-        // Update context with any attached files
-
-        // Process the request
-        val response = agent.process(
-            UserRequest(
-                instruction = message,
+    open suspend fun handleMessage(
+        message: String,
+        onResponse: (String) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        try {
+            // Process the request
+            val response = agent.process(
+                UserRequest(
+                    instruction = message,
+                )
             )
-        )
 
-        // Format response for chat
-        return """
-            Generated Code:
-            ```
+            // Format response for chat
+            val formattedResponse = """
+                Generated Code:
+                ```
+                
+                Explanation:
+                ${response.explanation}
+                
+                Next Steps:
+                ${response.nextSteps.joinToString("\n")}
+                
+                Confidence: ${response.confidence * 100}%
+            """.trimIndent()
             
-            Explanation:
-            ${response.explanation}
-            
-            Next Steps:
-            ${response.nextSteps.joinToString("\n")}
-            
-            Confidence: ${response.confidence * 100}%
-        """.trimIndent()
+            onResponse(formattedResponse)
+        } catch (e: Exception) {
+            onError(e)
+        }
     }
 }
