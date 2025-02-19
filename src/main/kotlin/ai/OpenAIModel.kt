@@ -1,6 +1,7 @@
 package ai
 
 import arrow.core.Either
+import config.AppConfig
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.messages.UserMessage
@@ -13,7 +14,7 @@ import org.springframework.ai.openai.api.OpenAiApi
 import org.springframework.core.ParameterizedTypeReference
 
 class OpenAIModel(
-    private val apiKey: String,
+    val config: AppConfig
 ) : Model {
 
     val logger = LoggerFactory.getLogger(this::class.java)
@@ -26,8 +27,12 @@ class OpenAIModel(
     }
 
     fun createModel(): OpenAiChatModel {
+        if (config.openAiKey.isBlank()) {
+            throw IllegalArgumentException("openAiKey is not set")
+        }
+
         return OpenAiChatModel.builder()
-            .openAiApi(OpenAiApi.builder().apiKey(apiKey).build())
+            .openAiApi(OpenAiApi.builder().apiKey(config.openAiKey).build())
             .defaultOptions(
                 OpenAiChatOptions.builder()
                     .model(modelName)
