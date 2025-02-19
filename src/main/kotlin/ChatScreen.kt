@@ -31,6 +31,7 @@ fun ChatScreen() {
     
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
+    var isProcessing by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     
@@ -95,10 +96,11 @@ fun ChatScreen() {
                 
                 IconButton(
                     onClick = {
-                        if (inputText.isNotBlank()) {
+                        if (inputText.isNotBlank() && !isProcessing) {
                             val userMessage = inputText
                             messages = messages + ChatMessage(userMessage, true)
                             inputText = ""
+                            isProcessing = true
                             
                             coroutineScope.launch {
                                 try {
@@ -106,15 +108,18 @@ fun ChatScreen() {
                                     messages = messages + ChatMessage(response, false)
                                 } catch (e: Exception) {
                                     messages = messages + ChatMessage("Error: ${e.message}", false)
+                                } finally {
+                                    isProcessing = false
                                 }
                             }
                         }
-                    }
+                    },
+                    enabled = !isProcessing
                 ) {
                     Icon(
                         Icons.Default.Send,
                         contentDescription = "Send",
-                        tint = Color.White
+                        tint = if (isProcessing) Color.Gray else Color.White
                     )
                 }
             }
