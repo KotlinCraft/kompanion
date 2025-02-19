@@ -29,6 +29,12 @@ dependencies {
     // Jackson for YAML
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.3")
+
+    // JUnit for testing
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+
+    // AssertJ for fluent assertions
+    testImplementation("org.assertj:assertj-core:3.21.0")
 }
 
 compose.desktop {
