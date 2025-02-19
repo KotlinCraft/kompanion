@@ -1,7 +1,7 @@
 package agent.domain
 
-data class AgentResponse(
-    val generatedCode: String,
+data class CodingAgentResponse(
+    val fileChanges: List<FileChange>,
     val explanation: String,
     val nextSteps: List<String>,
     val confidence: Float

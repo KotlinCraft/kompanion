@@ -13,6 +13,7 @@ class ChatBot(private val agent: CodeAgent) : AgentMessageCallback {
         // TODO: In a real implementation, this would need to handle async message display
         println("Agent: $message")
     }
+
     suspend fun handleMessage(message: String): String {
         // Update context with any attached files
 

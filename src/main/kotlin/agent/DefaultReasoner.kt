@@ -14,19 +14,32 @@ class DefaultReasoner(
     private val contextManager: ContextManager
 ) : Reasoner {
 
+    //TODO: current directory should be dynamic
     val workingDirectory = "/opt/projects/kotlincraft/kompanion"
 
-    override fun analyzeRequest(request: UserRequest): PotentialUnderstanding {
+    override fun analyzeRequest(request: UserRequest): Understanding {
+        val context = contextManager.getContext()
         val prompt = """
-            Current working directory is: /opt/projects/kotlincraft/kompanion
+            
+            Current working directory is: $workingDirectory
+            
+            Files in your current context: 
+            ${
+            if (context.isEmpty()) "no files in context yet" else
+                context.joinToString("\n") {
+                    """File: ${it.path} (language: ${it.language})
+                    |Content: ${it.content}
+                """.trimMargin()
+                }
+        }
             
             Analyze the following code-related request and extract key information.
-            The content for various files (but not all) is provided for context. 
+            The content for various files (but not all) might be provided for context. 
             If you think a file already exists but its contents was not provided yet, request it using "request_file_context".
+            
+            important: We cannot use files that are not in our context yet.
 
             Make sure you have access to every file mentioned in the request before continuing.
-            
-            If the request is not clear, ask for more information.
             
             User Request: ${request.instruction}
             ${if (request.codeContext.isNotEmpty()) "Code Context:\n" + request.codeContext.joinToString("\n") { "File: ${it.path}\n${it.content}" } else ""}
@@ -51,8 +64,8 @@ class DefaultReasoner(
                     )
                 )
             ),
-            temperature = 0.7,
-            parameterizedTypeReference = object : ParameterizedTypeReference<PotentialUnderstanding>() {}
+            temperature = 0.3,
+            parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {}
         )
     }
 
@@ -64,16 +77,18 @@ class DefaultReasoner(
         return if (filePath.isPresent) {
             val content = Files.readString(filePath.get())
             val path = filePath.get().toString()
-            
+
             // Add the file to context manager
-            contextManager.updateFiles(listOf(
-                CodeFile(
-                    path = path,
-                    content = content,
-                    language = path.substringAfterLast('.', "txt")
+            contextManager.updateFiles(
+                listOf(
+                    CodeFile(
+                        path = path,
+                        content = content,
+                        language = path.substringAfterLast('.', "txt")
+                    )
                 )
-            ))
-            
+            )
+
             RequestFileResponse(true, path, content)
         } else {
             RequestFileResponse(false, null, null)
@@ -176,6 +191,6 @@ class DefaultReasoner(
     }
 
     override fun learn(feedback: UserFeedback) {
-        // TODO: Implement later
+        TODO("Not yet implemented")
     }
 }

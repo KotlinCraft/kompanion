@@ -6,16 +6,14 @@ import agent.domain.UserRequest
 class InMemoryContextManager : ContextManager {
 
     private val files = mutableMapOf<String, CodeFile>()
-
-    override fun updateFiles(newFiles: List<CodeFile>) {
-        newFiles.forEach { file ->
-            files[file.path] = file
-        }
+    override fun getContext(): List<CodeFile> {
+        return files.values.toList()
     }
 
-    override fun getRelevantContext(request: UserRequest): List<CodeFile> {
-        // For simplicity, return all files. This can be enhanced to filter based on relevance.
-        return files.values.toList()
+    override fun updateFiles(files: List<CodeFile>) {
+        files.forEach { file ->
+            this.files[file.path] = file
+        }
     }
 
     override fun clearContext() {

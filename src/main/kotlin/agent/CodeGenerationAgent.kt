@@ -16,6 +16,7 @@ class CodeGenerationAgent(
     private fun sendMessage(message: String) {
         messageCallback?.onMessage(message)
     }
+
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun process(request: UserRequest): CodingAgentResponse {
@@ -33,10 +34,12 @@ class CodeGenerationAgent(
         var iterations = 0
         val maxIterations = 1
 
+        var generationResult: GenerationResult? = null
+
         while (iterations < maxIterations) {
             logger.info("Iteration $iterations: Generating code")
             sendMessage("Generating code (iteration ${iterations + 1})...")
-            val generationResult = codeGenerator.generate(plan, request)
+            generationResult = codeGenerator.generate(plan, currentCode)
 
             logger.debug("Generation result: {}", generationResult)
             val evaluation = reasoner.evaluateCode(generationResult, understanding)
@@ -66,7 +69,7 @@ class CodeGenerationAgent(
 
         logger.warn("Reached maximum iterations. Returning best attempt.")
         return CodingAgentResponse(
-            fileChanges = generationResult.fileChanges,
+            fileChanges = generationResult!!.fileChanges,
             explanation = "Reached maximum iterations. Current best attempt provided.",
             nextSteps = listOf(
                 "Consider providing more specific requirements",

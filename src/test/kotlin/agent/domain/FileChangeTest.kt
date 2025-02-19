@@ -1,14 +1,14 @@
 package agent.domain
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class FileChangeTest {
 
-    private val objectMapper = ObjectMapper().registerModule(KotlinModule())
+    private val objectMapper = jacksonObjectMapper().registerModule(KotlinModule.Builder().build())
 
     @Test
     fun `test serialization and deserialization of CreateFile`() {

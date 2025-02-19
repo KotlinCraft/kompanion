@@ -31,8 +31,8 @@ dependencies {
     implementation("io.arrow-kt:arrow-fx-coroutines")
     
     // Jackson for YAML
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.3")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.3")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
 
     // JUnit for testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")

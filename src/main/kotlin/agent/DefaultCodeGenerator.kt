@@ -10,27 +10,38 @@ class DefaultCodeGenerator(
     private val contextManager: ContextManager
 ) : CodeGenerator {
 
-    override suspend fun generate(plan: GenerationPlan, request: UserRequest): GenerationResult {
-        val relevantFiles = contextManager.getRelevantContext(request)
-        val codeContext = relevantFiles.joinToString("\n\n") { file ->
-            """
-            File: ${file.path}
-            Language: ${file.language}
-            Content:
-            ${file.content}
-            """.trimIndent()
-        }
-        
+    val workingDirectory = "/opt/projects/kotlincraft/kompanion"
+
+    override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
+        val context = contextManager.getContext()
         val prompt = """
-            Based on the following generation plan, generate the necessary code changes.
+            Current working directory is: $workingDirectory
+
+
+            You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
+            
+            Files in your current context: 
+            ${
+            if (context.isEmpty()) "no files in context yet" else
+                context.joinToString("\n") {
+                    """File: ${it.path} (language: ${it.language})
+                    |Content: ${it.content}
+                """.trimMargin()
+                }
+        }
+            
+            Based on the following generation plan, generate the necessary code changes. Use files in your current context to provide the changes. 
+            Both modification and adding new files requires absolute paths.
             
             Plan Steps:
-            ${plan.steps.joinToString("\n") { step ->
+            ${
+            plan.steps.joinToString("\n") { step ->
                 "- Action: ${step.action}\n  Input: ${step.input}\n  Expected Output: ${step.expectedOutput}"
-            }}
+            }
+        }
             
             Current Code Context:
-            $codeContext
+            $currentCode
             
             Expected Outcome:
             ${plan.expectedOutcome}

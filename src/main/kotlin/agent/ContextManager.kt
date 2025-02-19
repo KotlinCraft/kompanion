@@ -4,7 +4,8 @@ import agent.domain.CodeFile
 import agent.domain.UserRequest
 
 interface ContextManager {
+    //TODO: make this smart?
+    fun getContext(): List<CodeFile>
     fun updateFiles(files: List<CodeFile>)
-    fun getRelevantContext(request: UserRequest): List<CodeFile>
     fun clearContext()
 }
