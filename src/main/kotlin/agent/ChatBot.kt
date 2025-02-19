@@ -1,6 +1,7 @@
 package agent
 
 import agent.domain.UserRequest
+import kotlinx.coroutines.delay
 
 open class ChatBot(
     private val agent: CodeAgent,
@@ -9,11 +10,11 @@ open class ChatBot(
     init {
         if (agent is CodeGenerationAgent) {
             agent.setMessageCallback(this)
+
         }
     }
 
     override fun onMessage(message: String) {
-        println("Agent: $message")
         onMessage?.invoke(message)
     }
 
