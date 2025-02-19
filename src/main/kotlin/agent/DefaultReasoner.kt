@@ -56,10 +56,13 @@ class DefaultReasoner(
     }
 
     fun requestFileContext(file: String): RequestFileResponse {
-        val filePath = Paths.get(workingDirectory, file)
-        return if (Files.exists(filePath)) {
-            val content = Files.readString(filePath)
-            RequestFileResponse(true, filePath.toString(), content)
+        val filePath = Files.walk(Paths.get(workingDirectory))
+            .filter { it.fileName.toString() == file }
+            .findFirst()
+
+        return if (filePath.isPresent) {
+            val content = Files.readString(filePath.get())
+            RequestFileResponse(true, filePath.get().toString(), content)
         } else {
             RequestFileResponse(false, null, null)
         }
