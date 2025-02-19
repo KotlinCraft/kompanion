@@ -1,11 +1,13 @@
 package agent
 
-import agent.domain.*
+import agent.domain.GenerationPlan
+import agent.domain.GenerationResult
 import ai.Model
 import org.springframework.core.ParameterizedTypeReference
 
 class DefaultCodeGenerator(
-    private val model: Model
+    private val model: Model,
+    private val contextManager: ContextManager
 ) : CodeGenerator {
 
     override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
