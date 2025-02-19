@@ -12,6 +12,10 @@ repositories {
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.materialIconsExtended)
