@@ -1,0 +1,103 @@
+package ai
+
+import arrow.core.Either
+import org.slf4j.LoggerFactory
+import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.messages.UserMessage
+import org.springframework.ai.chat.prompt.Prompt
+import org.springframework.ai.chat.prompt.PromptTemplate
+import org.springframework.ai.converter.BeanOutputConverter
+import org.springframework.ai.openai.OpenAiChatModel
+import org.springframework.ai.openai.OpenAiChatOptions
+import org.springframework.ai.openai.api.OpenAiApi
+import org.springframework.core.ParameterizedTypeReference
+
+class OpenAIModel(
+    private val apiKey: String,
+) : Model {
+
+    val logger = LoggerFactory.getLogger(this::class.java)
+
+    var temperature = 1.0
+    var modelName = "gpt-4o"
+
+    val client by lazy {
+        createClient()
+    }
+
+    fun createModel(): OpenAiChatModel {
+        return OpenAiChatModel.builder()
+            .openAiApi(OpenAiApi.builder().apiKey(apiKey).build())
+            .defaultOptions(
+                OpenAiChatOptions.builder()
+                    .model(modelName)
+                    .temperature(temperature)
+                    .build()
+            ).build()
+    }
+
+
+    fun createClient(): ChatClient {
+        return ChatClient.create(createModel())
+    }
+
+    override fun <T> prompt(
+        input: String,
+        action: List<Action<*, *>>,
+        temperature: Double,
+        parameterizedTypeReference: ParameterizedTypeReference<T>,
+        retry: Boolean
+    ): T {
+
+        val converter = BeanOutputConverter(parameterizedTypeReference)
+
+        val outputMessage = PromptTemplate(
+            "{format}",
+            mapOf("format" to converter.format)
+        ).createMessage()
+
+        var prompt = client.prompt(
+            Prompt(
+                UserMessage(input),
+                outputMessage
+            )
+        )
+
+        action.forEach { action ->
+            prompt = action.enrichPrompt(prompt)
+        }
+
+        val content = prompt.call().content() ?: ""
+
+
+        return Either.catch {
+            converter.convert(content)
+        }.fold(
+            {
+                if (retry) {
+                    logger.info("response was: $content")
+                    logger.info("retrying, because we got the following error: $it")
+                    var prompt = client.prompt(
+                        Prompt(
+                            UserMessage(input),
+                            UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
+                            outputMessage
+                        )
+                    )
+
+                    action.forEach { action ->
+                        prompt = action.enrichPrompt(prompt)
+                    }
+
+                    val content = prompt.call().content() ?: ""
+                    converter.convert(content)
+                } else {
+                    throw it
+                }
+            },
+            {
+                it
+            }
+        )
+    }
+}

@@ -1,4 +1,4 @@
-package agent
+package agent.domain
 
 data class GenerationPlan(
     val steps: List<GenerationStep>,

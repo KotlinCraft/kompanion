@@ -1,5 +1,10 @@
 package agent
 
+import agent.domain.AgentResponse
+import agent.domain.CodeFile
+import agent.domain.UserFeedback
+import agent.domain.UserRequest
+
 class CodeGenerationAgent(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,

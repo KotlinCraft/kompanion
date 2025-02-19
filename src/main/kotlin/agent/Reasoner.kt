@@ -1,5 +1,7 @@
 package agent
 
+import agent.domain.*
+
 // Reasoning component for understanding and planning
 interface Reasoner {
     fun analyzeRequest(request: UserRequest): Understanding
