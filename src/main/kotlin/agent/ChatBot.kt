@@ -25,6 +25,7 @@ open class ChatBot(
         val response = agent.process(
             UserRequest(
                 instruction = message,
+                workingDirectory = workingDirectory
             )
         )
 

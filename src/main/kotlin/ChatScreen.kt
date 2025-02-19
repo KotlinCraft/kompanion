@@ -1,7 +1,11 @@
 import agent.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.text.input.ImeAction
 import kotlinx.coroutines.launch
 import ai.OpenAIModel
 import config.AppConfig
@@ -34,6 +38,8 @@ fun ChatScreen() {
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
+    var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
+    var isEditingDirectory by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
@@ -59,6 +65,49 @@ fun ChatScreen() {
     Column(
         modifier = Modifier.fillMaxSize().background(darkBackground)
     ) {
+        // Working directory selector
+        Surface(
+            color = darkSecondary,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Working Directory:",
+                    color = Color.Gray,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                if (isEditingDirectory) {
+                    TextField(
+                        value = workingDirectory,
+                        onValueChange = { workingDirectory = it },
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = darkSecondary,
+                            textColor = Color.White,
+                            cursorColor = Color.White,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { isEditingDirectory = false })
+                    )
+                } else {
+                    Text(
+                        workingDirectory,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { isEditingDirectory = true }
+                    )
+                }
+            }
+        }
         // Messages area
         LazyColumn(
             state = listState,
