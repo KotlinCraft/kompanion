@@ -79,7 +79,15 @@ class DefaultReasoner(
             ${understanding.requiredFeatures.joinToString("\n") { "- $it" }}
             
             Generated Code:
-            ${result.code}
+            ${result.fileChanges.joinToString("\n\n") { fileChange ->
+                when (fileChange) {
+                    is FileChange.CreateFile -> "New File ${fileChange.path}:\n${fileChange.content}"
+                    is FileChange.ModifyFile -> "Modify ${fileChange.path}:\n" +
+                            fileChange.changes.joinToString("\n") { change ->
+                                "- ${change.description}"
+                            }
+                }
+            }}
             
             Explanation:
             ${result.explanation}
