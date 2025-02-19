@@ -128,7 +128,7 @@ private fun MessageBubble(message: ChatMessage) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = if (message.isUser) "You: " else "AI: ",
+                text = if (message.isUser) "You: " else "Kompanion: ",
                 color = Color.Gray,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(end = 8.dp)
