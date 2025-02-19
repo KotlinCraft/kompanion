@@ -1,0 +1,1 @@
+We are creating a AI code companion agent, with the looks of Claude and ChatGPT.
