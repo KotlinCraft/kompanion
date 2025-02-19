@@ -1,16 +1,29 @@
 package agent
 
 import agent.domain.*
+import ai.Action
+import ai.ActionMethod
 import ai.Model
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.util.ReflectionUtils
 
 class DefaultReasoner(
     private val model: Model
 ) : Reasoner {
 
-    override fun analyzeRequest(request: UserRequest): Understanding {
+    val workingDirectory = "/opt/projects/kotlincraft/kompanion"
+
+    override fun analyzeRequest(request: UserRequest): PotentialUnderstanding {
         val prompt = """
+            Current working directory is: /opt/projects/kotlincraft/kompanion
+            
             Analyze the following code-related request and extract key information.
+            The content for various files (but not all) is provided for context. 
+            If you think a file already exists but its contents was not provided yet, request it using "request_file_context".
+
+            Make sure you have access to every file mentioned in the request before continuing.
+            
+            If the request is not clear, ask for more information.
             
             User Request: ${request.instruction}
             ${if (request.codeContext.isNotEmpty()) "Code Context:\n" + request.codeContext.joinToString("\n") { "File: ${it.path}\n${it.content}" } else ""}
@@ -23,11 +36,32 @@ class DefaultReasoner(
 
         return model.prompt(
             input = prompt,
-            action = emptyList(),
+            action = listOf(
+                Action(
+                    "request_file_context",
+                    """Provide a file in context for the request. 
+                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
+                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
+                    ActionMethod(
+                        ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java),
+                        this
+                    )
+                )
+            ),
             temperature = 0.7,
-            parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {}
+            parameterizedTypeReference = object : ParameterizedTypeReference<PotentialUnderstanding>() {}
         )
     }
+
+    fun requestFileContext(file: String): RequestFileResponse {
+        return RequestFileResponse(false, null, null)
+    }
+
+    data class RequestFileResponse(
+        val exists: Boolean,
+        val fullPath: String?,
+        val content: String?
+    )
 
     override fun createPlan(understanding: Understanding): GenerationPlan {
         val prompt = """
@@ -79,7 +113,8 @@ class DefaultReasoner(
             ${understanding.requiredFeatures.joinToString("\n") { "- $it" }}
             
             Generated Code:
-            ${result.fileChanges.joinToString("\n\n") { fileChange ->
+            ${
+            result.fileChanges.joinToString("\n\n") { fileChange ->
                 when (fileChange) {
                     is FileChange.CreateFile -> "New File ${fileChange.path}:\n${fileChange.content}"
                     is FileChange.ModifyFile -> "Modify ${fileChange.path}:\n" +
@@ -87,7 +122,8 @@ class DefaultReasoner(
                                 "- ${change.description}"
                             }
                 }
-            }}
+            }
+        }
             
             Explanation:
             ${result.explanation}
