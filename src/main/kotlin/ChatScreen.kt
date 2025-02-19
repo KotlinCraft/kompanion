@@ -39,13 +39,17 @@ fun ChatScreen() {
     val coroutineScope = rememberCoroutineScope()
     
     val chatBot = remember {
-        val config = AppConfig.load()
-        val model = OpenAIModel(config)
-        val contextManager = InMemoryContextManager()
-        val reasoner = DefaultReasoner(model, contextManager)
-        val codeGenerator = DefaultCodeGenerator(model, contextManager)
-        val agent = CodeGenerationAgent(reasoner, codeGenerator)
-        ChatBot(agent)
+        if (System.getenv("KOMPANION_ENV") == "production") {
+            val config = AppConfig.load()
+            val model = OpenAIModel(config)
+            val contextManager = InMemoryContextManager()
+            val reasoner = DefaultReasoner(model, contextManager)
+            val codeGenerator = DefaultCodeGenerator(model, contextManager)
+            val agent = CodeGenerationAgent(reasoner, codeGenerator)
+            ChatBot(agent)
+        } else {
+            FakeChatBot()
+        }
     }
     
     Column(
