@@ -7,12 +7,23 @@ class CodeGenerationAgent(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
 ) : CodeAgent {
+    private var messageCallback: AgentMessageCallback? = null
+
+    fun setMessageCallback(callback: AgentMessageCallback) {
+        messageCallback = callback
+    }
+
+    private fun sendMessage(message: String) {
+        messageCallback?.onMessage(message)
+    }
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun process(request: UserRequest): CodingAgentResponse {
         logger.info("Processing user request: ${request.instruction}")
+        sendMessage("Analyzing your request...")
         // 1. Analyze request and current context
         val understanding = reasoner.analyzeRequest(request)
+        sendMessage("I understand you want to: ${understanding.objective}")
 
         logger.debug("Understanding generated: {}", understanding)
         val plan = reasoner.createPlan(understanding)
@@ -24,13 +35,15 @@ class CodeGenerationAgent(
 
         while (iterations < maxIterations) {
             logger.info("Iteration $iterations: Generating code")
-            val generationResult = codeGenerator.generate(plan, currentCode)
+            sendMessage("Generating code (iteration ${iterations + 1})...")
+            val generationResult = codeGenerator.generate(plan, request)
 
             logger.debug("Generation result: {}", generationResult)
             val evaluation = reasoner.evaluateCode(generationResult, understanding)
 
             if (evaluation.meetsRequirements) {
                 logger.info("Requirements met. Returning successful response.")
+                sendMessage("Successfully generated code that meets all requirements!")
                 return CodingAgentResponse(
                     fileChanges = generationResult.fileChanges,
                     explanation = generationResult.explanation,

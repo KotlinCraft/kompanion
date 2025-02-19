@@ -2,7 +2,17 @@ package agent
 
 import agent.domain.UserRequest
 
-class ChatBot(private val agent: CodeAgent) {
+class ChatBot(private val agent: CodeAgent) : AgentMessageCallback {
+    init {
+        if (agent is CodeGenerationAgent) {
+            agent.setMessageCallback(this)
+        }
+    }
+
+    override fun onMessage(message: String) {
+        // TODO: In a real implementation, this would need to handle async message display
+        println("Agent: $message")
+    }
     suspend fun handleMessage(message: String): String {
         // Update context with any attached files
 
