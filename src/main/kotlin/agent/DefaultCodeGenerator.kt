@@ -10,7 +10,17 @@ class DefaultCodeGenerator(
     private val contextManager: ContextManager
 ) : CodeGenerator {
 
-    override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
+    override suspend fun generate(plan: GenerationPlan, request: UserRequest): GenerationResult {
+        val relevantFiles = contextManager.getRelevantContext(request)
+        val codeContext = relevantFiles.joinToString("\n\n") { file ->
+            """
+            File: ${file.path}
+            Language: ${file.language}
+            Content:
+            ${file.content}
+            """.trimIndent()
+        }
+        
         val prompt = """
             Based on the following generation plan, generate the necessary code changes.
             
@@ -20,7 +30,7 @@ class DefaultCodeGenerator(
             }}
             
             Current Code Context:
-            $currentCode
+            $codeContext
             
             Expected Outcome:
             ${plan.expectedOutcome}
