@@ -74,8 +74,9 @@ class DefaultReasoner(
             Evaluate the following generated code against the original requirements:
             
             Original Requirements:
-            - Objective: ${understanding.mainObjective}
-            - Features: ${understanding.requiredFeatures.joinToString("\n")}
+            - Objective: ${understanding.objective}
+            - Required Features:
+            ${understanding.requiredFeatures.joinToString("\n") { "- $it" }}
             
             Generated Code:
             ${result.code}
@@ -83,10 +84,20 @@ class DefaultReasoner(
             Explanation:
             ${result.explanation}
             
-            Evaluate and provide:
-            1. Whether code meets requirements (true/false)
-            2. Confidence score (0.0-1.0)
-            3. List of suggested improvements
+            Evaluate and provide a response in this structure:
+            {
+                "meetsRequirements": boolean,
+                "confidence": float between 0.0 and 1.0,
+                "suggestedImprovements": [
+                    "list of specific improvements or recommendations"
+                ]
+            }
+            
+            Consider:
+            1. Does the code fully implement all required features?
+            2. Is the implementation correct and efficient?
+            3. Are there any potential issues or areas for improvement?
+            4. Does it follow best practices?
         """.trimIndent()
 
         return model.prompt(
