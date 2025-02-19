@@ -90,7 +90,7 @@ fun ChatScreen() {
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    placeholder = { Text("Ask me about your code...", color = Color.Gray) },
+                    placeholder = { Text(if (isProcessing) "Thinking really hard..." else "Ask me about your code...", color = Color.Gray) },
                     shape = RoundedCornerShape(8.dp)
                 )
                 
