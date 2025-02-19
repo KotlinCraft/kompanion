@@ -121,6 +121,13 @@ fun ChatScreen() {
                 }
             }
         }
+        
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color.White.copy(alpha = 0.1f))
+        )
 
         // Input area
         Surface(
