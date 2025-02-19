@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +35,7 @@ fun ChatScreen() {
     var isProcessing by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     
     val onAgentMessage: (String) -> Unit = { message ->
         messages = messages + ChatMessage(message, false)
@@ -96,30 +98,39 @@ fun ChatScreen() {
                 
                 IconButton(
                     onClick = {
-                        if (inputText.isNotBlank() && !isProcessing) {
+                        if (isProcessing) {
+                            currentJob?.cancel()
+                            currentJob = null
+                            isProcessing = false
+                            messages = messages + ChatMessage("Operation cancelled by user", false)
+                        } else if (inputText.isNotBlank()) {
                             val userMessage = inputText
                             messages = messages + ChatMessage(userMessage, true)
                             inputText = ""
                             isProcessing = true
                             
-                            coroutineScope.launch {
+                            currentJob = coroutineScope.launch {
                                 try {
                                     val response = chatBot.handleMessage(userMessage)
                                     messages = messages + ChatMessage(response, false)
                                 } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) {
+                                        // Handled above with the cancellation message
+                                        return@launch
+                                    }
                                     messages = messages + ChatMessage("Error: ${e.message}", false)
                                 } finally {
                                     isProcessing = false
+                                    currentJob = null
                                 }
                             }
                         }
-                    },
-                    enabled = !isProcessing
+                    }
                 ) {
                     Icon(
-                        Icons.Default.Send,
-                        contentDescription = "Send",
-                        tint = if (isProcessing) Color.Gray else Color.White
+                        if (isProcessing) Icons.Default.Close else Icons.Default.Send,
+                        contentDescription = if (isProcessing) "Cancel" else "Send",
+                        tint = Color.White
                     )
                 }
             }
