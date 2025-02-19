@@ -2,7 +2,7 @@ package agent
 
 import agent.domain.UserRequest
 
-class ChatBot(private val agent: CodeAgent) : AgentMessageCallback {
+open class ChatBot(private val agent: CodeAgent) : AgentMessageCallback {
     init {
         if (agent is CodeGenerationAgent) {
             agent.setMessageCallback(this)
@@ -14,7 +14,7 @@ class ChatBot(private val agent: CodeAgent) : AgentMessageCallback {
         println("Agent: $message")
     }
 
-    suspend fun handleMessage(message: String): String {
+    open suspend fun handleMessage(message: String): String {
         // Update context with any attached files
 
         // Process the request

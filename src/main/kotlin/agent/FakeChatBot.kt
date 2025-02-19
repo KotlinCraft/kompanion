@@ -1,5 +1,8 @@
 package agent
 
+import agent.domain.UserFeedback
+import agent.domain.UserRequest
+
 class FakeChatBot : ChatBot(FakeAgent()) {
     override suspend fun handleMessage(message: String): String {
         return """

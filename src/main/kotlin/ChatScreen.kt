@@ -1,12 +1,8 @@
+import agent.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
-import agent.ChatBot
-import agent.CodeGenerationAgent
-import agent.DefaultCodeGenerator
-import agent.DefaultReasoner
-import agent.InMemoryContextManager
 import ai.OpenAIModel
 import config.AppConfig
 import androidx.compose.foundation.lazy.LazyColumn
