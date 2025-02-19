@@ -31,15 +31,34 @@ class DefaultReasoner(
 
     override fun createPlan(understanding: Understanding): GenerationPlan {
         val prompt = """
-            Based on the following understanding of a code request, create a detailed plan:
+            Based on the following understanding of a code request, create a detailed generation plan.
             
-            Objective: ${understanding.mainObjective}
-            Required Features: ${understanding.requiredFeatures.joinToString("\n")}
+            Objective: ${understanding.objective}
+            Required Features: 
+            ${understanding.requiredFeatures.joinToString("\n") { "- $it" }}
+            Context Relevance:
+            ${understanding.contextRelevance.entries.joinToString("\n") { "- ${it.key}: ${it.value}" }}
             
-            Create a structured plan including:
-            1. Step-by-step implementation steps
-            2. Expected outcome
-            3. Validation criteria
+            Create a detailed plan with the following structure:
+            1. A list of specific implementation steps, each containing:
+               - The action to perform
+               - Required inputs
+               - Expected output
+            2. A clear description of the expected final outcome
+            3. A list of specific validation criteria to verify the implementation
+            
+            Ensure the response is structured to match:
+            {
+              "steps": [
+                {
+                  "action": "string describing the step",
+                  "input": {key-value map of inputs needed},
+                  "expectedOutput": "string describing expected output"
+                }
+              ],
+              "expectedOutcome": "detailed description of final result",
+              "validationCriteria": ["list", "of", "verification", "points"]
+            }
         """.trimIndent()
 
         return model.prompt(
