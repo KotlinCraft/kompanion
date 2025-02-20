@@ -28,6 +28,17 @@ class CodingAgent(
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
+    private suspend fun confirmWithUser(message: String): Boolean {
+        while (true) {
+            val response = askQuestion("$message\nPlease respond with Y or N:")
+            when (response.trim().uppercase()) {
+                "Y" -> return true
+                "N" -> return false
+                else -> sendMessage("Invalid response. Please answer with Y or N.")
+            }
+        }
+    }
+
     override suspend fun process(request: UserRequest): CodingAgentResponse {
         logger.info("Processing user request: ${request.instruction}")
         sendMessage("Analyzing your request...")
@@ -54,8 +65,23 @@ class CodingAgent(
             val evaluation = reasoner.evaluateCode(generationResult, understanding)
 
             if (evaluation.meetsRequirements) {
-                logger.info("Requirements met. Returning successful response.")
-                sendMessage("Successfully generated code that meets all requirements!")
+                logger.info("Requirements met. Asking for user confirmation.")
+                sendMessage("I've generated code that meets all requirements. Here's what I'm planning to change:")
+                sendMessage(generationResult.explanation)
+                
+                val userConfirmed = confirmWithUser("Would you like me to apply these changes?")
+                if (!userConfirmed) {
+                    logger.info("User rejected changes.")
+                    return CodingAgentResponse(
+                        fileChanges = emptyList(),
+                        explanation = "Changes were rejected by user.",
+                        nextSteps = listOf("Consider providing different requirements or explaining what wasn't right"),
+                        confidence = 0.0f
+                    )
+                }
+                
+                logger.info("User confirmed changes. Returning successful response.")
+                sendMessage("Proceeding with the changes!")
                 return CodingAgentResponse(
                     fileChanges = generationResult.fileChanges,
                     explanation = generationResult.explanation,
