@@ -17,10 +17,13 @@ Kompanion is an intelligent coding assistant that helps you generate, improve, a
 
 ## Features
 
-- **Iterative Improvement** - Progressive refinement of generated code
-- **Context-Aware** - Understands your existing codebase
-- **Reasoning-Based** - Explains its approach and decision making
-- **Kotlin-First** - Optimized for Kotlin development workflows
+- **Interactive Chat Interface** - A dynamic chat UI supporting multiple modes:
+    - **Code Mode:** For code-related queries and generation.
+    - **Ask Mode:** For general inquiries and explanations.
+- **Slash Commands** - Quickly switch modes and invoke commands (e.g., `/code`, `/ask`, `/help`, `/clear`).
+- **Auto-Scrolling** - The chat automatically scrolls to reveal new messages.
+- **Working Directory Selector** - Update your working directory via a file selector with changes saved to your configuration.
+- **Settings Dialog** - Easily update configuration settings (like your OpenAI API key) through an intuitive dialog.
 
 ## Getting Started
 
@@ -46,12 +49,12 @@ cd kompanion
 
 ## Usage
 
-Once launched, Kompanion provides a chat interface where you can:
+Once launched, Kompanion offers an interactive chat interface that allows you to:
 
-1. Request code generation based on requirements
-2. Upload existing code files for context
-3. Provide feedback to improve results
-4. View explanations of generated code
+1. **Interact Seamlessly:** Switch between code and ask modes using slash commands or the mode indicator in the topbar.
+2. **Send Messages Efficiently:** Use Command+Enter (Meta+Enter) to send messages.
+3. **Stay Up-to-Date:** Enjoy automatic scrolling to see the latest messages without manual intervention.
+4. **Customize Your Environment:** Easily update your working directory and configuration settings using the integrated file selector and settings dialog.
 
 Example interactions coming soon!
 
