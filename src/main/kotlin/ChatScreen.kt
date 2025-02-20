@@ -5,6 +5,7 @@ import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import ai.OpenAIModel
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +26,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ui.chat.ChatMessage
+import ui.chat.MessageBubble
 import ui.chat.WorkingDirectorySelector
 
 private data class SlashCommand(
@@ -36,11 +39,6 @@ private val slashCommands = listOf(
     SlashCommand("/code", "Switch to code mode"),
     SlashCommand("/help", "Show available commands"),
     SlashCommand("/clear", "Clear chat history")
-)
-
-data class ChatMessage(
-    val content: String,
-    val isUser: Boolean
 )
 
 @Composable
@@ -108,7 +106,7 @@ fun ChatScreen() {
             darkBackground = darkBackground,
             onSettingsClick = { showSettings = true }
         )
-        
+
         // Messages area
         LazyColumn(
             state = listState,
@@ -146,178 +144,181 @@ fun ChatScreen() {
                 Box {
                     TextField(
                         value = inputText,
-                        onValueChange = { 
+                        onValueChange = {
                             if (!isProcessing) {
                                 inputText = it
                                 showSuggestions = it.startsWith("/")
                             }
                         },
-                    modifier = Modifier.weight(1f),
-                    enabled = !isProcessing || isWaitingForAnswer,
-                    colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = darkSecondary,
-                        textColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    placeholder = {
-                        Text(
-                            if (isProcessing && !isWaitingForAnswer) "Thinking really hard..."
-                            else if (isWaitingForAnswer) "Answer the question..."
-                            else "Ask me about your code...",
-                            color = Color.Gray
-                        )
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                )
-                
-                if (showSuggestions) {
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .offset(y = (-4).dp),
-                        elevation = 4.dp,
-                        shape = RoundedCornerShape(8.dp),
-                        color = darkSecondary
-                    ) {
-                        Column(
-                            modifier = Modifier.width(300.dp)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isProcessing || isWaitingForAnswer,
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = darkSecondary,
+                            textColor = Color.White,
+                            cursorColor = Color.White,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        placeholder = {
+                            Text(
+                                if (isProcessing && !isWaitingForAnswer) "Thinking really hard..."
+                                else if (isWaitingForAnswer) "Answer the question..."
+                                else "Ask me about your code...",
+                                color = Color.Gray
+                            )
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+
+                    if (showSuggestions) {
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .offset(y = (-4).dp),
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(8.dp),
+                            color = darkSecondary
                         ) {
-                            slashCommands.take(3).forEach { command ->
-                                Surface(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { 
-                                            inputText = command.command
-                                            showSuggestions = false 
-                                        },
-                                    color = Color.Transparent
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(12.dp)
-                                    ) {
-                                        Text(
-                                            text = command.command,
-                                            color = Color.White,
-                                            fontSize = 14.sp,
-                                            modifier = Modifier.width(80.dp)
-                                        )
-                                        Text(
-                                            text = command.description,
-                                            color = Color.Gray,
-                                            fontSize = 14.sp
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Spacer(Modifier.width(8.dp))
-
-                if (isProcessing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(Modifier.width(8.dp))
-                }
-
-                IconButton(
-                    onClick = {
-                        if (isProcessing && !isWaitingForAnswer) {
-                            currentJob?.cancel()
-                            currentJob = null
-                            isProcessing = false
-                            messages = messages + ChatMessage("Operation cancelled by user", false)
-                        } else if (inputText.isNotBlank()) {
-                            val userMessage = inputText
-                            messages = messages + ChatMessage(userMessage, true)
-                            inputText = ""
-
-                            if (userMessage.startsWith("/")) {
-                                when (userMessage.lowercase()) {
-                                    "/code" -> {
-                                        isCodeMode = true
-                                        messages = messages + ChatMessage("Changed to code mode", false)
-                                        return@IconButton
-                                    }
-                                    "/help" -> {
-                                        messages = messages + ChatMessage(
-                                            "Available commands:\n" + slashCommands.joinToString("\n") { 
-                                                "${it.command} - ${it.description}" 
+                            Column(
+                                modifier = Modifier.width(300.dp)
+                            ) {
+                                slashCommands.take(3).forEach { command ->
+                                    Surface(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                inputText = command.command
+                                                showSuggestions = false
                                             },
-                                            false
-                                        )
-                                        return@IconButton
-                                    }
-                                    "/clear" -> {
-                                        messages = emptyList()
-                                        return@IconButton
-                                    }
-                                }
-                            } else if (isWaitingForAnswer && pendingQuestion != null) {
-                                // Handle answer to pending question
-                                isWaitingForAnswer = false
-                                pendingQuestion = null
-                                userResponse = userMessage
-                                return@IconButton
-                            } else {
-                                // Handle new request
-                                isProcessing = true
-                                currentJob = coroutineScope.launch {
-                                    try {
-                                        withContext(Dispatchers.IO) {
-                                            val response = chatBot.handleMessage(message = userMessage)
-                                            messages = messages + ChatMessage(response, false)
-                                            currentJob = null
-                                            isProcessing = false
+                                        color = Color.Transparent
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(12.dp)
+                                        ) {
+                                            Text(
+                                                text = command.command,
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                modifier = Modifier.width(80.dp)
+                                            )
+                                            Text(
+                                                text = command.description,
+                                                color = Color.Gray,
+                                                fontSize = 14.sp
+                                            )
                                         }
-                                    } catch (e: Exception) {
-                                        messages = messages + ChatMessage("Error: ${e.message}", false)
-                                        isProcessing = false
-                                        currentJob = null
                                     }
                                 }
                             }
                         }
                     }
-                ) {
-                    Icon(
-                        if (isProcessing) Icons.Default.Close else Icons.Default.Send,
-                        contentDescription = if (isProcessing) "Cancel" else "Send",
-                        tint = Color.White
-                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    if (isProcessing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
+
+                    IconButton(
+                        onClick = {
+                            if (isProcessing && !isWaitingForAnswer) {
+                                currentJob?.cancel()
+                                currentJob = null
+                                isProcessing = false
+                                messages = messages + ChatMessage("Operation cancelled by user", false)
+                            } else if (inputText.isNotBlank()) {
+                                val userMessage = inputText
+                                messages = messages + ChatMessage(userMessage, true)
+                                inputText = ""
+
+                                if (userMessage.startsWith("/")) {
+                                    when (userMessage.lowercase()) {
+                                        "/code" -> {
+                                            isCodeMode = true
+                                            messages = messages + ChatMessage("Changed to code mode", false)
+                                            return@IconButton
+                                        }
+
+                                        "/help" -> {
+                                            messages = messages + ChatMessage(
+                                                "Available commands:\n" + slashCommands.joinToString("\n") {
+                                                    "${it.command} - ${it.description}"
+                                                },
+                                                false
+                                            )
+                                            return@IconButton
+                                        }
+
+                                        "/clear" -> {
+                                            messages = emptyList()
+                                            return@IconButton
+                                        }
+                                    }
+                                } else if (isWaitingForAnswer && pendingQuestion != null) {
+                                    // Handle answer to pending question
+                                    isWaitingForAnswer = false
+                                    pendingQuestion = null
+                                    userResponse = userMessage
+                                    return@IconButton
+                                } else {
+                                    // Handle new request
+                                    isProcessing = true
+                                    currentJob = coroutineScope.launch {
+                                        try {
+                                            withContext(Dispatchers.IO) {
+                                                val response = chatBot.handleMessage(message = userMessage)
+                                                messages = messages + ChatMessage(response, false)
+                                                currentJob = null
+                                                isProcessing = false
+                                            }
+                                        } catch (e: Exception) {
+                                            messages = messages + ChatMessage("Error: ${e.message}", false)
+                                            isProcessing = false
+                                            currentJob = null
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            if (isProcessing) Icons.Default.Close else Icons.Default.Send,
+                            contentDescription = if (isProcessing) "Cancel" else "Send",
+                            tint = Color.White
+                        )
+                    }
                 }
             }
         }
     }
-}
 
 
-@Composable
-private fun MessageBubble(message: ChatMessage) {
-    Surface(
-        color = if (message.isUser) Color(0xFF343541) else Color(0xFF444654),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp)
+    @Composable
+    fun MessageBubble(message: ChatMessage) {
+        Surface(
+            color = if (message.isUser) Color(0xFF343541) else Color(0xFF444654),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = if (message.isUser) "You: " else "Kompanion: ",
-                color = Color.Gray,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            Text(
-                text = message.content,
-                color = Color.White,
-                fontSize = 14.sp
-            )
+            Row(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = if (message.isUser) "You: " else "Kompanion: ",
+                    color = Color.Gray,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = message.content,
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }
