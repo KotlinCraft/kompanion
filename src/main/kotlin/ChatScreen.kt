@@ -60,6 +60,8 @@ fun ChatScreen() {
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     var userResponse by remember { mutableStateOf("") }
+    
+    var showSettings by remember { mutableStateOf(false) }
 
     val onAgentMessage: suspend (AgentMessage) -> String = { message ->
         when (message) {
@@ -97,8 +99,6 @@ fun ChatScreen() {
             FakeChatBot(onAgentMessage)
         }
     }
-
-    var showSettings by remember { mutableStateOf(false) }
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
@@ -167,6 +167,32 @@ fun ChatScreen() {
             mode = mode,
             onSettingsClick = { showSettings = true }
         )
+        
+        if (showSettings) {
+            Dialog(onDismissRequest = { showSettings = false }) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = darkSecondary
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Settings",
+                            color = Color.White,
+                            style = MaterialTheme.typography.h6
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { showSettings = false }) {
+                            Text("Close")
+                        }
+                    }
+                }
+            }
+        }
 
         // Messages area
         LazyColumn(
