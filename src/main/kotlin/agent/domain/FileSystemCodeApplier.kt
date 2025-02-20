@@ -8,7 +8,22 @@ class FileSystemCodeApplier(private val contextManager: ContextManager) : CodeAp
     override fun apply(fileChange: FileChange): Boolean {
         return when (fileChange) {
             is FileChange.CreateFile -> {
-                true // Keep existing implementation for now
+                try {
+                    val fullPath = if(Paths.get(fileChange.path).exists()) 
+                        Paths.get(fileChange.path) 
+                    else 
+                        Paths.get(contextManager.fetchWorkingDirectory(), fileChange.path)
+
+                    // Create parent directories if they don't exist
+                    fullPath.parent?.toFile()?.mkdirs()
+                    
+                    // Create and write to the file
+                    fullPath.toFile().writeText(fileChange.content)
+                    true
+                } catch (e: Exception) {
+                    println("Error creating file ${fileChange.path}: ${e.message}")
+                    false
+                }
             }
 
             is FileChange.ModifyFile -> {
