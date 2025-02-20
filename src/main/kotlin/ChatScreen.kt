@@ -37,12 +37,6 @@ private data class SlashCommand(
     val run: () -> Unit = {}
 )
 
-private val slashCommands = listOf(
-    SlashCommand("/code", "Switch to code mode"),
-    SlashCommand("/help", "Show available commands"),
-    SlashCommand("/clear", "Clear chat history")
-)
-
 @Composable
 fun ChatScreen() {
     val darkBackground = Color(0xFF343541)
@@ -53,7 +47,8 @@ fun ChatScreen() {
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
 
-    var isCodeMode by remember { mutableStateOf(true) }
+    // New mode state variable ("code" or "ask")
+    var mode by remember { mutableStateOf("code") }
 
     var showSuggestions by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
@@ -103,6 +98,14 @@ fun ChatScreen() {
 
     var showSettings by remember { mutableStateOf(false) }
 
+    // Local slash commands with callbacks to update the mode.
+    val slashCommands = listOf(
+        SlashCommand("/code", "Switch to code mode") { mode = "code" },
+        SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
+        SlashCommand("/help", "Show available commands"),
+        SlashCommand("/clear", "Clear chat history")
+    )
+
     fun sendToBot(userMessage: String) {
         // Handle new request
         isProcessing = true
@@ -143,12 +146,8 @@ fun ChatScreen() {
                 pendingQuestion = null
                 userResponse = userMessage
             } else {
-                if (slashCommands.any {
-                        it.command == userMessage.trim()
-                    }) {
-                    performSlashCommand(slashCommands.first {
-                        it.command == userMessage.trim()
-                    })
+                if (slashCommands.any { it.command == userMessage.trim() }) {
+                    performSlashCommand(slashCommands.first { it.command == userMessage.trim() })
                 } else {
                     sendToBot(userMessage)
                 }
@@ -166,20 +165,18 @@ fun ChatScreen() {
             onSettingsClick = { showSettings = true }
         )
         
-        // Visual indicator for Code Mode
-        if (isCodeMode) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .background(color = Color.Blue, shape = RoundedCornerShape(8.dp))
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Code Mode", color = Color.White)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+        // Visual indicator for current mode (Code Mode or Ask Mode)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .background(color = if (mode == "code") Color.Blue else Color.Green, shape = RoundedCornerShape(8.dp))
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = if (mode == "code") "Code Mode" else "Ask Mode", color = Color.White)
         }
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Messages area
         LazyColumn(
