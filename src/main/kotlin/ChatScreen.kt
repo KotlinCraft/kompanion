@@ -150,7 +150,7 @@ fun ChatScreen() {
                             if (!isProcessing) {
                                 inputText = it
                                 // Only show suggestions if we're at the start of a command
-                                showSuggestions = it.startsWith("/") && !it.contains(" ")
+                                showSuggestions = it.startsWith("/")
                             }
                         },
                         enabled = !isProcessing || isWaitingForAnswer,
@@ -241,30 +241,7 @@ fun ChatScreen() {
                             messages = messages + ChatMessage(userMessage, true)
                             inputText = ""
 
-                            if (userMessage.startsWith("/")) {
-                                when (userMessage.lowercase()) {
-                                    "/code" -> {
-                                        isCodeMode = true
-                                        messages = messages + ChatMessage("Changed to code mode", false)
-                                        return@IconButton
-                                    }
-
-                                    "/help" -> {
-                                        messages = messages + ChatMessage(
-                                            "Available commands:\n" + slashCommands.joinToString("\n") {
-                                                "${it.command} - ${it.description}"
-                                            },
-                                            false
-                                        )
-                                        return@IconButton
-                                    }
-
-                                    "/clear" -> {
-                                        messages = emptyList()
-                                        return@IconButton
-                                    }
-                                }
-                            } else if (isWaitingForAnswer && pendingQuestion != null) {
+                            if (isWaitingForAnswer && pendingQuestion != null) {
                                 // Handle answer to pending question
                                 isWaitingForAnswer = false
                                 pendingQuestion = null
