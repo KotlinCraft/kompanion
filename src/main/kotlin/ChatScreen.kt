@@ -177,7 +177,7 @@ fun ChatScreen() {
             elevation = 8.dp
         ) {
             Row(
-                modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                modifier = Modifier.padding(vertical = 6.dp, horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -186,14 +186,14 @@ fun ChatScreen() {
                         imageVector = Icons.Default.Code,
                         contentDescription = "Code Mode",
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(12.dp)
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.QuestionAnswer,
                         contentDescription = "Ask Mode",
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
