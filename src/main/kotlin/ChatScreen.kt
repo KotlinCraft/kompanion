@@ -49,11 +49,12 @@ fun ChatScreen() {
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
-    val onAgentMessage: (AgentMessage) -> Unit = { message ->
+    val onAgentMessage: (AgentMessage) -> String = { message ->
         messages = when (message) {
             is AgentQuestion -> messages + ChatMessage(message.message, false)
             is AgentResponse -> messages + ChatMessage(message.message, false)
         }
+        ""
     }
 
     val chatBot = remember {
