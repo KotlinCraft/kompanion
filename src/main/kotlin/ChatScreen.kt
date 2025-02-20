@@ -150,7 +150,6 @@ fun ChatScreen() {
                                 showSuggestions = it.startsWith("/")
                             }
                         },
-                        modifier = Modifier.weight(1f),
                         enabled = !isProcessing || isWaitingForAnswer,
                         colors = TextFieldDefaults.textFieldColors(
                             backgroundColor = darkSecondary,
