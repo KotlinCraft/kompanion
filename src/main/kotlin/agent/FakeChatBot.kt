@@ -2,21 +2,21 @@ package agent
 
 import agent.domain.UserFeedback
 import agent.domain.UserRequest
+import agent.interaction.AgentMessage
+import agent.interaction.AgentResponse
 import kotlinx.coroutines.delay
 
-class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), onMessage) {
+class FakeChatBot(onMessage: ((AgentMessage) -> Unit)) : ChatBot(FakeAgent(), onMessage) {
     override suspend fun handleMessage(
         message: String,
-        onMessage: (String) -> Unit,
     ): String {
         delay(2000) // Simulate some initial processing
-        onMessage("Starting to process your request...")
+        onMessage(AgentResponse("Starting to process your request..."))
 
         delay(2000) // Simulate more processing
-        onMessage("Analyzing code patterns...")
+        onMessage(AgentResponse("Analyzing code patterns..."))
 
         delay(2000) // Final delay before response
-
 
         return """
             Generated Code:

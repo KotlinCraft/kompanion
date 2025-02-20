@@ -2,12 +2,10 @@ package agent
 
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
-import agent.interaction.AgentQuestion
-import agent.interaction.AgentResponse
 
 open class ChatBot(
     private val agent: CodeAgent,
-    private val onMessage: ((String) -> Unit)? = null
+    private val onMessage: ((message: AgentMessage) -> Unit)
 ) : AgentMessageCallback {
     init {
         if (agent is CodingAgent) {
@@ -16,20 +14,11 @@ open class ChatBot(
     }
 
     override fun onMessage(message: AgentMessage) {
-        when (message) {
-            is AgentResponse -> {
-                onMessage?.invoke(message.message)
-            }
-
-            is AgentQuestion -> {
-                onMessage?.invoke(message.message)
-            }
-        }
+        onMessage(message)
     }
 
     open suspend fun handleMessage(
-        message: String,
-        onMessage: (String) -> Unit,
+        message: String
     ): String {
         // Process the request
         val response = agent.process(

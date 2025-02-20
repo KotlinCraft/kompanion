@@ -1,4 +1,7 @@
 import agent.*
+import agent.interaction.AgentMessage
+import agent.interaction.AgentQuestion
+import agent.interaction.AgentResponse
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
@@ -46,8 +49,11 @@ fun ChatScreen() {
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
-    val onAgentMessage: (String) -> Unit = { message ->
-        messages = messages + ChatMessage(message, false)
+    val onAgentMessage: (AgentMessage) -> Unit = { message ->
+        messages = when (message) {
+            is AgentQuestion -> messages + ChatMessage(message.message, false)
+            is AgentResponse -> messages + ChatMessage(message.message, false)
+        }
     }
 
     val chatBot = remember {
@@ -149,12 +155,7 @@ fun ChatScreen() {
                             currentJob = coroutineScope.launch {
                                 try {
                                     withContext(Dispatchers.IO) {
-                                        val response = chatBot.handleMessage(
-                                            message = userMessage,
-                                            onMessage = { response ->
-                                                messages = messages + ChatMessage(response, false)
-                                            }
-                                        )
+                                        val response = chatBot.handleMessage(message = userMessage)
                                         messages = messages + ChatMessage(response, false)
                                         currentJob = null
                                         isProcessing = false
