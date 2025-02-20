@@ -14,7 +14,7 @@ class CodingAgent(
         messageCallback = callback
     }
 
-    private fun sendMessage(message: String) {
+    private suspend fun sendMessage(message: String) {
         messageCallback?.onAgentInteraction(AgentResponse(message))
     }
 

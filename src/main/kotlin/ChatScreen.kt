@@ -52,16 +52,21 @@ fun ChatScreen() {
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
+    var userResponse by remember { mutableStateOf("") }
+
     val onAgentMessage: suspend (AgentMessage) -> String = { message ->
         when (message) {
             is AgentQuestion -> {
                 messages = messages + ChatMessage(message.message, false)
                 isWaitingForAnswer = true
                 pendingQuestion = message
-                while (isWaitingForAnswer) {
+                isProcessing = false
+                while (isWaitingForAnswer && userResponse.isBlank()) {
                     delay(100)
                 }
-                ""
+                val response = userResponse
+                userResponse = ""
+                response
             }
 
             is AgentResponse -> {
@@ -171,8 +176,8 @@ fun ChatScreen() {
                             if (isWaitingForAnswer && pendingQuestion != null) {
                                 // Handle answer to pending question
                                 isWaitingForAnswer = false
-                                val question = pendingQuestion
                                 pendingQuestion = null
+                                userResponse = userMessage
                                 return@IconButton
                             } else {
                                 // Handle new request

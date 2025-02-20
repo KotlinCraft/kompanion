@@ -3,5 +3,5 @@ package agent
 import agent.interaction.AgentMessage
 
 interface AgentMessageCallback {
-    fun onAgentInteraction(message: AgentMessage)
+    suspend fun onAgentInteraction(message: AgentMessage): String
 }

@@ -3,10 +3,11 @@ package agent
 import agent.domain.UserFeedback
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
+import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import kotlinx.coroutines.delay
 
-class FakeChatBot(onMessage: ((AgentMessage) -> Unit)) : ChatBot(FakeAgent(), onMessage) {
+class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeAgent(), onMessage) {
     override suspend fun handleMessage(
         message: String,
     ): String {
@@ -15,6 +16,10 @@ class FakeChatBot(onMessage: ((AgentMessage) -> Unit)) : ChatBot(FakeAgent(), on
 
         delay(2000) // Simulate more processing
         onAgentInteraction(AgentResponse("Analyzing code patterns..."))
+
+        val response = onAgentInteraction(AgentQuestion("wait, how old are you again?"))
+
+        println(response)
 
         delay(2000) // Final delay before response
 

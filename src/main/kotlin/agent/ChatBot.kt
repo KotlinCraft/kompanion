@@ -5,7 +5,7 @@ import agent.interaction.AgentMessage
 
 open class ChatBot(
     private val agent: CodeAgent,
-    private val onMessage: ((message: AgentMessage) -> Unit)
+    private val onMessage: suspend ((message: AgentMessage) -> String)
 ) : AgentMessageCallback {
     init {
         if (agent is CodingAgent) {
@@ -13,8 +13,8 @@ open class ChatBot(
         }
     }
 
-    override fun onAgentInteraction(message: AgentMessage) {
-        onMessage(message)
+    override suspend fun onAgentInteraction(message: AgentMessage): String {
+        return onMessage(message)
     }
 
     open suspend fun handleMessage(
