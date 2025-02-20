@@ -1,6 +1,8 @@
 import agent.*
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
+import agent.interaction.AgentQuestion
+import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
 import ai.OpenAIModel
 import config.AppConfig
@@ -38,7 +40,16 @@ fun main() {
 
 class StubInteractionHandler() : InteractionHandler {
     override suspend fun interact(agentMessage: AgentMessage): String {
-        println("Interacting with agent: $agentMessage")
-        return "Stubbed response"
+        when (agentMessage) {
+            is AgentQuestion -> {
+                println("Question from agent: ${agentMessage.message}")
+                return "Stubbed response"
+            }
+
+            is AgentResponse -> {
+                println("Message from agent: ${agentMessage.message}")
+                return "Stubbed response"
+            }
+        }
     }
 }
