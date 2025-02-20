@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import ui.TopBar
 import ui.chat.WorkingDirectorySelector
 import java.nio.file.FileSystem
 
@@ -93,9 +94,16 @@ fun ChatScreen() {
         }
     }
 
+    var showSettings by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxSize().background(darkBackground)
     ) {
+        TopBar(
+            darkBackground = darkBackground,
+            onSettingsClick = { showSettings = true }
+        )
+        
         // Messages area
         LazyColumn(
             state = listState,
