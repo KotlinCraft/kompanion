@@ -185,33 +185,35 @@ fun ChatScreen() {
                             Column(
                                 modifier = Modifier.width(300.dp)
                             ) {
-                                slashCommands.take(3).forEach { command ->
-                                    Surface(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                inputText = command.command + " "
-                                                showSuggestions = false
-                                            },
-                                        color = Color.Transparent
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(12.dp)
+                                slashCommands
+                                    .filter { it.command.startsWith(inputText) }
+                                    .take(3)
+                                    .forEach { command ->
+                                        Surface(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    inputText = command.command + " "
+                                                },
+                                            color = Color.Transparent
                                         ) {
-                                            Text(
-                                                text = command.command,
-                                                color = Color.White,
-                                                fontSize = 14.sp,
-                                                modifier = Modifier.width(80.dp)
-                                            )
-                                            Text(
-                                                text = command.description,
-                                                color = Color.Gray,
-                                                fontSize = 14.sp
-                                            )
+                                            Row(
+                                                modifier = Modifier.padding(12.dp)
+                                            ) {
+                                                Text(
+                                                    text = command.command,
+                                                    color = Color.White,
+                                                    fontSize = 14.sp,
+                                                    modifier = Modifier.width(80.dp)
+                                                )
+                                                Text(
+                                                    text = command.description,
+                                                    color = Color.Gray,
+                                                    fontSize = 14.sp
+                                                )
+                                            }
                                         }
                                     }
-                                }
                             }
                         }
                     }
