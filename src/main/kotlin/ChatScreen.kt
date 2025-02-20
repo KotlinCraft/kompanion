@@ -199,8 +199,8 @@ fun ChatScreen() {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = if (mode == "code") Color(0xFF1E88E5) else Color(0xFF43A047),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = 8.dp
+                    shape = RoundedCornerShape(1.dp),
+                    elevation = 8.dp,
                 ) {
                     Row(
                         modifier = Modifier.padding(vertical = 6.dp, horizontal = 16.dp),
