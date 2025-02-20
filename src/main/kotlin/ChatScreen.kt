@@ -30,9 +30,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ui.chat.ChatMessage
-import ui.chat.MessageBubble
+import ui.ChatMessage
+import ui.MessageBubble
 import ui.chat.WorkingDirectorySelector
+import ui.SettingsDialog
 
 private data class SlashCommand(
     val command: String,
@@ -63,6 +64,7 @@ fun ChatScreen() {
     var userResponse by remember { mutableStateOf("") }
     
     var showSettings by remember { mutableStateOf(false) }
+    var configState by remember { mutableStateOf(AppConfig.load()) }
 
     val onAgentMessage: suspend (AgentMessage) -> String = { message ->
         when (message) {
@@ -170,29 +172,11 @@ fun ChatScreen() {
         )
         
         if (showSettings) {
-            Dialog(onDismissRequest = { showSettings = false }) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = darkSecondary
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Settings",
-                            color = Color.White,
-                            style = MaterialTheme.typography.h6
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { showSettings = false }) {
-                            Text("Close")
-                        }
-                    }
-                }
-            }
+            SettingsDialog(initialConfig = configState, onClose = {
+                configState = it
+                AppConfig.save(it)
+                showSettings = false
+            })
         }
 
         // Messages area
@@ -335,9 +319,7 @@ fun ChatScreen() {
                 }
 
                 IconButton(
-                    onClick = {
-                        sendCurrentMessage()
-                    }
+                    onClick = { sendCurrentMessage() }
                 ) {
                     Icon(
                         if (isProcessing) Icons.Default.Close else Icons.Default.Send,
