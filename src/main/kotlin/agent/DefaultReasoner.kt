@@ -6,24 +6,26 @@ import ai.ActionMethod
 import ai.Model
 import arrow.core.Either
 import arrow.core.getOrElse
+import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.math.log
 
 class DefaultReasoner(
     private val model: Model,
     private val contextManager: ContextManager
 ) : Reasoner {
 
-    //TODO: current directory should be dynamic
-    val workingDirectory = "/opt/projects/kotlincraft/kompanion"
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun analyzeRequest(request: UserRequest): Understanding {
         val context = contextManager.getContext()
         val prompt = """
-            
-            Current working directory is: $workingDirectory
+            Current working directory is: ${contextManager.fetchWorkingDirectory()}
+            The full codebase outline looks like this:
+            ${contextManager.getFullFileList()}
             
             Files in your current context: 
             ${
@@ -76,7 +78,8 @@ class DefaultReasoner(
     }
 
     fun requestFileContext(file: String): RequestFileResponse {
-        val filePath = Files.walk(Paths.get(workingDirectory))
+        logger.info("Looking up file: $file")
+        val filePath = Files.walk(Paths.get(contextManager.fetchWorkingDirectory()))
             .filter { it.fileName.toString() == file }
             .findFirst()
 

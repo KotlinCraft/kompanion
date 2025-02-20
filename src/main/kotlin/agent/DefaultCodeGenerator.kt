@@ -10,13 +10,11 @@ class DefaultCodeGenerator(
     private val contextManager: ContextManager
 ) : CodeGenerator {
 
-    val workingDirectory = "/opt/projects/kotlincraft/kompanion"
 
     override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
         val context = contextManager.getContext()
         val prompt = """
-            Current working directory is: $workingDirectory
-
+            Current working directory is: ${contextManager.fetchWorkingDirectory()}
 
             You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
             

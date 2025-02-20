@@ -1,11 +1,15 @@
 package agent
 
 import agent.domain.CodeFile
-import agent.domain.UserRequest
+import utils.walkDirectory
+import java.io.File
 
-class InMemoryContextManager : ContextManager {
+class InMemoryContextManager(
+    val workingDirectory: String
+) : ContextManager {
 
     private val files = mutableMapOf<String, CodeFile>()
+
     override fun getContext(): List<CodeFile> {
         return files.values.toList()
     }
@@ -18,5 +22,15 @@ class InMemoryContextManager : ContextManager {
 
     override fun clearContext() {
         files.clear()
+    }
+
+    override fun fetchWorkingDirectory(): String {
+        return workingDirectory
+    }
+
+    override fun getFullFileList(): String {
+        return buildString {
+            walkDirectory(File(workingDirectory), this, 0)
+        }
     }
 }

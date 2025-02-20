@@ -3,7 +3,7 @@ package agent
 import agent.domain.*
 import org.slf4j.LoggerFactory
 
-class CodeGenerationAgent(
+class CodingAgent(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
 ) : CodeAgent {

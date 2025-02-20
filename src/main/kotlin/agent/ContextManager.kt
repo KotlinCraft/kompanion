@@ -8,4 +8,8 @@ interface ContextManager {
     fun getContext(): List<CodeFile>
     fun updateFiles(files: List<CodeFile>)
     fun clearContext()
+    fun fetchWorkingDirectory(): String
+
+    fun getFullFileList(): String
+
 }

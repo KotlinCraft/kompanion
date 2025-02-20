@@ -7,9 +7,8 @@ import kotlinx.coroutines.delay
 class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), onMessage) {
     override suspend fun handleMessage(
         message: String,
-        onResponse: (String) -> Unit,
-        onError: (Throwable) -> Unit
-    ) {
+        onMessage: (String) -> Unit,
+    ): String {
         delay(2000) // Simulate some initial processing
         onMessage("Starting to process your request...")
 
@@ -17,8 +16,9 @@ class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), 
         onMessage("Analyzing code patterns...")
 
         delay(2000) // Final delay before response
-        onResponse(
-            """
+
+
+        return """
             Generated Code:
             ```kotlin
             fun example() {
@@ -36,7 +36,6 @@ class FakeChatBot(onMessage: ((String) -> Unit)? = null) : ChatBot(FakeAgent(), 
             
             Confidence: 95%
         """.trimIndent()
-        )
     }
 
     private class FakeAgent : CodeAgent {

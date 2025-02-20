@@ -1,14 +1,13 @@
 package agent
 
 import agent.domain.UserRequest
-import kotlinx.coroutines.delay
 
 open class ChatBot(
     private val agent: CodeAgent,
     private val onMessage: ((String) -> Unit)? = null
 ) : AgentMessageCallback {
     init {
-        if (agent is CodeGenerationAgent) {
+        if (agent is CodingAgent) {
             agent.setMessageCallback(this)
 
         }
@@ -20,19 +19,17 @@ open class ChatBot(
 
     open suspend fun handleMessage(
         message: String,
-        onResponse: (String) -> Unit,
-        onError: (Throwable) -> Unit
-    ) {
-        try {
-            // Process the request
-            val response = agent.process(
-                UserRequest(
-                    instruction = message,
-                )
+        onMessage: (String) -> Unit,
+    ): String {
+        // Process the request
+        val response = agent.process(
+            UserRequest(
+                instruction = message,
             )
+        )
 
-            // Format response for chat
-            val formattedResponse = """
+        // Format response for chat
+        return """
                 Generated Code:
                 ```
                 
@@ -44,10 +41,5 @@ open class ChatBot(
                 
                 Confidence: ${response.confidence * 100}%
             """.trimIndent()
-            
-            onResponse(formattedResponse)
-        } catch (e: Exception) {
-            onError(e)
-        }
     }
 }
