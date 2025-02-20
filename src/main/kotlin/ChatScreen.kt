@@ -149,7 +149,8 @@ fun ChatScreen() {
                         onValueChange = {
                             if (!isProcessing) {
                                 inputText = it
-                                showSuggestions = it.startsWith("/")
+                                // Only show suggestions if we're at the start of a command
+                                showSuggestions = it.startsWith("/") && !it.contains(" ")
                             }
                         },
                         enabled = !isProcessing || isWaitingForAnswer,
@@ -189,7 +190,7 @@ fun ChatScreen() {
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable {
-                                                inputText = command.command
+                                                inputText = command.command + " "
                                                 showSuggestions = false
                                             },
                                         color = Color.Transparent
