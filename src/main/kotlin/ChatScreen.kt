@@ -1,36 +1,20 @@
+package ui.chat
+
 import agent.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.text.input.ImeAction
-import kotlinx.coroutines.launch
-import ai.OpenAIModel
-import config.AppConfig
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-data class ChatMessage(
-    val content: String,
-    val isUser: Boolean
-)
+import ai.OpenAIModel
+import config.AppConfig
 
 @Composable
 fun ChatScreen() {
@@ -41,28 +25,13 @@ fun ChatScreen() {
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
-    var isEditingDirectory by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
-e
-    val onAgentMessage: (String) -> Unit = { message ->
-        messages = messages + ChatMessage(message, false)
-    }
 
-    val chatBot = remember {
-        if (System.getenv("KOMPANION_ENV") == "production") {
-            val config = AppConfig.load()
-            val model = OpenAIModel(config)
-            val contextManager = InMemoryContextManager(workingDirectory)
-            val reasoner = DefaultReasoner(model, contextManager)
-            val codeGenerator = DefaultCodeGenerator(model, contextManager)
-            val agent = CodingAgent(reasoner, codeGenerator)
-            ChatBot(agent, onAgentMessage)
-        } else {
-            FakeChatBot(onAgentMessage)
-        }
-    }
+    val chatBot = remember { createChatBot(workingDirectory) { message -> 
+        messages = messages + ChatMessage(message, false)
+    }}
 
     Column(
         modifier = Modifier.fillMaxSize().background(darkBackground)
@@ -216,26 +185,61 @@ e
     }
 }
 
-@Composable
-private fun MessageBubble(message: ChatMessage) {
-    Surface(
-        color = if (message.isUser) Color(0xFF343541) else Color(0xFF444654),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = if (message.isUser) "You: " else "Kompanion: ",
-                color = Color.Gray,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            Text(
-                text = message.content,
-                color = Color.White,
-                fontSize = 14.sp
-            )
+private fun createChatBot(workingDirectory: String, onMessage: (String) -> Unit): ChatBot {
+    return if (System.getenv("KOMPANION_ENV") == "production") {
+        val config = AppConfig.load()
+        val model = OpenAIModel(config)
+        val contextManager = InMemoryContextManager(workingDirectory)
+        val reasoner = DefaultReasoner(model, contextManager)
+        val codeGenerator = DefaultCodeGenerator(model, contextManager)
+        val agent = CodingAgent(reasoner, codeGenerator)
+        ChatBot(agent, onMessage)
+    } else {
+        FakeChatBot(onMessage)
+    }
+}
+
+private fun handleSendClick(
+    isProcessing: Boolean,
+    currentJob: kotlinx.coroutines.Job?,
+    inputText: String,
+    onProcessingChange: (Boolean) -> Unit,
+    onCurrentJobChange: (kotlinx.coroutines.Job?) -> Unit,
+    onMessagesChange: (List<ChatMessage>) -> Unit,
+    messages: List<ChatMessage>,
+    chatBot: ChatBot,
+    coroutineScope: kotlinx.coroutines.CoroutineScope,
+    onInputTextChange: (String) -> Unit
+) {
+    if (isProcessing) {
+        currentJob?.cancel()
+        onCurrentJobChange(null)
+        onProcessingChange(false)
+        onMessagesChange(messages + ChatMessage("Operation cancelled by user", false))
+    } else if (inputText.isNotBlank()) {
+        val userMessage = inputText
+        onMessagesChange(messages + ChatMessage(userMessage, true))
+        onInputTextChange("")
+        onProcessingChange(true)
+
+        val job = coroutineScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    chatBot.handleMessage(
+                        message = userMessage,
+                        onMessage = { response ->
+                            onMessagesChange(messages + ChatMessage(response, false))
+                            onProcessingChange(false)
+                            onCurrentJobChange(null)
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                onMessagesChange(messages + ChatMessage("Error: ${e.message}", false))
+                onProcessingChange(false)
+                onCurrentJobChange(null)
+            }
         }
+        onCurrentJobChange(job)
     }
 }
