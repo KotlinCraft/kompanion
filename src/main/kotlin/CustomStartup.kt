@@ -43,12 +43,13 @@ class StubInteractionHandler() : InteractionHandler {
         when (agentMessage) {
             is AgentQuestion -> {
                 println("Question from agent: ${agentMessage.message}")
-                return "Stubbed response"
+                print("> ") // Add prompt for user input
+                return readlnOrNull() ?: "no response" // Read from terminal
             }
 
             is AgentResponse -> {
                 println("Message from agent: ${agentMessage.message}")
-                return "Stubbed response"
+                return "" // No response needed for messages
             }
         }
     }
