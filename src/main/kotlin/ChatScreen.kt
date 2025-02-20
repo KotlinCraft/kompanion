@@ -41,7 +41,6 @@ fun ChatScreen() {
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
-    var isEditingDirectory by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
@@ -79,8 +78,11 @@ fun ChatScreen() {
             }
         }
 
-        // Working directory selector
-        workingDirectorySection(darkSecondary, isEditingDirectory, workingDirectory)
+        WorkingDirectorySelector(
+            workingDirectory = workingDirectory,
+            onWorkingDirectoryChange = { newDir -> workingDirectory = newDir },
+            darkSecondary = darkSecondary
+        )
 
         Box(
             modifier = Modifier
@@ -174,58 +176,6 @@ fun ChatScreen() {
     }
 }
 
-@Composable
-private fun workingDirectorySection(
-    darkSecondary: Color,
-    isEditingDirectory: Boolean,
-    workingDirectory: String
-) {
-    var isEditingDirectory1 = isEditingDirectory
-    var workingDirectory1 = workingDirectory
-    Surface(
-        color = darkSecondary,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Working Directory:",
-                color = Color.Gray,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            if (isEditingDirectory1) {
-                TextField(
-                    value = workingDirectory1,
-                    onValueChange = { workingDirectory1 = it },
-                    colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = darkSecondary,
-                        textColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { isEditingDirectory1 = false })
-                )
-            } else {
-                Text(
-                    workingDirectory1,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { isEditingDirectory1 = true }
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun MessageBubble(message: ChatMessage) {
