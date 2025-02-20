@@ -1,6 +1,9 @@
 package agent
 
 import agent.domain.UserRequest
+import agent.interaction.AgentMessage
+import agent.interaction.AgentQuestion
+import agent.interaction.AgentResponse
 
 open class ChatBot(
     private val agent: CodeAgent,
@@ -9,12 +12,19 @@ open class ChatBot(
     init {
         if (agent is CodingAgent) {
             agent.setMessageCallback(this)
-
         }
     }
 
-    override fun onMessage(message: String) {
-        onMessage?.invoke(message)
+    override fun onMessage(message: AgentMessage) {
+        when (message) {
+            is AgentResponse -> {
+                onMessage?.invoke(message.message)
+            }
+
+            is AgentQuestion -> {
+                onMessage?.invoke(message.message)
+            }
+        }
     }
 
     open suspend fun handleMessage(

@@ -1,5 +1,7 @@
 package agent
 
+import agent.interaction.AgentMessage
+
 interface AgentMessageCallback {
-    fun onMessage(message: String)
+    fun onMessage(message: AgentMessage)
 }

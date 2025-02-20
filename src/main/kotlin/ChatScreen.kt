@@ -148,14 +148,15 @@ fun ChatScreen() {
                             currentJob = coroutineScope.launch {
                                 try {
                                     withContext(Dispatchers.IO) {
-                                        chatBot.handleMessage(
+                                        val response = chatBot.handleMessage(
                                             message = userMessage,
                                             onMessage = { response ->
                                                 messages = messages + ChatMessage(response, false)
-                                                isProcessing = false
-                                                currentJob = null
                                             }
                                         )
+                                        messages = messages + ChatMessage(response, false)
+                                        currentJob = null
+                                        isProcessing = false
                                     }
                                 } catch (e: Exception) {
                                     messages = messages + ChatMessage("Error: ${e.message}", false)

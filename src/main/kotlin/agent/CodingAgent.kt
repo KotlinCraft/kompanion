@@ -1,6 +1,7 @@
 package agent
 
 import agent.domain.*
+import agent.interaction.AgentResponse
 import org.slf4j.LoggerFactory
 
 class CodingAgent(
@@ -14,7 +15,7 @@ class CodingAgent(
     }
 
     private fun sendMessage(message: String) {
-        messageCallback?.onMessage(message)
+        messageCallback?.onMessage(AgentResponse(message))
     }
 
     private val logger = LoggerFactory.getLogger(this::class.java)
