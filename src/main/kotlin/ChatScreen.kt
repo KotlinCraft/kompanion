@@ -166,45 +166,6 @@ fun ChatScreen() {
             darkBackground = darkBackground,
             onSettingsClick = { showSettings = true }
         )
-        
-        // Enhanced visual indicator for current mode using a Surface with elevation and icon
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            color = if (mode == "code") Color(0xFF1E88E5) else Color(0xFF43A047),
-            shape = RoundedCornerShape(16.dp),
-            elevation = 8.dp
-        ) {
-            Row(
-                modifier = Modifier.padding(vertical = 6.dp, horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                if (mode == "code") {
-                    Icon(
-                        imageVector = Icons.Default.Code,
-                        contentDescription = "Code Mode",
-                        tint = Color.White,
-                        modifier = Modifier.size(12.dp)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.QuestionAnswer,
-                        contentDescription = "Ask Mode",
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (mode == "code") "Code Mode" else "Ask Mode",
-                    color = Color.White,
-                    style = MaterialTheme.typography.h6
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
 
         // Messages area
         LazyColumn(
@@ -220,11 +181,57 @@ fun ChatScreen() {
             }
         }
 
-        WorkingDirectorySelector(
-            workingDirectory = workingDirectory,
-            onWorkingDirectoryChange = { newDir -> workingDirectory = newDir },
-            darkSecondary = darkSecondary
-        )
+        // Row with Working Directory (left) and Mode Indicator (right)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                WorkingDirectorySelector(
+                    workingDirectory = workingDirectory,
+                    onWorkingDirectoryChange = { newDir -> workingDirectory = newDir },
+                    darkSecondary = darkSecondary
+                )
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = if (mode == "code") Color(0xFF1E88E5) else Color(0xFF43A047),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = 8.dp
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (mode == "code") {
+                            Icon(
+                                imageVector = Icons.Default.Code,
+                                contentDescription = "Code Mode",
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.QuestionAnswer,
+                                contentDescription = "Ask Mode",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (mode == "code") "Code Mode" else "Ask Mode",
+                            color = Color.White,
+                            style = MaterialTheme.typography.h6
+                        )
+                    }
+                }
+            }
+        }
 
         Box(
             modifier = Modifier
