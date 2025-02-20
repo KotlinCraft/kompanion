@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
@@ -47,7 +49,7 @@ fun ChatScreen() {
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
 
-    // New mode state variable ("code" or "ask")
+    // Mode state variable: "code" or "ask"
     var mode by remember { mutableStateOf("code") }
 
     var showSuggestions by remember { mutableStateOf(false) }
@@ -165,16 +167,42 @@ fun ChatScreen() {
             onSettingsClick = { showSettings = true }
         )
         
-        // Visual indicator for current mode (Code Mode or Ask Mode)
-        Box(
+        // Enhanced visual indicator for current mode using a Surface with elevation and icon
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .background(color = if (mode == "code") Color.Blue else Color.Green, shape = RoundedCornerShape(8.dp))
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
+                .padding(horizontal = 16.dp),
+            color = if (mode == "code") Color(0xFF1E88E5) else Color(0xFF43A047),
+            shape = RoundedCornerShape(16.dp),
+            elevation = 8.dp
         ) {
-            Text(text = if (mode == "code") "Code Mode" else "Ask Mode", color = Color.White)
+            Row(
+                modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (mode == "code") {
+                    Icon(
+                        imageVector = Icons.Default.Code,
+                        contentDescription = "Code Mode",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.QuestionAnswer,
+                        contentDescription = "Ask Mode",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (mode == "code") "Code Mode" else "Ask Mode",
+                    color = Color.White,
+                    style = MaterialTheme.typography.h6
+                )
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
 
