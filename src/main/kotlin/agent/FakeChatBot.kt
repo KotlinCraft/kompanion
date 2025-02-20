@@ -5,6 +5,7 @@ import agent.domain.UserRequest
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
+import agent.interaction.InteractionHandler
 import kotlinx.coroutines.delay
 
 class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeAgent(), onMessage) {
@@ -12,14 +13,10 @@ class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeA
         message: String,
     ): String {
         delay(2000) // Simulate some initial processing
-        onAgentInteraction(AgentResponse("Starting to process your request..."))
+        interact(AgentResponse("Starting to process your request..."))
 
         delay(2000) // Simulate more processing
-        onAgentInteraction(AgentResponse("Analyzing code patterns..."))
-
-        val response = onAgentInteraction(AgentQuestion("wait, how old are you again?"))
-
-        println(response)
+        interact(AgentResponse("Analyzing code patterns..."))
 
         delay(2000) // Final delay before response
 
@@ -46,5 +43,8 @@ class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeA
     private class FakeAgent : CodeAgent {
         override suspend fun process(request: UserRequest) = throw UnsupportedOperationException()
         override suspend fun addFeedback(feedback: UserFeedback) = throw UnsupportedOperationException()
+        override fun registerHandler(interactionHandler: InteractionHandler) {
+            //don't do anything
+        }
     }
 }

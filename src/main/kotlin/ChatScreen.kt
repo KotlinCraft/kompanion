@@ -141,7 +141,7 @@ fun ChatScreen() {
                     ),
                     placeholder = {
                         Text(
-                            if (isProcessing && !isWaitingForAnswer) "Thinking really hard..." 
+                            if (isProcessing && !isWaitingForAnswer) "Thinking really hard..."
                             else if (isWaitingForAnswer) "Answer the question..."
                             else "Ask me about your code...",
                             color = Color.Gray

@@ -1,22 +1,30 @@
 package agent
 
 import agent.domain.*
+import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
+import agent.interaction.InteractionHandler
 import org.slf4j.LoggerFactory
 
 class CodingAgent(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
 ) : CodeAgent {
-    private var messageCallback: AgentMessageCallback? = null
 
-    fun setMessageCallback(callback: AgentMessageCallback) {
-        messageCallback = callback
+    lateinit var interactionHandler: InteractionHandler
+
+    override fun registerHandler(interactionHandler: InteractionHandler) {
+        this.interactionHandler = interactionHandler
     }
 
     private suspend fun sendMessage(message: String) {
-        messageCallback?.onAgentInteraction(AgentResponse(message))
+        interactionHandler.interact(AgentResponse(message))
     }
+
+    private suspend fun askQuestion(question: String): String {
+        return interactionHandler.interact(AgentQuestion(question))
+    }
+
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 

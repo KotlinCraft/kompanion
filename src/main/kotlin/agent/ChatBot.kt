@@ -2,19 +2,15 @@ package agent
 
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
+import agent.interaction.InteractionHandler
 
 open class ChatBot(
     private val agent: CodeAgent,
     private val onMessage: suspend ((message: AgentMessage) -> String)
-) : AgentMessageCallback {
-    init {
-        if (agent is CodingAgent) {
-            agent.setMessageCallback(this)
-        }
-    }
+) : InteractionHandler {
 
-    override suspend fun onAgentInteraction(message: AgentMessage): String {
-        return onMessage(message)
+    init {
+        agent.registerHandler(this)
     }
 
     open suspend fun handleMessage(
@@ -40,5 +36,9 @@ open class ChatBot(
                 
                 Confidence: ${response.confidence * 100}%
             """.trimIndent()
+    }
+
+    override suspend fun interact(agentMessage: AgentMessage): String {
+        return onMessage(agentMessage)
     }
 }
