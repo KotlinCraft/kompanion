@@ -19,10 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import config.AppConfig
@@ -36,7 +33,8 @@ import ui.chat.WorkingDirectorySelector
 
 private data class SlashCommand(
     val command: String,
-    val description: String
+    val description: String,
+    val run: () -> Unit = {}
 )
 
 private val slashCommands = listOf(
@@ -54,7 +52,9 @@ fun ChatScreen() {
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
-    var isCodeMode by remember { mutableStateOf(false) }
+
+    var isCodeMode by remember { mutableStateOf(true) }
+
     var showSuggestions by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
     var pendingQuestion by remember { mutableStateOf<AgentQuestion?>(null) }
@@ -103,6 +103,29 @@ fun ChatScreen() {
 
     var showSettings by remember { mutableStateOf(false) }
 
+    fun sendToBot(userMessage: String) {
+        // Handle new request
+        isProcessing = true
+        currentJob = coroutineScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val response = chatBot.handleMessage(message = userMessage)
+                    messages = messages + ChatMessage(response, false)
+                    currentJob = null
+                    isProcessing = false
+                }
+            } catch (e: Exception) {
+                messages = messages + ChatMessage("Error: ${e.message}", false)
+                isProcessing = false
+                currentJob = null
+            }
+        }
+    }
+
+    fun performSlashCommand(first: SlashCommand) {
+        first.run()
+    }
+
     // Local function to send the current message (and cancel if already processing)
     fun sendCurrentMessage() {
         if (isProcessing && !isWaitingForAnswer) {
@@ -120,21 +143,14 @@ fun ChatScreen() {
                 pendingQuestion = null
                 userResponse = userMessage
             } else {
-                // Handle new request
-                isProcessing = true
-                currentJob = coroutineScope.launch {
-                    try {
-                        withContext(Dispatchers.IO) {
-                            val response = chatBot.handleMessage(message = userMessage)
-                            messages = messages + ChatMessage(response, false)
-                            currentJob = null
-                            isProcessing = false
-                        }
-                    } catch (e: Exception) {
-                        messages = messages + ChatMessage("Error: ${e.message}", false)
-                        isProcessing = false
-                        currentJob = null
-                    }
+                if (slashCommands.any {
+                        it.command == userMessage.trim()
+                    }) {
+                    performSlashCommand(slashCommands.first {
+                        it.command == userMessage.trim()
+                    })
+                } else {
+                    sendToBot(userMessage)
                 }
             }
         }
