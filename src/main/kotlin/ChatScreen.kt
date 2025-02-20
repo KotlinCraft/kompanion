@@ -211,6 +211,11 @@ fun ChatScreen() {
                 MessageBubble(message)
             }
         }
+        
+        // Automatically scroll to the bottom on new messages
+        LaunchedEffect(key1 = messages.size) {
+            listState.animateScrollToItem(messages.size)
+        }
 
         // Working Directory Selector (full width)
         Box(
