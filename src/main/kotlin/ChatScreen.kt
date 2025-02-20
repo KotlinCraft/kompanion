@@ -103,8 +103,9 @@ fun ChatScreen() {
             ) {
                 TextField(
                     value = inputText,
-                    onValueChange = { inputText = it },
+                    onValueChange = { if (!isProcessing) inputText = it },
                     modifier = Modifier.weight(1f),
+                    enabled = !isProcessing,
                     colors = TextFieldDefaults.textFieldColors(
                         backgroundColor = darkSecondary,
                         textColor = Color.White,
