@@ -16,7 +16,6 @@ sealed class FileChange {
     data class CreateFile(
         val path: String,
         val content: String,
-        val language: String
     ) : FileChange()
 
     data class ModifyFile(

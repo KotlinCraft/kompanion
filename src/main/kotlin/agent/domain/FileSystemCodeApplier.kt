@@ -9,14 +9,11 @@ class FileSystemCodeApplier(private val contextManager: ContextManager) : CodeAp
         return when (fileChange) {
             is FileChange.CreateFile -> {
                 try {
-                    val fullPath = if(Paths.get(fileChange.path).exists()) 
-                        Paths.get(fileChange.path) 
-                    else 
-                        Paths.get(contextManager.fetchWorkingDirectory(), fileChange.path)
+                    val fullPath = Paths.get(fileChange.path)
 
                     // Create parent directories if they don't exist
                     fullPath.parent?.toFile()?.mkdirs()
-                    
+
                     // Create and write to the file
                     fullPath.toFile().writeText(fileChange.content)
                     true
@@ -28,7 +25,10 @@ class FileSystemCodeApplier(private val contextManager: ContextManager) : CodeAp
 
             is FileChange.ModifyFile -> {
                 try {
-                    val fullPath = if(Paths.get(fileChange.path).exists()) Paths.get(fileChange.path) else Paths.get(contextManager.fetchWorkingDirectory(), fileChange.path)
+                    val fullPath = if (Paths.get(fileChange.path).exists()) Paths.get(fileChange.path) else Paths.get(
+                        contextManager.fetchWorkingDirectory(),
+                        fileChange.path
+                    )
 
 
                     if (!fullPath.exists()) {

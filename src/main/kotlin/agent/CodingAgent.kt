@@ -47,7 +47,6 @@ class CodingAgent(
                 when (change) {
                     is FileChange.CreateFile -> {
                         appendLine("📄 CREATE NEW FILE: ${change.path}")
-                        appendLine("   Language: ${change.language}")
                         appendLine("   Content preview (first 200 chars):")
                         appendLine("   ${change.content.take(200)}${if (change.content.length > 200) "..." else ""}")
                         appendLine()

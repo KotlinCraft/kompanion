@@ -33,7 +33,7 @@ fun main() {
 
         val response = agent.process(
             UserRequest(
-                instruction = "add a function that takes two numbers and returns their sum in CustomStartup.kt"
+                instruction = "create a new file called 'hello.txt' with the content 'Hello, World!'",
             )
         )
     }
