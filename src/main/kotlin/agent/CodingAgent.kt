@@ -39,6 +39,33 @@ class CodingAgent(
         }
     }
 
+    private fun formatFileChanges(fileChanges: List<FileChange>): String {
+        return buildString {
+            appendLine("File changes overview:")
+            appendLine("----------------------")
+            fileChanges.forEach { change ->
+                when (change) {
+                    is FileChange.CreateFile -> {
+                        appendLine("📄 CREATE NEW FILE: ${change.path}")
+                        appendLine("   Language: ${change.language}")
+                        appendLine("   Content preview (first 200 chars):")
+                        appendLine("   ${change.content.take(200)}${if (change.content.length > 200) "..." else ""}")
+                        appendLine()
+                    }
+                    is FileChange.ModifyFile -> {
+                        appendLine("📝 MODIFY FILE: ${change.path}")
+                        change.changes.forEachIndexed { index, modification ->
+                            appendLine("   Change #${index + 1}: ${modification.description}")
+                            appendLine("   - Remove: ${modification.searchContent.take(100)}${if (modification.searchContent.length > 100) "..." else ""}")
+                            appendLine("   + Add: ${modification.replaceContent.take(100)}${if (modification.replaceContent.length > 100) "..." else ""}")
+                        }
+                        appendLine()
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun process(request: UserRequest): CodingAgentResponse {
         logger.info("Processing user request: ${request.instruction}")
         sendMessage("Analyzing your request...")
@@ -67,6 +94,8 @@ class CodingAgent(
             if (evaluation.meetsRequirements) {
                 logger.info("Requirements met. Asking for user confirmation.")
                 sendMessage("I've generated code that meets all requirements. Here's what I'm planning to change:")
+                sendMessage(formatFileChanges(generationResult.fileChanges))
+                sendMessage("\nExplanation of changes:")
                 sendMessage(generationResult.explanation)
                 
                 val userConfirmed = confirmWithUser("Would you like me to apply these changes?")
