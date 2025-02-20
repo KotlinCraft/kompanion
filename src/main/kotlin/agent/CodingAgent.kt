@@ -76,7 +76,7 @@ class CodingAgent(
                         fileChanges = emptyList(),
                         explanation = "Changes were rejected by user.",
                         nextSteps = listOf("Consider providing different requirements or explaining what wasn't right"),
-                        confidence = 0.0f
+                        confidence = 0.9f
                     )
                 }
                 
@@ -90,7 +90,6 @@ class CodingAgent(
                 )
             }
 
-            logger.info("Requirements not met. Updating current code and retrying.")
             currentCode = generationResult.fileChanges.joinToString("\n") {
                 when (it) {
                     is FileChange.CreateFile -> it.content
@@ -101,8 +100,6 @@ class CodingAgent(
             }
             iterations++
         }
-
-        logger.warn("Reached maximum iterations. Returning best attempt.")
 
         return CodingAgentResponse(
             fileChanges = generationResult!!.fileChanges,
