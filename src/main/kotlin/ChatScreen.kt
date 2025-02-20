@@ -44,17 +44,26 @@ fun ChatScreen() {
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
+    var isWaitingForAnswer by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
+    var pendingQuestion by remember { mutableStateOf<AgentQuestion?>(null) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     val onAgentMessage: (AgentMessage) -> String = { message ->
-        messages = when (message) {
-            is AgentQuestion -> messages + ChatMessage(message.message, false)
-            is AgentResponse -> messages + ChatMessage(message.message, false)
+        when (message) {
+            is AgentQuestion -> {
+                messages = messages + ChatMessage(message.message, false)
+                isWaitingForAnswer = true
+                pendingQuestion = message
+                ""
+            }
+            is AgentResponse -> {
+                messages = messages + ChatMessage(message.message, false)
+                ""
+            }
         }
-        ""
     }
 
     val chatBot = remember {
@@ -151,20 +160,29 @@ fun ChatScreen() {
                             val userMessage = inputText
                             messages = messages + ChatMessage(userMessage, true)
                             inputText = ""
-                            isProcessing = true
 
-                            currentJob = coroutineScope.launch {
-                                try {
-                                    withContext(Dispatchers.IO) {
-                                        val response = chatBot.handleMessage(message = userMessage)
-                                        messages = messages + ChatMessage(response, false)
-                                        currentJob = null
+                            if (isWaitingForAnswer && pendingQuestion != null) {
+                                // Handle answer to pending question
+                                isWaitingForAnswer = false
+                                val question = pendingQuestion
+                                pendingQuestion = null
+                                return@IconButton
+                            } else {
+                                // Handle new request
+                                isProcessing = true
+                                currentJob = coroutineScope.launch {
+                                    try {
+                                        withContext(Dispatchers.IO) {
+                                            val response = chatBot.handleMessage(message = userMessage)
+                                            messages = messages + ChatMessage(response, false)
+                                            currentJob = null
+                                            isProcessing = false
+                                        }
+                                    } catch (e: Exception) {
+                                        messages = messages + ChatMessage("Error: ${e.message}", false)
                                         isProcessing = false
+                                        currentJob = null
                                     }
-                                } catch (e: Exception) {
-                                    messages = messages + ChatMessage("Error: ${e.message}", false)
-                                    isProcessing = false
-                                    currentJob = null
                                 }
                             }
                         }
