@@ -15,7 +15,7 @@ class CodingAgent(
     }
 
     private fun sendMessage(message: String) {
-        messageCallback?.onMessage(AgentResponse(message))
+        messageCallback?.onAgentInteraction(AgentResponse(message))
     }
 
     private val logger = LoggerFactory.getLogger(this::class.java)

@@ -13,8 +13,8 @@ open class ChatBot(
         }
     }
 
-    override fun onMessage(message: AgentMessage) {
-        onMessage(message)
+    override fun onAgentInteraction(message: AgentMessage) {
+        onAgentInteraction(message)
     }
 
     open suspend fun handleMessage(

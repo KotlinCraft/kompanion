@@ -11,10 +11,10 @@ class FakeChatBot(onMessage: ((AgentMessage) -> Unit)) : ChatBot(FakeAgent(), on
         message: String,
     ): String {
         delay(2000) // Simulate some initial processing
-        onMessage(AgentResponse("Starting to process your request..."))
+        onAgentInteraction(AgentResponse("Starting to process your request..."))
 
         delay(2000) // Simulate more processing
-        onMessage(AgentResponse("Analyzing code patterns..."))
+        onAgentInteraction(AgentResponse("Analyzing code patterns..."))
 
         delay(2000) // Final delay before response
 
