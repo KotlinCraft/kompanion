@@ -77,6 +77,7 @@ class CodingAgent(
         }
 
         logger.warn("Reached maximum iterations. Returning best attempt.")
+
         return CodingAgentResponse(
             fileChanges = generationResult!!.fileChanges,
             explanation = "Reached maximum iterations. Current best attempt provided.",
