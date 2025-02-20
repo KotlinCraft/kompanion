@@ -298,27 +298,28 @@ fun ChatScreen() {
     }
 
 
-    @Composable
-    fun MessageBubble(message: ChatMessage) {
-        Surface(
-            color = if (message.isUser) Color(0xFF343541) else Color(0xFF444654),
-            modifier = Modifier.fillMaxWidth()
+}
+
+@Composable
+private fun MessageBubble(message: ChatMessage) {
+    Surface(
+        color = if (message.isUser) Color(0xFF343541) else Color(0xFF444654),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = if (message.isUser) "You: " else "Kompanion: ",
-                    color = Color.Gray,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = message.content,
-                    color = Color.White,
-                    fontSize = 14.sp
-                )
-            }
+            Text(
+                text = if (message.isUser) "You: " else "Kompanion: ",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(
+                text = message.content,
+                color = Color.White,
+                fontSize = 14.sp
+            )
         }
     }
 }
