@@ -3,7 +3,6 @@ package agent
 import agent.domain.UserFeedback
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
-import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
 import kotlinx.coroutines.delay
