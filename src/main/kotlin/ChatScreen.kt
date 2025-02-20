@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import ui.chat.WorkingDirectorySelector
 
@@ -51,14 +52,18 @@ fun ChatScreen() {
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
-    val onAgentMessage: (AgentMessage) -> String = { message ->
+    val onAgentMessage: suspend (AgentMessage) -> String = { message ->
         when (message) {
             is AgentQuestion -> {
                 messages = messages + ChatMessage(message.message, false)
                 isWaitingForAnswer = true
                 pendingQuestion = message
+                while (isWaitingForAnswer) {
+                    delay(100)
+                }
                 ""
             }
+
             is AgentResponse -> {
                 messages = messages + ChatMessage(message.message, false)
                 ""
