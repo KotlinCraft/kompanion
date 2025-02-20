@@ -41,6 +41,7 @@ fun ChatScreen() {
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
+    var isCodeMode by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
     var pendingQuestion by remember { mutableStateOf<AgentQuestion?>(null) }
     val listState = rememberLazyListState()
@@ -176,7 +177,15 @@ fun ChatScreen() {
                             messages = messages + ChatMessage(userMessage, true)
                             inputText = ""
 
-                            if (isWaitingForAnswer && pendingQuestion != null) {
+                            if (userMessage.startsWith("/")) {
+                                when (userMessage.lowercase()) {
+                                    "/code" -> {
+                                        isCodeMode = true
+                                        messages = messages + ChatMessage("Changed to code mode", false)
+                                        return@IconButton
+                                    }
+                                }
+                            } else if (isWaitingForAnswer && pendingQuestion != null) {
                                 // Handle answer to pending question
                                 isWaitingForAnswer = false
                                 pendingQuestion = null
