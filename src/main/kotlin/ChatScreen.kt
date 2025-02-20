@@ -195,7 +195,11 @@ fun ChatScreen() {
                     darkSecondary = darkSecondary
                 )
             }
-            Box(modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .align(Alignment.Bottom)
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = if (mode == "code") Color(0xFF1E88E5) else Color(0xFF43A047),
