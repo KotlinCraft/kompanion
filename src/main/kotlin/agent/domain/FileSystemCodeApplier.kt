@@ -23,8 +23,6 @@ class FileSystemCodeApplier(private val contextManager: ContextManager) : CodeAp
 
                     val file = fullPath.toFile()
 
-
-
                     var content = file.readText()
 
                     // Apply each change sequentially
