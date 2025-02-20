@@ -19,6 +19,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import config.AppConfig
@@ -99,8 +103,47 @@ fun ChatScreen() {
 
     var showSettings by remember { mutableStateOf(false) }
 
+    // Local function to send the current message (and cancel if already processing)
+    fun sendCurrentMessage() {
+        if (isProcessing && !isWaitingForAnswer) {
+            currentJob?.cancel()
+            currentJob = null
+            isProcessing = false
+            messages = messages + ChatMessage("Operation cancelled by user", false)
+        } else if (inputText.isNotBlank()) {
+            val userMessage = inputText
+            messages = messages + ChatMessage(userMessage, true)
+            inputText = ""
+            if (isWaitingForAnswer && pendingQuestion != null) {
+                // Handle answer to pending question
+                isWaitingForAnswer = false
+                pendingQuestion = null
+                userResponse = userMessage
+            } else {
+                // Handle new request
+                isProcessing = true
+                currentJob = coroutineScope.launch {
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val response = chatBot.handleMessage(message = userMessage)
+                            messages = messages + ChatMessage(response, false)
+                            currentJob = null
+                            isProcessing = false
+                        }
+                    } catch (e: Exception) {
+                        messages = messages + ChatMessage("Error: ${e.message}", false)
+                        isProcessing = false
+                        currentJob = null
+                    }
+                }
+            }
+        }
+    }
+
     Column(
-        modifier = Modifier.fillMaxSize().background(darkBackground)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(darkBackground)
     ) {
         TopBar(
             darkBackground = darkBackground,
@@ -110,7 +153,9 @@ fun ChatScreen() {
         // Messages area
         LazyColumn(
             state = listState,
-            modifier = Modifier.weight(1f).fillMaxWidth(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -142,7 +187,14 @@ fun ChatScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .onKeyEvent { event ->
+                            if (event.key == Key.Enter && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
+                                sendCurrentMessage()
+                                true
+                            } else false
+                        }
                 ) {
                     TextField(
                         value = inputText,
@@ -217,7 +269,6 @@ fun ChatScreen() {
                             }
                         }
                     }
-
                 }
 
                 Spacer(Modifier.width(8.dp))
@@ -233,41 +284,7 @@ fun ChatScreen() {
 
                 IconButton(
                     onClick = {
-                        if (isProcessing && !isWaitingForAnswer) {
-                            currentJob?.cancel()
-                            currentJob = null
-                            isProcessing = false
-                            messages = messages + ChatMessage("Operation cancelled by user", false)
-                        } else if (inputText.isNotBlank()) {
-                            val userMessage = inputText
-                            messages = messages + ChatMessage(userMessage, true)
-                            inputText = ""
-
-                            if (isWaitingForAnswer && pendingQuestion != null) {
-                                // Handle answer to pending question
-                                isWaitingForAnswer = false
-                                pendingQuestion = null
-                                userResponse = userMessage
-                                return@IconButton
-                            } else {
-                                // Handle new request
-                                isProcessing = true
-                                currentJob = coroutineScope.launch {
-                                    try {
-                                        withContext(Dispatchers.IO) {
-                                            val response = chatBot.handleMessage(message = userMessage)
-                                            messages = messages + ChatMessage(response, false)
-                                            currentJob = null
-                                            isProcessing = false
-                                        }
-                                    } catch (e: Exception) {
-                                        messages = messages + ChatMessage("Error: ${e.message}", false)
-                                        isProcessing = false
-                                        currentJob = null
-                                    }
-                                }
-                            }
-                        }
+                        sendCurrentMessage()
                     }
                 ) {
                     Icon(
