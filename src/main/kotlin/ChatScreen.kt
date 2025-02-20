@@ -54,10 +54,10 @@ fun ChatScreen() {
         if (System.getenv("KOMPANION_ENV") == "production") {
             val config = AppConfig.load()
             val model = OpenAIModel(config)
-            val contextManager = InMemoryContextManager()
+            val contextManager = InMemoryContextManager(workingDirectory)
             val reasoner = DefaultReasoner(model, contextManager)
             val codeGenerator = DefaultCodeGenerator(model, contextManager)
-            val agent = CodeGenerationAgent(reasoner, codeGenerator)
+            val agent = CodingAgent(reasoner, codeGenerator)
             ChatBot(agent, onAgentMessage)
         } else {
             FakeChatBot(onAgentMessage)
@@ -189,17 +189,8 @@ fun ChatScreen() {
                                     withContext(Dispatchers.IO) {
                                         chatBot.handleMessage(
                                             message = userMessage,
-                                            onResponse = { response ->
+                                            onMessage = { response ->
                                                 messages = messages + ChatMessage(response, false)
-                                                isProcessing = false
-                                                currentJob = null
-                                            },
-                                            onError = { error ->
-                                                if (error is kotlinx.coroutines.CancellationException) {
-                                                    // Handled above with the cancellation message
-                                                    return@handleMessage
-                                                }
-                                                messages = messages + ChatMessage("Error: ${error.message}", false)
                                                 isProcessing = false
                                                 currentJob = null
                                             }
