@@ -229,79 +229,76 @@ fun ChatScreen() {
                 }
 
                 IconButton(
-                        onClick = {
-                            if (isProcessing && !isWaitingForAnswer) {
-                                currentJob?.cancel()
-                                currentJob = null
-                                isProcessing = false
-                                messages = messages + ChatMessage("Operation cancelled by user", false)
-                            } else if (inputText.isNotBlank()) {
-                                val userMessage = inputText
-                                messages = messages + ChatMessage(userMessage, true)
-                                inputText = ""
+                    onClick = {
+                        if (isProcessing && !isWaitingForAnswer) {
+                            currentJob?.cancel()
+                            currentJob = null
+                            isProcessing = false
+                            messages = messages + ChatMessage("Operation cancelled by user", false)
+                        } else if (inputText.isNotBlank()) {
+                            val userMessage = inputText
+                            messages = messages + ChatMessage(userMessage, true)
+                            inputText = ""
 
-                                if (userMessage.startsWith("/")) {
-                                    when (userMessage.lowercase()) {
-                                        "/code" -> {
-                                            isCodeMode = true
-                                            messages = messages + ChatMessage("Changed to code mode", false)
-                                            return@IconButton
-                                        }
-
-                                        "/help" -> {
-                                            messages = messages + ChatMessage(
-                                                "Available commands:\n" + slashCommands.joinToString("\n") {
-                                                    "${it.command} - ${it.description}"
-                                                },
-                                                false
-                                            )
-                                            return@IconButton
-                                        }
-
-                                        "/clear" -> {
-                                            messages = emptyList()
-                                            return@IconButton
-                                        }
+                            if (userMessage.startsWith("/")) {
+                                when (userMessage.lowercase()) {
+                                    "/code" -> {
+                                        isCodeMode = true
+                                        messages = messages + ChatMessage("Changed to code mode", false)
+                                        return@IconButton
                                     }
-                                } else if (isWaitingForAnswer && pendingQuestion != null) {
-                                    // Handle answer to pending question
-                                    isWaitingForAnswer = false
-                                    pendingQuestion = null
-                                    userResponse = userMessage
-                                    return@IconButton
-                                } else {
-                                    // Handle new request
-                                    isProcessing = true
-                                    currentJob = coroutineScope.launch {
-                                        try {
-                                            withContext(Dispatchers.IO) {
-                                                val response = chatBot.handleMessage(message = userMessage)
-                                                messages = messages + ChatMessage(response, false)
-                                                currentJob = null
-                                                isProcessing = false
-                                            }
-                                        } catch (e: Exception) {
-                                            messages = messages + ChatMessage("Error: ${e.message}", false)
-                                            isProcessing = false
+
+                                    "/help" -> {
+                                        messages = messages + ChatMessage(
+                                            "Available commands:\n" + slashCommands.joinToString("\n") {
+                                                "${it.command} - ${it.description}"
+                                            },
+                                            false
+                                        )
+                                        return@IconButton
+                                    }
+
+                                    "/clear" -> {
+                                        messages = emptyList()
+                                        return@IconButton
+                                    }
+                                }
+                            } else if (isWaitingForAnswer && pendingQuestion != null) {
+                                // Handle answer to pending question
+                                isWaitingForAnswer = false
+                                pendingQuestion = null
+                                userResponse = userMessage
+                                return@IconButton
+                            } else {
+                                // Handle new request
+                                isProcessing = true
+                                currentJob = coroutineScope.launch {
+                                    try {
+                                        withContext(Dispatchers.IO) {
+                                            val response = chatBot.handleMessage(message = userMessage)
+                                            messages = messages + ChatMessage(response, false)
                                             currentJob = null
+                                            isProcessing = false
                                         }
+                                    } catch (e: Exception) {
+                                        messages = messages + ChatMessage("Error: ${e.message}", false)
+                                        isProcessing = false
+                                        currentJob = null
                                     }
                                 }
                             }
                         }
-                    ) {
-                        Icon(
-                            if (isProcessing) Icons.Default.Close else Icons.Default.Send,
-                            contentDescription = if (isProcessing) "Cancel" else "Send",
-                            tint = Color.White
-                        )
                     }
+                ) {
+                    Icon(
+                        if (isProcessing) Icons.Default.Close else Icons.Default.Send,
+                        contentDescription = if (isProcessing) "Cancel" else "Send",
+                        tint = Color.White
+                    )
                 }
             }
         }
     }
-
-
 }
 
 @Composable
