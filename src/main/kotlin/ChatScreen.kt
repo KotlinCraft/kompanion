@@ -30,8 +30,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ui.ChatMessage
-import ui.MessageBubble
+import ui.chat.ChatMessage
+import ui.chat.MessageBubble
 import ui.chat.WorkingDirectorySelector
 import ui.SettingsDialog
 
@@ -55,14 +55,14 @@ fun ChatScreen() {
     var mode by remember { mutableStateOf("code") }
 
     var showSuggestions by remember { mutableStateOf(false) }
-    var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
+    var workingDirectory by remember { mutableStateOf(AppConfig.load().latestDirectory) }
     var pendingQuestion by remember { mutableStateOf<AgentQuestion?>(null) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     var userResponse by remember { mutableStateOf("") }
-    
+
     var showSettings by remember { mutableStateOf(false) }
     var configState by remember { mutableStateOf(AppConfig.load()) }
 
@@ -107,8 +107,20 @@ fun ChatScreen() {
     val slashCommands = listOf(
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
-        SlashCommand("/help", "Show available commands"),
-        SlashCommand("/clear", "Clear chat history")
+        SlashCommand("/help", "Show available commands") {
+            messages = messages + ChatMessage(
+                """
+                Available commands:
+                /code - Switch to code mode
+                /ask - Switch to ask mode
+                /help - Show available commands
+                /clear - Clear chat history
+                """.trimIndent(), false
+            )
+        },
+        SlashCommand("/clear", "Clear chat history") {
+            messages = emptyList()
+        }
     )
 
     fun sendToBot(userMessage: String) {
@@ -134,28 +146,35 @@ fun ChatScreen() {
         first.run()
     }
 
+    fun cancelProcessing() {
+        currentJob?.cancel()
+        currentJob = null
+        isProcessing = false
+        messages = messages + ChatMessage("Operation cancelled by user", false)
+    }
+
     // Local function to send the current message (and cancel if already processing)
     fun sendCurrentMessage() {
+        showSuggestions = false
         if (isProcessing && !isWaitingForAnswer) {
-            currentJob?.cancel()
-            currentJob = null
-            isProcessing = false
-            messages = messages + ChatMessage("Operation cancelled by user", false)
+            cancelProcessing()
         } else if (inputText.isNotBlank()) {
             val userMessage = inputText
-            messages = messages + ChatMessage(userMessage, true)
             inputText = ""
+
+            if (slashCommands.any { it.command == userMessage.trim() }) {
+                performSlashCommand(slashCommands.first { it.command == userMessage.trim() })
+                return
+            }
+
+            messages = messages + ChatMessage(userMessage, true)
             if (isWaitingForAnswer && pendingQuestion != null) {
                 // Handle answer to pending question
                 isWaitingForAnswer = false
                 pendingQuestion = null
                 userResponse = userMessage
             } else {
-                if (slashCommands.any { it.command == userMessage.trim() }) {
-                    performSlashCommand(slashCommands.first { it.command == userMessage.trim() })
-                } else {
-                    sendToBot(userMessage)
-                }
+                sendToBot(userMessage)
             }
         }
     }
@@ -170,7 +189,7 @@ fun ChatScreen() {
             mode = mode,
             onSettingsClick = { showSettings = true }
         )
-        
+
         if (showSettings) {
             SettingsDialog(initialConfig = configState, onClose = {
                 configState = it
@@ -201,7 +220,12 @@ fun ChatScreen() {
         ) {
             WorkingDirectorySelector(
                 workingDirectory = workingDirectory,
-                onWorkingDirectoryChange = { newDir -> workingDirectory = newDir },
+                onWorkingDirectoryChange = { newDir ->
+                    workingDirectory = newDir
+                    AppConfig.save(
+                        AppConfig.load().copy(latestDirectory = newDir)
+                    )
+                },
                 darkSecondary = darkSecondary
             )
         }
@@ -265,7 +289,7 @@ fun ChatScreen() {
                         Surface(
                             modifier = Modifier
                                 .align(Alignment.TopStart)
-                                .offset(y = (-4).dp),
+                                .offset(x = ((inputText.length) * 20).dp),
                             elevation = 4.dp,
                             shape = RoundedCornerShape(8.dp),
                             color = darkSecondary
@@ -275,7 +299,7 @@ fun ChatScreen() {
                             ) {
                                 slashCommands
                                     .filter { it.command.startsWith(inputText) }
-                                    .take(3)
+                                    .take(1)
                                     .forEach { command ->
                                         Surface(
                                             modifier = Modifier
