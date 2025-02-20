@@ -27,6 +27,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ui.chat.WorkingDirectorySelector
 
+private data class SlashCommand(
+    val command: String,
+    val description: String
+)
+
+private val slashCommands = listOf(
+    SlashCommand("/code", "Switch to code mode"),
+    SlashCommand("/help", "Show available commands"),
+    SlashCommand("/clear", "Clear chat history")
+)
+
 data class ChatMessage(
     val content: String,
     val isUser: Boolean
@@ -42,6 +53,7 @@ fun ChatScreen() {
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
     var isCodeMode by remember { mutableStateOf(false) }
+    var showSuggestions by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(System.getProperty("user.dir")) }
     var pendingQuestion by remember { mutableStateOf<AgentQuestion?>(null) }
     val listState = rememberLazyListState()
@@ -131,9 +143,15 @@ fun ChatScreen() {
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextField(
-                    value = inputText,
-                    onValueChange = { if (!isProcessing) inputText = it },
+                Box {
+                    TextField(
+                        value = inputText,
+                        onValueChange = { 
+                            if (!isProcessing) {
+                                inputText = it
+                                showSuggestions = it.startsWith("/")
+                            }
+                        },
                     modifier = Modifier.weight(1f),
                     enabled = !isProcessing || isWaitingForAnswer,
                     colors = TextFieldDefaults.textFieldColors(
@@ -153,6 +171,49 @@ fun ChatScreen() {
                     },
                     shape = RoundedCornerShape(8.dp)
                 )
+                
+                if (showSuggestions) {
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .offset(y = (-4).dp),
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(8.dp),
+                        color = darkSecondary
+                    ) {
+                        Column(
+                            modifier = Modifier.width(300.dp)
+                        ) {
+                            slashCommands.take(3).forEach { command ->
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { 
+                                            inputText = command.command
+                                            showSuggestions = false 
+                                        },
+                                    color = Color.Transparent
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp)
+                                    ) {
+                                        Text(
+                                            text = command.command,
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            modifier = Modifier.width(80.dp)
+                                        )
+                                        Text(
+                                            text = command.description,
+                                            color = Color.Gray,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Spacer(Modifier.width(8.dp))
 
@@ -182,6 +243,19 @@ fun ChatScreen() {
                                     "/code" -> {
                                         isCodeMode = true
                                         messages = messages + ChatMessage("Changed to code mode", false)
+                                        return@IconButton
+                                    }
+                                    "/help" -> {
+                                        messages = messages + ChatMessage(
+                                            "Available commands:\n" + slashCommands.joinToString("\n") { 
+                                                "${it.command} - ${it.description}" 
+                                            },
+                                            false
+                                        )
+                                        return@IconButton
+                                    }
+                                    "/clear" -> {
+                                        messages = emptyList()
                                         return@IconButton
                                     }
                                 }
