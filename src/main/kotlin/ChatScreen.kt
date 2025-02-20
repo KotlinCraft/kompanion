@@ -1,4 +1,5 @@
 import agent.*
+import agent.domain.FileSystemCodeApplier
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
@@ -31,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import ui.chat.WorkingDirectorySelector
+import java.nio.file.FileSystem
 
 data class ChatMessage(
     val content: String,
@@ -83,7 +85,8 @@ fun ChatScreen() {
             val contextManager = InMemoryContextManager(workingDirectory)
             val reasoner = DefaultReasoner(model, contextManager)
             val codeGenerator = DefaultCodeGenerator(model, contextManager)
-            val agent = CodingAgent(reasoner, codeGenerator)
+            val codeApplier = FileSystemCodeApplier(contextManager)
+            val agent = CodingAgent(reasoner, codeGenerator, codeApplier)
             ChatBot(agent, onAgentMessage)
         } else {
             FakeChatBot(onAgentMessage)

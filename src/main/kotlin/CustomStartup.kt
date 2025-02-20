@@ -1,4 +1,5 @@
 import agent.*
+import agent.domain.FileSystemCodeApplier
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
@@ -25,13 +26,14 @@ fun main() {
         val agent = CodingAgent(
             DefaultReasoner(defaultModel, contextManager),
             DefaultCodeGenerator(defaultModel, contextManager),
+            FileSystemCodeApplier(contextManager)
         ).also {
             it.registerHandler(interactionHandler)
         }
 
         val response = agent.process(
             UserRequest(
-                instruction = "add a function that takes two numbers and returns their sum"
+                instruction = "add a function that takes two numbers and returns their sum in CustomStartup.kt"
             )
         )
     }

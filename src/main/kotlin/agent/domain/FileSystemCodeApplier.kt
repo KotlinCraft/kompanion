@@ -1,9 +1,8 @@
 package agent.domain
 
 import agent.ContextManager
-import java.io.File
-import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.exists
 
 class FileSystemCodeApplier(private val contextManager: ContextManager) : CodeApplier {
     override fun apply(fileChange: FileChange): Boolean {
@@ -14,16 +13,20 @@ class FileSystemCodeApplier(private val contextManager: ContextManager) : CodeAp
 
             is FileChange.ModifyFile -> {
                 try {
-                    val fullPath = Paths.get(contextManager.fetchWorkingDirectory(), fileChange.path)
-                    val file = fullPath.toFile()
-                    
-                    if (!file.exists()) {
-                        println("Error: File ${file.absolutePath} does not exist")
+                    val fullPath = if(Paths.get(fileChange.path).exists()) Paths.get(fileChange.path) else Paths.get(contextManager.fetchWorkingDirectory(), fileChange.path)
+
+
+                    if (!fullPath.exists()) {
+                        println("Error: File ${fullPath} does not exist")
                         return false
                     }
 
+                    val file = fullPath.toFile()
+
+
+
                     var content = file.readText()
-                    
+
                     // Apply each change sequentially
                     fileChange.changes.forEach { change ->
                         content = content.replace(change.searchContent, change.replaceContent)

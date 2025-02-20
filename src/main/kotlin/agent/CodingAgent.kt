@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 class CodingAgent(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
+    private val codeApplier: CodeApplier
 ) : CodeAgent {
 
     lateinit var interactionHandler: InteractionHandler
@@ -24,7 +25,6 @@ class CodingAgent(
     private suspend fun askQuestion(question: String): String {
         return interactionHandler.interact(AgentQuestion(question))
     }
-
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -52,6 +52,7 @@ class CodingAgent(
                         appendLine("   ${change.content.take(200)}${if (change.content.length > 200) "..." else ""}")
                         appendLine()
                     }
+
                     is FileChange.ModifyFile -> {
                         appendLine("📝 MODIFY FILE: ${change.path}")
                         change.changes.forEachIndexed { index, modification ->
@@ -97,7 +98,7 @@ class CodingAgent(
                 sendMessage(formatFileChanges(generationResult.fileChanges))
                 sendMessage("\nExplanation of changes:")
                 sendMessage(generationResult.explanation)
-                
+
                 val userConfirmed = confirmWithUser("Would you like me to apply these changes?")
                 if (!userConfirmed) {
                     logger.info("User rejected changes.")
@@ -108,7 +109,12 @@ class CodingAgent(
                         confidence = 0.9f
                     )
                 }
-                
+
+                generationResult.fileChanges.forEach {
+                    val result = codeApplier.apply(it)
+                    logger.info("did it work? $result")
+                }
+
                 logger.info("User confirmed changes. Returning successful response.")
                 sendMessage("Proceeding with the changes!")
                 return CodingAgentResponse(
