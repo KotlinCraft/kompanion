@@ -174,6 +174,7 @@ fun ChatScreen() {
     }
 }
 
+@Composable
 private fun workingDirectorySection(
     darkSecondary: Color,
     isEditingDirectory: Boolean,
