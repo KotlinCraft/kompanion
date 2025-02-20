@@ -141,7 +141,9 @@ fun ChatScreen() {
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
                     TextField(
                         value = inputText,
                         onValueChange = {
@@ -158,6 +160,7 @@ fun ChatScreen() {
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
+                        modifier = Modifier.fillMaxWidth(),
                         placeholder = {
                             Text(
                                 if (isProcessing && !isWaitingForAnswer) "Thinking really hard..."
@@ -212,18 +215,20 @@ fun ChatScreen() {
                         }
                     }
 
+                }
+
+                Spacer(Modifier.width(8.dp))
+
+                if (isProcessing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
                     Spacer(Modifier.width(8.dp))
+                }
 
-                    if (isProcessing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(Modifier.width(8.dp))
-                    }
-
-                    IconButton(
+                IconButton(
                         onClick = {
                             if (isProcessing && !isWaitingForAnswer) {
                                 currentJob?.cancel()
