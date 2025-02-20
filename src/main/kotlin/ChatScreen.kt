@@ -45,7 +45,7 @@ fun ChatScreen() {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
-
+e
     val onAgentMessage: (String) -> Unit = { message ->
         messages = messages + ChatMessage(message, false)
     }
