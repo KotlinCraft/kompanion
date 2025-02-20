@@ -165,6 +165,21 @@ fun ChatScreen() {
             darkBackground = darkBackground,
             onSettingsClick = { showSettings = true }
         )
+        
+        // Visual indicator for Code Mode
+        if (isCodeMode) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .background(color = Color.Blue, shape = RoundedCornerShape(8.dp))
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "Code Mode", color = Color.White)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
         // Messages area
         LazyColumn(
