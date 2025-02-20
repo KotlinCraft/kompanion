@@ -30,7 +30,6 @@ class FileSystemCodeApplier(private val contextManager: ContextManager) : CodeAp
                         fileChange.path
                     )
 
-
                     if (!fullPath.exists()) {
                         println("Error: File ${fullPath} does not exist")
                         return false

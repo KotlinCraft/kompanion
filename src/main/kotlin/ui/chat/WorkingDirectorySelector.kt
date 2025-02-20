@@ -30,12 +30,6 @@ fun WorkingDirectorySelector(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                "Working Directory:",
-                color = Color.Gray,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(end = 8.dp)
-            )
             if (isEditingDirectory) {
                 TextField(
                     value = workingDirectory,

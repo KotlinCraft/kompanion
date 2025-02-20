@@ -14,12 +14,14 @@ fun main() {
     val config = AppConfig.load()
     val defaultModel = OpenAIModel(config)
 
-    val workingDirectory = "/opt/projects/kotlincraft/kompanion"
+    val workingDirectory = "/opt/projects/decentrifi/humanless"
     runBlocking {
 
         val contextManager = InMemoryContextManager(
             workingDirectory = workingDirectory
         )
+
+        val filelist = contextManager.getFullFileList()
 
         val interactionHandler = StubInteractionHandler()
 
@@ -33,7 +35,7 @@ fun main() {
 
         val response = agent.process(
             UserRequest(
-                instruction = "create a new file called 'hello.txt' with the content 'Hello, World!'",
+                instruction = "Let's add excerpt to the GeneratedNews class",
             )
         )
     }

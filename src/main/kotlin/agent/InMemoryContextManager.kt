@@ -30,7 +30,7 @@ class InMemoryContextManager(
 
     override fun getFullFileList(): String {
         return buildString {
-            walkDirectory(File(workingDirectory), this, 0)
+            walkDirectory(File(workingDirectory.trim()), this, 0)
         }
     }
 }
