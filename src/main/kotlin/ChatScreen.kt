@@ -126,7 +126,7 @@ fun ChatScreen() {
                     value = inputText,
                     onValueChange = { if (!isProcessing) inputText = it },
                     modifier = Modifier.weight(1f),
-                    enabled = !isProcessing,
+                    enabled = !isProcessing || isWaitingForAnswer,
                     colors = TextFieldDefaults.textFieldColors(
                         backgroundColor = darkSecondary,
                         textColor = Color.White,
@@ -136,7 +136,9 @@ fun ChatScreen() {
                     ),
                     placeholder = {
                         Text(
-                            if (isProcessing) "Thinking really hard..." else "Ask me about your code...",
+                            if (isProcessing && !isWaitingForAnswer) "Thinking really hard..." 
+                            else if (isWaitingForAnswer) "Answer the question..."
+                            else "Ask me about your code...",
                             color = Color.Gray
                         )
                     },
@@ -156,7 +158,7 @@ fun ChatScreen() {
 
                 IconButton(
                     onClick = {
-                        if (isProcessing) {
+                        if (isProcessing && !isWaitingForAnswer) {
                             currentJob?.cancel()
                             currentJob = null
                             isProcessing = false
