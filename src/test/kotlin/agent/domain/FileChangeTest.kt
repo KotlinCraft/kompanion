@@ -15,7 +15,6 @@ class FileChangeTest {
         val createFile = FileChange.CreateFile(
             path = "src/main/kotlin/NewFile.kt",
             content = "fun main() {}",
-            language = "kotlin"
         )
 
         val json = objectMapper.writeValueAsString(createFile)
