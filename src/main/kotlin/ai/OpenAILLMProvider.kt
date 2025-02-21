@@ -48,7 +48,7 @@ class OpenAILLMProvider : LLMProvider {
 
     override suspend fun <T> prompt(
         input: String,
-        action: List<Action>,
+        actions: List<Action>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
         retry: Boolean
@@ -68,7 +68,7 @@ class OpenAILLMProvider : LLMProvider {
             )
         )
 
-        action.forEach { action ->
+        actions.forEach { action ->
             prompt = action.enrichPrompt(prompt)
         }
 
@@ -89,7 +89,7 @@ class OpenAILLMProvider : LLMProvider {
                         )
                     )
 
-                    action.forEach { action ->
+                    actions.forEach { action ->
                         prompt = action.enrichPrompt(prompt)
                     }
 

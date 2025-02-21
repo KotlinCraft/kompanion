@@ -37,7 +37,7 @@ interface LLMProvider {
 
     suspend fun <T> prompt(
         input: String,
-        action: List<Action>,
+        actions: List<Action>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
         retry: Boolean = true

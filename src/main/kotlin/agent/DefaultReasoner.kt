@@ -45,7 +45,7 @@ class DefaultReasoner(
         return Either.catch {
             LLMProvider.prompt(
                 input = prompt,
-                action = listOf(
+                actions = listOf(
                     Action(
                         "request_file_context",
                         """Provide a file in context for the request. 
@@ -135,7 +135,7 @@ class DefaultReasoner(
 
         return LLMProvider.prompt(
             input = prompt,
-            action = emptyList(),
+            actions = emptyList(),
             temperature = 0.7,
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {}
         )
@@ -184,7 +184,7 @@ class DefaultReasoner(
 
         return LLMProvider.prompt(
             input = prompt,
-            action = emptyList(),
+            actions = emptyList(),
             temperature = 0.7,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodeEvaluation>() {}
         )

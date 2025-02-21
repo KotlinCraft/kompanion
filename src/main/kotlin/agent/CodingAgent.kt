@@ -82,7 +82,6 @@ class CodingAgent internal constructor(
         val plan = reasoner.createPlan(understanding)
 
         logger.debug("Generation plan created: {}", plan)
-        var currentCode = ""
         var iterations = 0
         val maxIterations = 2
 
@@ -91,7 +90,7 @@ class CodingAgent internal constructor(
         while (iterations < maxIterations) {
             logger.info("Iteration $iterations: Generating code")
             sendMessage("Generating code (iteration ${iterations + 1})...")
-            generationResult = codeGenerator.generate(plan, currentCode)
+            generationResult = codeGenerator.generate(plan, generationResult?.formatted() ?: "")
 
             logger.debug("Generation result: {}", generationResult)
             val evaluation = reasoner.evaluateCode(generationResult, understanding)
@@ -114,10 +113,7 @@ class CodingAgent internal constructor(
                     )
                 }
 
-                generationResult.fileChanges.forEach {
-                    val result = codeApplier.apply(it)
-                    logger.debug("did it work? $result")
-                }
+                codeGenerator.execute(plan, generationResult)
 
                 logger.info("User confirmed changes. Returning successful response.")
                 sendMessage("✅Proceeding with the changes!")
@@ -129,14 +125,6 @@ class CodingAgent internal constructor(
                 )
             }
 
-            currentCode = generationResult.fileChanges.joinToString("\n") {
-                when (it) {
-                    is FileChange.CreateFile -> it.content
-                    is FileChange.ModifyFile -> it.changes.joinToString("\n") { change ->
-                        change.replaceContent
-                    }
-                }
-            }
             iterations++
         }
 
