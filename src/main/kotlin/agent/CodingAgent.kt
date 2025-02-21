@@ -111,11 +111,11 @@ class CodingAgent internal constructor(
 
                 generationResult.fileChanges.forEach {
                     val result = codeApplier.apply(it)
-                    logger.info("did it work? $result")
+                    logger.debug("did it work? $result")
                 }
 
                 logger.info("User confirmed changes. Returning successful response.")
-                sendMessage("Proceeding with the changes!")
+                sendMessage("✅Proceeding with the changes!")
                 return CodingAgentResponse(
                     fileChanges = generationResult.fileChanges,
                     explanation = generationResult.explanation,

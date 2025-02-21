@@ -24,18 +24,7 @@ open class ChatBot(
         )
 
         // Format response for chat
-        return """
-                Generated Code:
-                ```
-                
-                Explanation:
-                ${response.explanation}
-                
-                Next Steps:
-                ${response.nextSteps.joinToString("\n")}
-                
-                Confidence: ${response.confidence * 100}%
-            """.trimIndent()
+        return """ℹ️ ${response.explanation}""".trimIndent()
     }
 
     override suspend fun interact(agentMessage: AgentMessage): String {
