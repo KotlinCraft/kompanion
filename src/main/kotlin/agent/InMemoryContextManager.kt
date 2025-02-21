@@ -12,9 +12,8 @@ import kotlin.io.path.absolutePathString
 
 class InMemoryContextManager : ContextManager {
 
-
-    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())
-    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()
+    private val _files = MutableStateFlow<List<CodeFile>>(listOf())
+    val files: StateFlow<List<CodeFile>> = _files.asStateFlow()
 
     init {
         updateFiles(
@@ -28,18 +27,19 @@ class InMemoryContextManager : ContextManager {
         )
     }
 
-    override fun getContext(): StateFlow<Map<String, CodeFile>> {
+    override fun getContext(): StateFlow<List<CodeFile>> {
         return files
     }
 
     override fun updateFiles(files: List<CodeFile>) {
         files.forEach { file ->
-            this.files.value[file.path.absolutePathString()] = file
+            val unique = files + this.files.value
+            this._files.value = unique
         }
     }
 
     override fun clearContext() {
-        files.value.clear()
+        _files.value = emptyList()
     }
 
     override fun fetchWorkingDirectory(): String {
