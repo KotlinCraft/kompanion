@@ -14,11 +14,25 @@ import androidx.compose.ui.unit.sp
 fun FilePill(fileName: String) {
     Text(
         text = fileName,
-        color = Color.White,
+        color = textColor(fileName),
         fontSize = 12.sp,
         modifier = Modifier
             .padding(1.dp)
-            .background(color = Color.Gray, shape = RoundedCornerShape(15.dp))
+            .background(color = pillColor(fileName), shape = RoundedCornerShape(15.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     )
+}
+
+private fun textColor(fileName: String): Color {
+    return when {
+        fileName.endsWith(".kt") || fileName.endsWith(".kts") -> Color.White
+        else -> Color.Black
+    }
+}
+
+private fun pillColor(fileName: String): Color {
+    return when {
+        fileName.endsWith(".kt") || fileName.endsWith(".kts") -> Color(0xFF2E6F40)
+        else -> Color.LightGray
+    }
 }
