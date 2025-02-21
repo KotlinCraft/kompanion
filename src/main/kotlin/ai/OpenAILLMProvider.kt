@@ -18,6 +18,10 @@ import org.springframework.core.ParameterizedTypeReference
 class OpenAILLMProvider(
     val config: AppConfig
 ) : LLMProvider {
+    
+    init {
+        LLMProvider.register(this.javaClass)
+    }
 
     val logger = LoggerFactory.getLogger(this::class.java)
 
