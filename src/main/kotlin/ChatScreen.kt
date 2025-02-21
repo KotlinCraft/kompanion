@@ -1,5 +1,6 @@
 import agent.ChatBot
 import agent.FakeChatBot
+import agent.domain.CodeFile
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
@@ -31,7 +32,9 @@ import ui.SettingsDialog
 import ui.chat.ChatMessage
 import ui.chat.MessageBubble
 import ui.chat.WorkingDirectorySelector
+import java.nio.file.Path
 import kotlin.io.path.name
+import kotlin.random.Random
 
 private data class SlashCommand(
     val command: String,
@@ -101,8 +104,19 @@ fun ChatScreen() {
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
+        SlashCommand("/clear-context", "Clear the file context") {
+            chatBot.agent.fetchContextManager().clearContext()
+            messages = messages + ChatMessage("File context cleared.", false)
+        },
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
+        SlashCommand("/add", "Switch to ask mode") {
+            chatBot.agent.fetchContextManager().updateFiles(
+                listOf(
+                    CodeFile(Path.of("/opt/test${Random(1000).nextInt()}.html"), "", "html")
+                )
+            )
+        },
         SlashCommand("/help", "Show available commands") {
             messages = messages + ChatMessage(
                 """
@@ -362,12 +376,8 @@ fun ChatScreen() {
                 .padding(horizontal = 16.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Surface(
-                color = darkSecondary
-            ) {
-                openFiles.forEach { file ->
-                    FilePill(fileName = file.value.path.name)
-                }
+            openFiles.forEach { file ->
+                FilePill(fileName = file.path.name)
             }
         }
     }
