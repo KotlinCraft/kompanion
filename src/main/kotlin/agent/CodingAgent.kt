@@ -71,7 +71,7 @@ class CodingAgent internal constructor(
         }
     }
 
-    override suspend fun process(request: UserRequest): CodingAgentResponse {
+    override suspend fun processCodingRequest(request: UserRequest): CodingAgentResponse {
         logger.info("Processing user request: ${request.instruction}")
         sendMessage("Analyzing your request...")
         // 1. Analyze request and current context

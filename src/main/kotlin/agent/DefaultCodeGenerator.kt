@@ -119,7 +119,8 @@ class DefaultCodeGenerator(
 
     data class ModifyFileResponse(
         val error: String?,
-        val modifiedContent: String?
+        val modifiedContent: String?,
+        val anythingChanged: Boolean
     )
 
     data class ModifyFileRequest(
@@ -137,20 +138,20 @@ class DefaultCodeGenerator(
 
         if (!fullPath.exists()) {
             println("Error: File ${fullPath} does not exist")
-            return ModifyFileResponse(error = "File does not exist", modifiedContent = "")
+            return ModifyFileResponse(error = "File does not exist", modifiedContent = "", anythingChanged = false)
         }
 
         val file = fullPath.toFile()
 
-        var content = file.readText()
-
-        content = content.replaceFirst(modifyFileRequest.searchContent, modifyFileRequest.replaceContent)
+        val originalContent = file.readText()
+        val newContent = originalContent.replaceFirst(modifyFileRequest.searchContent, modifyFileRequest.replaceContent)
 
         // Write the modified content back to the file
-        file.writeText(content)
+        file.writeText(newContent)
         return ModifyFileResponse(
             error = null,
-            modifiedContent = content
+            modifiedContent = originalContent,
+            anythingChanged = originalContent != newContent
         )
     }
 }

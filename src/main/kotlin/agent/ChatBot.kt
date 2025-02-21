@@ -17,7 +17,7 @@ open class ChatBot(
         message: String
     ): String {
         // Process the request
-        val response = agent.process(
+        val response = agent.processCodingRequest(
             UserRequest(
                 instruction = message,
             )

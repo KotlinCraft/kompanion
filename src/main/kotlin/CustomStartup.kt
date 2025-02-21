@@ -1,15 +1,8 @@
-import agent.CodingAgent
-import agent.DefaultCodeGenerator
-import agent.DefaultReasoner
-import agent.InMemoryContextManager
-import agent.domain.FileSystemCodeApplier
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
-import ai.OpenAILLMProvider
-import config.AppConfig
 import kotlinx.coroutines.runBlocking
 
 fun main() {
@@ -24,9 +17,9 @@ fun main() {
             it.registerHandler(interactionHandler)
         }
 
-        val response = agent.process(
+        val response = agent.processCodingRequest(
             UserRequest(
-                instruction = "add a nice looking title to chatscreen"
+                instruction = "add comments to the customstartup"
             )
         )
     }

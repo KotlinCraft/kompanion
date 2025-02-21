@@ -40,7 +40,7 @@ class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeA
     }
 
     private class FakeAgent : CodeAgent {
-        override suspend fun process(request: UserRequest) = throw UnsupportedOperationException()
+        override suspend fun processCodingRequest(request: UserRequest) = throw UnsupportedOperationException()
         override suspend fun addFeedback(feedback: UserFeedback) = throw UnsupportedOperationException()
         override fun registerHandler(interactionHandler: InteractionHandler) {
             //don't do anything

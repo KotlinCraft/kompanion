@@ -34,7 +34,6 @@ class DefaultReasoner(
             Make sure you have access to every file mentioned in the request before continuing.
             
             User Request: ${request.instruction}
-            ${if (request.codeContext.isNotEmpty()) "Code Context:\n" + request.codeContext.joinToString("\n") { "File: ${it.path}\n${it.content}" } else ""}
             
             Provide a structured analysis including:
             1. The main objective
