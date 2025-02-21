@@ -45,5 +45,9 @@ class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeA
         override fun registerHandler(interactionHandler: InteractionHandler) {
             //don't do anything
         }
+
+        override fun fetchContextManager(): ContextManager {
+            throw UnsupportedOperationException()
+        }
     }
 }

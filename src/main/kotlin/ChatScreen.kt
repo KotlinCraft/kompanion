@@ -1,9 +1,8 @@
-import agent.*
-import agent.domain.FileSystemCodeApplier
+import agent.ChatBot
+import agent.FakeChatBot
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
-import ai.OpenAILLMProvider
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ui.FilePill
 import ui.SettingsDialog
 import ui.chat.ChatMessage
 import ui.chat.MessageBubble
@@ -93,6 +93,9 @@ fun ChatScreen() {
             FakeChatBot(onAgentMessage)
         }
     }
+
+    var openFiles by remember { mutableStateOf(chatBot.agent.fetchContextManager().getContext().map { it.path }) }
+
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
@@ -232,6 +235,18 @@ fun ChatScreen() {
                 .height(1.dp)
                 .background(Color.White.copy(alpha = 0.2f))
         )
+
+        // Display open files below input area
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            openFiles.forEach { file ->
+                FilePill(fileName = file)
+            }
+        }
 
         // Input area
         Surface(

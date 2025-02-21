@@ -5,7 +5,7 @@ import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler
 
 open class ChatBot(
-    private val agent: CodeAgent,
+    val agent: CodeAgent,
     private val onMessage: suspend ((message: AgentMessage) -> String)
 ) : InteractionHandler {
 

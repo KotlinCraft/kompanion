@@ -25,7 +25,7 @@ class DefaultCodeGenerator(
                 }
         }
         
-             You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
+            You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
 
             Based on the following generation plan, generate the necessary code changes. Use files in your current context to provide the changes. 
             Both modification and adding new files requires absolute paths.

@@ -9,13 +9,18 @@ import org.slf4j.LoggerFactory
 class CodingAgent internal constructor(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
-    private val codeApplier: CodeApplier
+    private val codeApplier: CodeApplier,
+    private val contextManager: ContextManager
 ) : CodeAgent {
 
     lateinit var interactionHandler: InteractionHandler
 
     override fun registerHandler(interactionHandler: InteractionHandler) {
         this.interactionHandler = interactionHandler
+    }
+
+    override fun fetchContextManager(): ContextManager {
+        return contextManager
     }
 
     private suspend fun sendMessage(message: String) {
@@ -79,7 +84,7 @@ class CodingAgent internal constructor(
         logger.debug("Generation plan created: {}", plan)
         var currentCode = ""
         var iterations = 0
-        val maxIterations = 1
+        val maxIterations = 2
 
         var generationResult: GenerationResult? = null
 
