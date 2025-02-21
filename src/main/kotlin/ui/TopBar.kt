@@ -20,16 +20,25 @@ fun TopBar(
     mode: String,
     onSettingsClick: () -> Unit
 ) {
+    Row() {
+        IconButton(onClick = onSettingsClick) {
+            Icon(
+                Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = Color.White
+            )
+        }
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .background(darkBackground)
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "Kompanion",
                 color = Color.White,
@@ -54,14 +63,6 @@ fun TopBar(
                     )
                 }
             }
-        }
-        
-        IconButton(onClick = onSettingsClick) {
-            Icon(
-                Icons.Default.Settings,
-                contentDescription = "Settings",
-                tint = Color.White
-            )
         }
     }
 }
