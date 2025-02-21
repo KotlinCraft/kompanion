@@ -6,6 +6,7 @@ import org.springframework.core.ParameterizedTypeReference
  * Provider interface for Large Language Models
  */
 interface LLMProvider {
+
     companion object {
         fun register(providerClass: Class<out LLMProvider>) {
             try {
@@ -15,6 +16,11 @@ interface LLMProvider {
                 // Skip registration if we can't instantiate
             }
         }
+
+        fun load() {
+            println("loading")
+        }
+
     }
     suspend fun <T> prompt(
         input: String,
