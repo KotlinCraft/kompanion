@@ -20,7 +20,7 @@ fun TopBar(
     mode: String,
     onSettingsClick: () -> Unit
 ) {
-    Row() {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         IconButton(onClick = onSettingsClick) {
             Icon(
                 Icons.Default.Settings,

@@ -134,7 +134,18 @@ class DefaultReasoner(
 
         return LLMProvider.prompt(
             input = prompt,
-            actions = emptyList(),
+            actions = listOf(
+                Action(
+                    "request_file_context",
+                    """Provide a file in context for the request. 
+                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
+                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
+                    ActionMethod(
+                        ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java),
+                        this
+                    )
+                )
+            ),
             temperature = 0.7,
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {}
         )

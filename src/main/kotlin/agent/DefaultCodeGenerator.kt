@@ -1,19 +1,26 @@
 package agent
 
+import agent.DefaultReasoner.RequestFileResponse
+import agent.domain.CodeFile
 import agent.domain.GenerationPlan
 import agent.domain.GenerationResult
 import ai.Action
 import ai.ActionMethod
 import ai.LLMProvider
+import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.util.ReflectionUtils
+import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 
 class DefaultCodeGenerator(
     private val LLMProvider: LLMProvider,
     private val contextManager: ContextManager
 ) : CodeGenerator {
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     data class CodingResult(
         val editedFiles: List<String>,
@@ -147,11 +154,38 @@ class DefaultCodeGenerator(
         val newContent = originalContent.replaceFirst(modifyFileRequest.searchContent, modifyFileRequest.replaceContent)
 
         // Write the modified content back to the file
+
         file.writeText(newContent)
         return ModifyFileResponse(
             error = null,
             modifiedContent = originalContent,
             anythingChanged = originalContent != newContent
         )
+    }
+
+    fun requestFileContext(file: String): RequestFileResponse {
+        val filePath = Files.walk(Paths.get(contextManager.fetchWorkingDirectory()))
+            .filter { it.fileName.toString() == file }
+            .findFirst()
+
+        return if (filePath.isPresent) {
+            val content = Files.readString(filePath.get())
+            val path = filePath.get()
+
+            // Add the file to context manager
+            contextManager.updateFiles(
+                listOf(
+                    CodeFile(
+                        path = path,
+                        content = content,
+                        language = path.toString().substringAfterLast('.', "txt")
+                    )
+                )
+            )
+
+            RequestFileResponse(true, path.absolutePathString(), content)
+        } else {
+            RequestFileResponse(false, null, null)
+        }
     }
 }

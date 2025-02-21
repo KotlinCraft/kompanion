@@ -80,6 +80,8 @@ fun ChatScreen() {
                 }
                 val response = userResponse
                 userResponse = ""
+                pendingQuestion = null
+                isProcessing = true
                 response
             }
 
