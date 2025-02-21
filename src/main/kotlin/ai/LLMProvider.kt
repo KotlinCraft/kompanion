@@ -1,5 +1,6 @@
 package ai
 
+import org.reflections.Reflections
 import org.springframework.core.ParameterizedTypeReference
 
 /**
@@ -18,9 +19,20 @@ interface LLMProvider {
         }
 
         fun load() {
-            println("loading")
+            val reflections = Reflections("ai") // Scans the ai package where providers live
+            val providers = reflections.getSubTypesOf(LLMProvider::class.java)
+            
+            providers.forEach { providerClass ->
+                try {
+                    // Skip the interface itself
+                    if (!providerClass.isInterface) {
+                        register(providerClass)
+                    }
+                } catch (e: Exception) {
+                    println("Failed to register provider ${providerClass.simpleName}: ${e.message}")
+                }
+            }
         }
-
     }
     suspend fun <T> prompt(
         input: String,
