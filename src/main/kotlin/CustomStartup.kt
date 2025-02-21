@@ -1,18 +1,21 @@
-import agent.*
+import agent.CodingAgent
+import agent.DefaultCodeGenerator
+import agent.DefaultReasoner
+import agent.InMemoryContextManager
 import agent.domain.FileSystemCodeApplier
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
-import ai.OpenAIModel
+import ai.OpenAILLMProvider
 import config.AppConfig
 import kotlinx.coroutines.runBlocking
 
 fun main() {
 
     val config = AppConfig.load()
-    val defaultModel = OpenAIModel(config)
+    val defaultModel = OpenAILLMProvider()
 
     val workingDirectory = "/opt/projects/decentrifi/humanless"
     runBlocking {
