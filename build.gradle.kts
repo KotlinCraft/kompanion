@@ -39,6 +39,9 @@ dependencies {
 
     // AssertJ for fluent assertions
     testImplementation("org.assertj:assertj-core:3.21.0")
+    
+    // Reflections library for runtime class scanning
+    implementation("org.reflections:reflections:0.10.2")
 }
 
 compose.desktop {

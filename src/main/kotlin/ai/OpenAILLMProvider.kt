@@ -108,6 +108,10 @@ class OpenAILLMProvider(
     }
 
     override fun getSupportedModels(): List<String> {
-        return listOf("gpt-4o")
+        return listOf(
+            "gpt-4",
+            "gpt-4-turbo-preview", 
+            "gpt-3.5-turbo"
+        )
     }
 }
