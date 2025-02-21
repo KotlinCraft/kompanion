@@ -17,6 +17,7 @@ fun FilePill(fileName: String) {
         color = Color.White,
         fontSize = 12.sp,
         modifier = Modifier
+            .padding(1.dp)
             .background(color = Color.Gray, shape = RoundedCornerShape(15.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     )

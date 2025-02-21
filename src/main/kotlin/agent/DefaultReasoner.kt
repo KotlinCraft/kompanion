@@ -11,6 +11,7 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.io.path.absolutePathString
 
 class DefaultReasoner(
     private val LLMProvider: LLMProvider,
@@ -73,7 +74,7 @@ class DefaultReasoner(
 
         return if (filePath.isPresent) {
             val content = Files.readString(filePath.get())
-            val path = filePath.get().toString()
+            val path = filePath.get()
 
             // Add the file to context manager
             contextManager.updateFiles(
@@ -81,12 +82,12 @@ class DefaultReasoner(
                     CodeFile(
                         path = path,
                         content = content,
-                        language = path.substringAfterLast('.', "txt")
+                        language = path.toString().substringAfterLast('.', "txt")
                     )
                 )
             )
 
-            RequestFileResponse(true, path, content)
+            RequestFileResponse(true, path.absolutePathString(), content)
         } else {
             RequestFileResponse(false, null, null)
         }

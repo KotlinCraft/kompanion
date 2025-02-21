@@ -11,20 +11,9 @@ class DefaultCodeGenerator(
 ) : CodeGenerator {
 
     override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
-        val context = contextManager.getContext()
         val prompt = """
             ${contextManager.currentContextPrompt()}
             
-            Files in your current context: 
-            ${
-            if (context.isEmpty()) "no files in context yet" else
-                context.joinToString("\n") {
-                    """File: ${it.path} (language: ${it.language})
-                    |Content: ${it.content}
-                """.trimMargin()
-                }
-        }
-        
             You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
 
             Based on the following generation plan, generate the necessary code changes. Use files in your current context to provide the changes. 

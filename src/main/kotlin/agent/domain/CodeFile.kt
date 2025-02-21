@@ -1,6 +1,9 @@
 package agent.domain
+
+import java.nio.file.Path
+
 data class CodeFile(
-    val path: String,
+    val path: Path,
     val content: String,
     val language: String
 )

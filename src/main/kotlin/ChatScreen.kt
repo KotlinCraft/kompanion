@@ -31,6 +31,7 @@ import ui.SettingsDialog
 import ui.chat.ChatMessage
 import ui.chat.MessageBubble
 import ui.chat.WorkingDirectorySelector
+import kotlin.io.path.name
 
 private data class SlashCommand(
     val command: String,
@@ -38,6 +39,7 @@ private data class SlashCommand(
     val run: () -> Unit = {}
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ChatScreen() {
     val darkBackground = Color(0xFF343541)
@@ -94,7 +96,7 @@ fun ChatScreen() {
         }
     }
 
-    var openFiles by remember { mutableStateOf(chatBot.agent.fetchContextManager().getContext().map { it.path }) }
+    val openFiles by chatBot.agent.fetchContextManager().getContext().collectAsState()
 
 
     // Local slash commands with callbacks to update the mode.
@@ -236,18 +238,6 @@ fun ChatScreen() {
                 .background(Color.White.copy(alpha = 0.2f))
         )
 
-        // Display open files below input area
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            openFiles.forEach { file ->
-                FilePill(fileName = file)
-            }
-        }
-
         // Input area
         Surface(
             color = darkSecondary,
@@ -361,6 +351,22 @@ fun ChatScreen() {
                         contentDescription = if (isProcessing) "Cancel" else "Send",
                         tint = Color.White
                     )
+                }
+            }
+        }
+
+        // Display open files below input area
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 3.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Surface(
+                color = darkSecondary
+            ) {
+                openFiles.forEach { file ->
+                    FilePill(fileName = file.value.path.name)
                 }
             }
         }

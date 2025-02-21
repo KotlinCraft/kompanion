@@ -1,13 +1,14 @@
 package agent
 
 import agent.domain.CodeFile
+import kotlinx.coroutines.flow.StateFlow
 
 interface ContextManager {
     /**
      * Retrieves the current context as a list of CodeFiles.
      * @return A list of CodeFiles representing the current context.
      */
-    fun getContext(): List<CodeFile>
+    fun getContext(): StateFlow<Map<String, CodeFile>>
 
     /**
      * Updates the context with a list of CodeFiles.
@@ -38,7 +39,7 @@ interface ContextManager {
      * @return A formatted string detailing the current context.
      */
     fun currentContextPrompt(): String {
-        val codeFiles = getContext()
+        val codeFiles = getContext().value.values
 
         return """     
             Current working directory is: ${fetchWorkingDirectory()}
