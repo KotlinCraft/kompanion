@@ -6,7 +6,7 @@ import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
 import org.slf4j.LoggerFactory
 
-class CodingAgent(
+class CodingAgent internal constructor(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
     private val codeApplier: CodeApplier

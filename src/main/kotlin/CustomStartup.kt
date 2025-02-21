@@ -14,25 +14,16 @@ import kotlinx.coroutines.runBlocking
 
 fun main() {
 
-    val config = AppConfig.load()
-    val defaultModel = OpenAILLMProvider()
-
     val workingDirectory = "/opt/projects/decentrifi/humanless"
     runBlocking {
-
-        val contextManager = InMemoryContextManager(
-            workingDirectory = workingDirectory
-        )
-
-        val filelist = contextManager.getFullFileList()
-
         val interactionHandler = StubInteractionHandler()
-
-        val agent = CodingAgent(
-            DefaultReasoner(defaultModel, contextManager),
-            DefaultCodeGenerator(defaultModel, contextManager),
-            FileSystemCodeApplier(contextManager)
-        ).also {
+        
+        val kompanion = Kompanion.builder()
+            .withWorkingDirectory(workingDirectory)
+            .withLLMProvider(OpenAILLMProvider())
+            .build()
+            
+        val agent = kompanion.getAgent().also {
             it.registerHandler(interactionHandler)
         }
 
