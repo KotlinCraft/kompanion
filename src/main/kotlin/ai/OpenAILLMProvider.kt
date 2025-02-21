@@ -15,14 +15,7 @@ import org.springframework.ai.openai.OpenAiChatOptions
 import org.springframework.ai.openai.api.OpenAiApi
 import org.springframework.core.ParameterizedTypeReference
 
-class OpenAILLMProvider(
-    val config: AppConfig
-) : LLMProvider {
-    
-    init {
-        LLMProvider.register(this.javaClass)
-    }
-
+class OpenAILLMProvider : LLMProvider {
     val logger = LoggerFactory.getLogger(this::class.java)
 
     var temperature = 1.0
@@ -33,12 +26,13 @@ class OpenAILLMProvider(
     }
 
     fun createModel(): OpenAiChatModel {
-        if (config.openAiKey.isBlank()) {
+        val key = AppConfig.load().openAiKey
+        if (key.isBlank()) {
             throw IllegalArgumentException("openAiKey is not set")
         }
 
         return OpenAiChatModel.builder()
-            .openAiApi(OpenAiApi.builder().apiKey(config.openAiKey).build())
+            .openAiApi(OpenAiApi.builder().apiKey(key).build())
             .defaultOptions(
                 OpenAiChatOptions.builder()
                     .model(modelName)
@@ -113,9 +107,8 @@ class OpenAILLMProvider(
 
     override fun getSupportedModels(): List<String> {
         return listOf(
-            "gpt-4",
-            "gpt-4-turbo-preview", 
-            "gpt-3.5-turbo"
+            "gpt-4o-mini",
+            "gpt-4o",
         )
     }
 }

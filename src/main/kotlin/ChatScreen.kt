@@ -3,7 +3,7 @@ import agent.domain.FileSystemCodeApplier
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
-import ai.OpenAIModel
+import ai.OpenAILLMProvider
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -87,14 +87,8 @@ fun ChatScreen() {
 
     val chatBot = remember {
         if (System.getenv("KOMPANION_ENV") == "production") {
-            val config = AppConfig.load()
-            val model = OpenAIModel(config)
-            val contextManager = InMemoryContextManager(workingDirectory)
-            val reasoner = DefaultReasoner(model, contextManager)
-            val codeGenerator = DefaultCodeGenerator(model, contextManager)
-            val codeApplier = FileSystemCodeApplier(contextManager)
-            val agent = CodingAgent(reasoner, codeGenerator, codeApplier)
-            ChatBot(agent, onAgentMessage)
+            val kompanion = Kompanion.default()
+            ChatBot(kompanion.agent, onAgentMessage)
         } else {
             FakeChatBot(onAgentMessage)
         }
@@ -208,7 +202,7 @@ fun ChatScreen() {
                 MessageBubble(message)
             }
         }
-        
+
         // Automatically scroll to the bottom on new messages
         LaunchedEffect(key1 = messages.size) {
             listState.animateScrollToItem(messages.size)

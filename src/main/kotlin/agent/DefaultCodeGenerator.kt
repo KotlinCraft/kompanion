@@ -2,21 +2,18 @@ package agent
 
 import agent.domain.GenerationPlan
 import agent.domain.GenerationResult
-import ai.Model
+import ai.LLMProvider
 import org.springframework.core.ParameterizedTypeReference
 
 class DefaultCodeGenerator(
-    private val model: Model,
+    private val LLMProvider: LLMProvider,
     private val contextManager: ContextManager
 ) : CodeGenerator {
-
 
     override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
         val context = contextManager.getContext()
         val prompt = """
-            Current working directory is: ${contextManager.fetchWorkingDirectory()}
-
-            You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
+            ${contextManager.currentContextPrompt()}
             
             Files in your current context: 
             ${
@@ -27,7 +24,9 @@ class DefaultCodeGenerator(
                 """.trimMargin()
                 }
         }
-            
+        
+             You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
+
             Based on the following generation plan, generate the necessary code changes. Use files in your current context to provide the changes. 
             Both modification and adding new files requires absolute paths.
             
@@ -67,7 +66,7 @@ class DefaultCodeGenerator(
             }
         """.trimIndent()
 
-        return model.prompt(
+        return LLMProvider.prompt(
             input = prompt,
             action = emptyList(),
             temperature = 0.7,

@@ -4,22 +4,22 @@ package ai
  * Registry for LLM models and their providers
  */
 object LLMRegistry {
-    private val modelProviders = mutableMapOf<String, MutableSet<Class<out LLMProvider>>>()
-    
-    fun registerModels(providerClass: Class<out LLMProvider>, models: List<String>) {
+    private val modelProviders = mutableMapOf<String, LLMProvider>()
+
+    fun registerModels(provider: LLMProvider, models: List<String>) {
         models.forEach { model ->
-            modelProviders.getOrPut(model) { mutableSetOf() }.add(providerClass)
+            modelProviders[model] = provider
         }
     }
-    
-    fun getProvidersForModel(model: String): Set<Class<out LLMProvider>> {
-        return modelProviders[model] ?: emptySet()
+
+    fun getProviderForModel(model: String): LLMProvider? {
+        return modelProviders[model]
     }
-    
+
     fun getAllRegisteredModels(): Set<String> {
         return modelProviders.keys
     }
-    
+
     fun clear() {
         modelProviders.clear()
     }

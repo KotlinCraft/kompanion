@@ -17,13 +17,10 @@ fun main() {
     val workingDirectory = "/opt/projects/decentrifi/humanless"
     runBlocking {
         val interactionHandler = StubInteractionHandler()
-        
-        val kompanion = Kompanion.builder()
-            .withWorkingDirectory(workingDirectory)
-            .withLLMProvider(OpenAILLMProvider())
-            .build()
-            
-        val agent = kompanion.getAgent().also {
+
+        val kompanion = Kompanion.builder().build()
+
+        val agent = kompanion.agent.also {
             it.registerHandler(interactionHandler)
         }
 

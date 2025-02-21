@@ -12,7 +12,7 @@ interface LLMProvider {
         fun register(providerClass: Class<out LLMProvider>) {
             try {
                 val instance = providerClass.getDeclaredConstructor().newInstance()
-                LLMRegistry.registerModels(providerClass, instance.getSupportedModels())
+                LLMRegistry.registerModels(instance, instance.getSupportedModels())
             } catch (e: Exception) {
                 // Skip registration if we can't instantiate
             }
@@ -21,7 +21,7 @@ interface LLMProvider {
         fun load() {
             val reflections = Reflections("ai") // Scans the ai package where providers live
             val providers = reflections.getSubTypesOf(LLMProvider::class.java)
-            
+
             providers.forEach { providerClass ->
                 try {
                     // Skip the interface itself
@@ -34,6 +34,7 @@ interface LLMProvider {
             }
         }
     }
+
     suspend fun <T> prompt(
         input: String,
         action: List<Action>,

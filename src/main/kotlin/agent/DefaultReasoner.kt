@@ -3,7 +3,7 @@ package agent
 import agent.domain.*
 import ai.Action
 import ai.ActionMethod
-import ai.Model
+import ai.LLMProvider
 import arrow.core.Either
 import arrow.core.getOrElse
 import org.slf4j.LoggerFactory
@@ -11,35 +11,22 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
 import java.nio.file.Paths
-import kotlin.math.log
 
 class DefaultReasoner(
-    private val model: Model,
+    private val LLMProvider: LLMProvider,
     private val contextManager: ContextManager
 ) : Reasoner {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun analyzeRequest(request: UserRequest): Understanding {
-        val context = contextManager.getContext()
         val prompt = """
-            Current working directory is: ${contextManager.fetchWorkingDirectory()}
-            The full codebase outline looks like this:
-            ${contextManager.getFullFileList()}
-            
-            Files in your current context: 
-            ${
-            if (context.isEmpty()) "no files in context yet" else
-                context.joinToString("\n") {
-                    """File: ${it.path} (language: ${it.language})
-                    |Content: ${it.content}
-                """.trimMargin()
-                }
-        }
+            ${contextManager.currentContextPrompt()}
             
             Analyze the following code-related request and extract key information.
             The content for various files (but not all) might be provided for context. 
-            If you think a file already exists but its contents was not provided yet, request it using "request_file_context".
+            If you think a file already exists but its contents was not provided yet, request it using "request_file_context". 
+            Only attempt to read files you could find in the outline.
             
             important: We cannot use files that are not in our context yet.
 
@@ -55,7 +42,7 @@ class DefaultReasoner(
         """.trimIndent()
 
         return Either.catch {
-            model.prompt(
+            LLMProvider.prompt(
                 input = prompt,
                 action = listOf(
                     Action(
@@ -76,6 +63,7 @@ class DefaultReasoner(
             throw IllegalArgumentException("I'm afraid I was unable to analyze your request.")
         }
     }
+
 
     fun requestFileContext(file: String): RequestFileResponse {
         logger.info("Looking up file: $file")
@@ -112,6 +100,8 @@ class DefaultReasoner(
 
     override suspend fun createPlan(understanding: Understanding): GenerationPlan {
         val prompt = """
+            ${contextManager.currentContextPrompt()}
+            
             Based on the following understanding of a code request, create a detailed generation plan.
             
             Objective: ${understanding.objective}
@@ -142,7 +132,7 @@ class DefaultReasoner(
             }
         """.trimIndent()
 
-        return model.prompt(
+        return LLMProvider.prompt(
             input = prompt,
             action = emptyList(),
             temperature = 0.7,
@@ -191,7 +181,7 @@ class DefaultReasoner(
             4. Does it follow best practices?
         """.trimIndent()
 
-        return model.prompt(
+        return LLMProvider.prompt(
             input = prompt,
             action = emptyList(),
             temperature = 0.7,
