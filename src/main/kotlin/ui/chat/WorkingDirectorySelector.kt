@@ -19,19 +19,19 @@ fun WorkingDirectorySelector(
 ) {
     Surface(
         color = darkSecondary,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(0.3f)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(12.dp, 5.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = workingDirectory,
-                color = Color.White,
-                fontSize = 14.sp,
+                text = "› $workingDirectory",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 10.sp,
                 modifier = Modifier
                     .weight(1f)
                     .clickable {

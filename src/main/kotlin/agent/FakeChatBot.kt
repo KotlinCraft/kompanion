@@ -49,5 +49,13 @@ class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeA
         override fun fetchContextManager(): ContextManager {
             throw UnsupportedOperationException()
         }
+
+        override suspend fun sendMessage(message: String) {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun askQuestion(question: String): String {
+            TODO("Not yet implemented")
+        }
     }
 }

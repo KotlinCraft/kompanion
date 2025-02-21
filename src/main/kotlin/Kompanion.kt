@@ -63,12 +63,10 @@ class KompanionBuilder {
 
         val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)
         val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
-        val finalApplier = codeApplier ?: FileSystemCodeApplier(finalContextManager)
 
         val agent = CodingAgent(
             reasoner = finalReasoner,
             codeGenerator = finalGenerator,
-            codeApplier = finalApplier,
             finalContextManager
         ).also {
             if (interactionHandler != null) {

@@ -233,26 +233,32 @@ fun ChatScreen() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
         ) {
-            WorkingDirectorySelector(
-                workingDirectory = workingDirectory,
-                onWorkingDirectoryChange = { newDir ->
-                    workingDirectory = newDir
-                    AppConfig.save(
-                        AppConfig.load().copy(latestDirectory = newDir)
-                    )
-                },
-                darkSecondary = darkSecondary
-            )
-        }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Color.White.copy(alpha = 0.2f))
-        )
+            Row(modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)) {
+                WorkingDirectorySelector(
+                    workingDirectory = workingDirectory,
+                    onWorkingDirectoryChange = { newDir ->
+                        workingDirectory = newDir
+                        AppConfig.save(
+                            AppConfig.load().copy(latestDirectory = newDir)
+                        )
+                    },
+                    darkSecondary = darkSecondary
+                )
+
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(0.7f)
+                ) {
+                    openFiles.forEach { file ->
+                        FilePill(fileName = file.path.name)
+                    }
+                }
+            }
+
+
+        }
 
         // Input area
         Surface(
@@ -368,18 +374,6 @@ fun ChatScreen() {
                         tint = Color.White
                     )
                 }
-            }
-        }
-
-        // Display open files below input area
-        FlowRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 3.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            openFiles.forEach { file ->
-                FilePill(fileName = file.path.name)
             }
         }
     }
