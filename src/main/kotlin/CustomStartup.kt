@@ -26,7 +26,7 @@ fun main() {
 
         val response = agent.process(
             UserRequest(
-                instruction = "Let's add excerpt to the GeneratedNews class",
+                instruction = "add a nice looking title to chatscreen"
             )
         )
     }

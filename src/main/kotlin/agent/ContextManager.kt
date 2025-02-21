@@ -8,7 +8,7 @@ interface ContextManager {
      * Retrieves the current context as a list of CodeFiles.
      * @return A list of CodeFiles representing the current context.
      */
-    fun getContext(): StateFlow<Map<String, CodeFile>>
+    fun getContext(): StateFlow<List<CodeFile>>
 
     /**
      * Updates the context with a list of CodeFiles.
@@ -39,7 +39,7 @@ interface ContextManager {
      * @return A formatted string detailing the current context.
      */
     fun currentContextPrompt(): String {
-        val codeFiles = getContext().value.values
+        val codeFiles = getContext().value
 
         return """     
             Current working directory is: ${fetchWorkingDirectory()}
