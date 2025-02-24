@@ -25,7 +25,7 @@ class CodingMode(
 
         logger.debug("Generation plan created: {}", plan)
         var iterations = 0
-        val maxIterations = 2
+        val maxIterations = 3
 
         var generationResult: GenerationResult? = null
 
