@@ -15,6 +15,8 @@ fun SettingsDialog(
     onClose: (AppConfig) -> Unit
 ) {
     var openAiKey by remember { mutableStateOf(initialConfig.openAiKey) }
+var smallModel by remember { mutableStateOf(initialConfig.model.small) }
+var bigModel by remember { mutableStateOf(initialConfig.model.big) }
 
     Dialog(onDismissRequest = { onClose(initialConfig.copy(openAiKey = openAiKey)) }) {
         Surface(
@@ -30,6 +32,20 @@ fun SettingsDialog(
                 Text(text = "Settings", style = MaterialTheme.typography.h6)
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
+value = smallModel,
+onValueChange = { smallModel = it },
+label = { Text("Small Model") },
+modifier = Modifier.fillMaxWidth()
+)
+Spacer(modifier = Modifier.height(16.dp))
+OutlinedTextField(
+value = bigModel,
+onValueChange = { bigModel = it },
+label = { Text("Big Model") },
+modifier = Modifier.fillMaxWidth()
+)
+Spacer(modifier = Modifier.height(16.dp))
+OutlinedTextField(
                     value = openAiKey,
                     onValueChange = { openAiKey = it },
                     label = { Text("OpenAI Key") },
@@ -40,7 +56,7 @@ fun SettingsDialog(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = { onClose(initialConfig.copy(openAiKey = openAiKey)) }) {
+                    Button(onClick = { onClose(initialConfig.copy(openAiKey = openAiKey, model = initialConfig.model.copy(small = smallModel, big = bigModel))) }) {
                         Text("Save and Close")
                     }
                 }
