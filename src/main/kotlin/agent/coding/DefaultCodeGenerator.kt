@@ -26,7 +26,8 @@ class DefaultCodeGenerator(
     val modifyFileAction = Action(
         "modify_file",
         """
-            |Modify a file, providing a regex search term and the replacement. 
+            |Modify a file, providing an exact search search and the replacement. 
+            |note: make the search content unique to avoid replacing unintended content.
             |The entire file, post edit, will be returned so you can verify the changes.""".trimMargin(),
         ActionMethod(
             ReflectionUtils.findMethod(this::class.java, "modifyFile", ModifyFileRequest::class.java), this
@@ -52,8 +53,9 @@ class DefaultCodeGenerator(
             ${contextManager.currentContextPrompt()}
             
             You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
-
-            Based on the following generation plan you have generated the necessary code changes. Use files in your current context to understand your changes. 
+            Based on the following generation plan you have generated the necessary code changes. 
+            Use files in your current context to understand your changes. 
+            If the result is not what you expected, you can retry.
             
             Code changes to be applied:
             ${generationResult.formatted()}
@@ -111,7 +113,7 @@ class DefaultCodeGenerator(
                   "content": "file content for CreateFile",
                   "changes": [
                     {
-                      "searchContent": "content to search for",
+                      "searchContent": "exact content to search for, not regex.",
                       "replaceContent": "content to replace with",
                       "description": "description of the change"
                     }

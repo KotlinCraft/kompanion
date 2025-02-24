@@ -1,5 +1,6 @@
 import KompanionBuilder.AgentMode.ASK
 import KompanionBuilder.AgentMode.CODE
+import agent.InMemoryContextManager
 import agent.domain.CodeFile
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
@@ -92,10 +93,15 @@ fun ChatScreen() {
         }
     }
 
+    val inMemoryContextManager = remember {
+        InMemoryContextManager()
+    }
+
     val codingKompanion = remember {
         Kompanion.builder()
             .withMode(CODE)
             .withInteractionHandler(interactionHandler)
+            .withContextManager(inMemoryContextManager)
             .build()
     }
 
@@ -103,6 +109,7 @@ fun ChatScreen() {
         Kompanion.builder()
             .withMode(ASK)
             .withInteractionHandler(interactionHandler)
+            .withContextManager(inMemoryContextManager)
             .build()
     }
 

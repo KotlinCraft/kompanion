@@ -21,7 +21,7 @@ class Agent internal constructor(
         return mode.perform(request).also { response ->
             if (KompanionFileHandler.kompanionFolderExists()) {
                 KompanionFileHandler.append(KompanionFile.MESSAGE_HISTORY.fileName, "User: $request")
-                KompanionFileHandler.append(KompanionFile.MESSAGE_HISTORY.fileName, "User: $response")
+                KompanionFileHandler.append(KompanionFile.MESSAGE_HISTORY.fileName, "Kompanion: $response")
             }
         }
     }

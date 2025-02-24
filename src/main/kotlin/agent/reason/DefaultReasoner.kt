@@ -72,6 +72,7 @@ class DefaultReasoner(
                     )
                 )
             )
+            logger.info("exists: file $file")
 
             RequestFileResponse(true, path.absolutePathString(), content)
         } else {
