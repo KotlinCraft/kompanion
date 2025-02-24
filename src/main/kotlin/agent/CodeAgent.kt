@@ -13,8 +13,8 @@ interface CodeAgent : Coder, Analyst, Interactor {
         while (true) {
             val response = askUser("$message\nPlease respond with Y or N:")
             when (response.trim().uppercase()) {
-                "Y" -> return true
-                "N" -> return false
+                "Y", "y", "yes" -> return true
+                "N", "n", "no" -> return false
                 else -> sendMessage("Invalid response. Please answer with Y or N.")
             }
         }
