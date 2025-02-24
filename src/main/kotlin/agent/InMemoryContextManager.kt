@@ -50,12 +50,12 @@ class InMemoryContextManager : ContextManager {
     }
 
     override fun fetchWorkingDirectory(): String {
-        return AppConfig.load().currentDirectory
+        return AppConfig.load().latestDirectory
     }
 
     override fun getFullFileList(): String {
         return buildString {
-            walkDirectory(File(AppConfig.load().currentDirectory.trim()), this, 0)
+            walkDirectory(File(AppConfig.load().latestDirectory.trim()), this, 0)
         }
     }
 }

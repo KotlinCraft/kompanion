@@ -15,13 +15,13 @@ class KompanionFileHandler {
         }
 
         fun folderExists(): Boolean {
-            val latestDirectory = AppConfig.load().currentDirectory
+            val latestDirectory = AppConfig.load().latestDirectory
             val folder = File("$latestDirectory/$KOMPANION_FOLDER")
             return folder.exists()
         }
 
         fun createFolder() {
-            val latestDirectory = AppConfig.load().currentDirectory
+            val latestDirectory = AppConfig.load().latestDirectory
             val folder = File("$latestDirectory/$KOMPANION_FOLDER")
             if (!folder.exists()) {
                 folder.mkdirs()
@@ -29,7 +29,7 @@ class KompanionFileHandler {
         }
 
         fun readFromKompanionDirectory(fileName: String): String {
-            val latestDirectory = AppConfig.load().currentDirectory
+            val latestDirectory = AppConfig.load().latestDirectory
             val filePath = "$latestDirectory/$KOMPANION_FOLDER/$fileName"
             return try {
                 val file = File(filePath)
@@ -41,7 +41,7 @@ class KompanionFileHandler {
         }
 
         fun appendToKompanionFile(fileName: String, text: String) {
-            val latestDirectory = AppConfig.load().currentDirectory
+            val latestDirectory = AppConfig.load().latestDirectory
             val filePath = "$latestDirectory/$KOMPANION_FOLDER/$fileName"
             try {
                 val file = File(filePath)
@@ -53,7 +53,7 @@ class KompanionFileHandler {
         }
 
         fun createFile(kompanionFile: KompanionFile) {
-            val latestDirectory = AppConfig.load().currentDirectory
+            val latestDirectory = AppConfig.load().latestDirectory
             val filePath = "$latestDirectory/$KOMPANION_FOLDER/${kompanionFile.fileName}"
             try {
                 val file = File(filePath)

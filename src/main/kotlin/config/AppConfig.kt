@@ -7,7 +7,7 @@ import java.nio.file.Paths
 
 data class AppConfig(
     val openAiKey: String = "",
-    val currentDirectory: String = "~",
+    val latestDirectory: String = "~",
     val model: ConfigModel = ConfigModel("gpt-4o-mini", "gpt-4o"),
 ) {
     companion object {
