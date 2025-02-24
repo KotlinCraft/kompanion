@@ -2,6 +2,7 @@ package ui.chat
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ fun WorkingDirectorySelector(
 ) {
     Surface(
         color = darkSecondary,
+        shape = RoundedCornerShape(2.dp),
         modifier = Modifier.fillMaxWidth(0.3f)
     ) {
         Row(
