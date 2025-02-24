@@ -4,6 +4,9 @@ import agent.ContextManager
 import agent.InMemoryContextManager
 import agent.coding.DefaultCodeGenerator
 import agent.domain.CodeApplier
+import agent.fileops.KompanionFileHandler
+import agent.interaction.AgentMessage
+import agent.interaction.AgentQuestion
 import agent.interaction.InteractionHandler
 import agent.reason.DefaultReasoner
 import agent.reason.Reasoner
@@ -23,7 +26,7 @@ class Kompanion(
             return KompanionBuilder()
         }
 
-        fun default(): Kompanion {
+        suspend fun default(): Kompanion {
             return builder().build()
         }
     }
@@ -50,7 +53,6 @@ class KompanionBuilder {
         bigLlmProvider = provider
     }
 
-
     fun withCustomReasoner(customReasoner: Reasoner) = apply {
         reasoner = customReasoner
     }
@@ -63,7 +65,7 @@ class KompanionBuilder {
         codeApplier = applier
     }
 
-    fun build(): Kompanion {
+    suspend fun build(): Kompanion {
         val finalContextManager = contextManager ?: InMemoryContextManager()
         val smallProvider = Either.catch {
             getFinalLLMProvider(AppConfig.load().model.small)
@@ -93,7 +95,7 @@ class KompanionBuilder {
             ?: throw IllegalArgumentException("Unable to find provider for model $name")
     }
 
-    fun withInteractionHandler(interactionHandler: StubInteractionHandler) = apply {
+    fun withInteractionHandler(interactionHandler: InteractionHandler) = apply {
         this.interactionHandler = interactionHandler
     }
 }

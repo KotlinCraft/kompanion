@@ -1,6 +1,7 @@
 package agent
 
 import agent.domain.*
+import agent.fileops.KompanionFileHandler
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
@@ -20,6 +21,30 @@ open class CodeAgent internal constructor(
 
     lateinit var interactionHandler: InteractionHandler
 
+    suspend fun onLoad() {
+        if (!KompanionFileHandler.folderExists()) {
+            val result =
+                confirmWithUser(
+                    """Hello! I'm Kompanion 👋, your coding assistant. 
+                    |Would you like to initialize this repository?
+                    |This is not required, but will make me smarter and more helpful! 🧠
+                    |""".trimMargin()
+                )
+
+            if (result) {
+                if (!KompanionFileHandler.folderExists()) {
+                    KompanionFileHandler.createFolder()
+                    interactionHandler.interact(
+                        AgentResponse(
+                            """Repository initialized ✅.
+                        |I'm ready to help you with your coding tasks! 🚀
+                    """.trimMargin()
+                        )
+                    )
+                }
+            }
+        }
+    }
 
     override suspend fun processCodingRequest(request: UserRequest): CodingAgentResponse {
         logger.info("Processing user request: ${request.instruction}")

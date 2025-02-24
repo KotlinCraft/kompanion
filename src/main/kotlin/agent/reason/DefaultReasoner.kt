@@ -16,7 +16,8 @@ import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
 class DefaultReasoner(
-    private val LLMProvider: LLMProvider, private val contextManager: ContextManager
+    private val LLMProvider: LLMProvider,
+    private val contextManager: ContextManager
 ) : Reasoner {
 
     private val logger = LoggerFactory.getLogger(this::class.java)

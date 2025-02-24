@@ -3,12 +3,11 @@ package config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import java.io.File
 import java.nio.file.Paths
 
 data class AppConfig(
     val openAiKey: String = "",
-    val latestDirectory: String = "~",
+    val currentDirectory: String = "~",
     val model: ConfigModel = ConfigModel("gpt-4o-mini", "gpt-4o"),
 ) {
     companion object {

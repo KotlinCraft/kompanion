@@ -1,8 +1,9 @@
-import agent.FakeChatBot
 import agent.domain.CodeFile
+import agent.domain.UserRequest
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
+import agent.interaction.InteractionHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,12 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import chat.ChatBot
 import config.AppConfig
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import ui.FilePill
 import ui.SettingsDialog
 import ui.chat.ChatMessage
@@ -57,63 +54,62 @@ fun ChatScreen() {
     var mode by remember { mutableStateOf("code") }
 
     var showSuggestions by remember { mutableStateOf(false) }
-    var workingDirectory by remember { mutableStateOf(AppConfig.load().latestDirectory) }
+    var workingDirectory by remember { mutableStateOf(AppConfig.load().currentDirectory) }
     var pendingQuestion by remember { mutableStateOf<AgentQuestion?>(null) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    var currentJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var currentJob by remember { mutableStateOf<Job?>(null) }
 
     var userResponse by remember { mutableStateOf("") }
 
     var showSettings by remember { mutableStateOf(false) }
     var configState by remember { mutableStateOf(AppConfig.load()) }
 
-    val onAgentMessage: suspend (AgentMessage) -> String = { message ->
-        when (message) {
-            is AgentQuestion -> {
-                messages = messages + ChatMessage(message.message, false)
-                isWaitingForAnswer = true
-                pendingQuestion = message
-                isProcessing = false
-                while (isWaitingForAnswer && userResponse.isBlank()) {
-                    delay(100)
+    val interactionHandler = object : InteractionHandler {
+        override suspend fun interact(agentMessage: AgentMessage): String {
+            return when (agentMessage) {
+                is AgentQuestion -> {
+                    messages = messages + ChatMessage(agentMessage.message, false)
+                    isWaitingForAnswer = true
+                    pendingQuestion = agentMessage
+                    isProcessing = false
+                    while (isWaitingForAnswer && userResponse.isBlank()) {
+                        delay(100)
+                    }
+                    val response = userResponse
+                    userResponse = ""
+                    pendingQuestion = null
+                    isProcessing = true
+                    response
                 }
-                val response = userResponse
-                userResponse = ""
-                pendingQuestion = null
-                isProcessing = true
-                response
-            }
 
-            is AgentResponse -> {
-                messages = messages + ChatMessage(message.message, false)
-                ""
+                is AgentResponse -> {
+                    messages = messages + ChatMessage(agentMessage.message, false)
+                    ""
+                }
             }
         }
     }
 
-    val chatBot = remember {
-        if (System.getenv("KOMPANION_ENV") == "production") {
-            val kompanion = Kompanion.default()
-            ChatBot(kompanion.agent, onAgentMessage)
-        } else {
-            FakeChatBot(onAgentMessage)
+    val kompanion = remember {
+        runBlocking(Dispatchers.IO) {
+            Kompanion.builder().withInteractionHandler(interactionHandler).build()
         }
     }
 
-    val openFiles by chatBot.agent.fetchContextManager().getContext().collectAsState()
+    val openFiles by kompanion.agent.fetchContextManager().getContext().collectAsState()
 
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
         SlashCommand("/clear-context", "Clear the file context") {
-            chatBot.agent.fetchContextManager().clearContext()
+            kompanion.agent.fetchContextManager().clearContext()
             messages = messages + ChatMessage("File context cleared.", false)
         },
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
         SlashCommand("/add", "Switch to ask mode") {
-            chatBot.agent.fetchContextManager().updateFiles(
+            kompanion.agent.fetchContextManager().updateFiles(
                 listOf(
                     CodeFile(Path.of("/opt/test${Random(1000).nextInt()}.html"), "", "html")
                 )
@@ -142,8 +138,8 @@ fun ChatScreen() {
             try {
                 withContext(Dispatchers.IO) {
                     val response = when (mode) {
-                        "code" -> chatBot.codingRequest(userMessage)
-                        "ask" -> chatBot.codeBaseQuestion(userMessage)
+                        "code" -> kompanion.agent.processCodingRequest(UserRequest(userMessage)).explanation
+                        "ask" -> kompanion.agent.askQuestion(userMessage).reply
                         else -> "Invalid mode"
                     }
                     messages = messages + ChatMessage(response, false)
@@ -233,6 +229,12 @@ fun ChatScreen() {
             listState.animateScrollToItem(messages.size)
         }
 
+        LaunchedEffect(key1 = workingDirectory) {
+            kompanion.agent.onLoad()
+            isProcessing = false
+            isWaitingForAnswer = false
+        }
+
         // Working Directory Selector (full width)
         Box(
             modifier = Modifier
@@ -245,7 +247,7 @@ fun ChatScreen() {
                     onWorkingDirectoryChange = { newDir ->
                         workingDirectory = newDir
                         AppConfig.save(
-                            AppConfig.load().copy(latestDirectory = newDir)
+                            AppConfig.load().copy(currentDirectory = newDir)
                         )
                     },
                     darkSecondary = darkSecondary
@@ -380,3 +382,4 @@ fun ChatScreen() {
         }
     }
 }
+
