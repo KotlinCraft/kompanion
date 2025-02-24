@@ -4,8 +4,8 @@ import agent.fileops.KompanionFile
 import agent.fileops.KompanionFileHandler
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
-import agent.traits.Interactor
-import agent.traits.Mode
+import agent.modes.Interactor
+import agent.modes.Mode
 
 class Agent internal constructor(
     private val contextManager: ContextManager,

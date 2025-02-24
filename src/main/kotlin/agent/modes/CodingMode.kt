@@ -1,4 +1,4 @@
-package agent.traits
+package agent.modes
 
 import agent.CodeGenerator
 import agent.domain.FileChange

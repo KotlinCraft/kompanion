@@ -8,8 +8,8 @@ import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler
 import agent.reason.DefaultReasoner
 import agent.reason.Reasoner
-import agent.traits.AnalystMode
-import agent.traits.CodingMode
+import agent.modes.AnalystMode
+import agent.modes.CodingMode
 import ai.LLMProvider
 import ai.LLMRegistry
 import arrow.core.Either

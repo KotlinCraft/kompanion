@@ -1,4 +1,4 @@
-package agent.traits
+package agent.modes
 
 interface Mode {
     suspend fun perform(request: String): String
