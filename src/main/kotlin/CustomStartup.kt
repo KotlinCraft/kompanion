@@ -13,11 +13,7 @@ fun main() {
 
         val kompanion = Kompanion.builder().build()
 
-        val agent = kompanion.agent.also {
-            it.registerHandler(interactionHandler)
-        }
-
-        val response = agent.processCodingRequest(
+        val response = kompanion.agent.processCodingRequest(
             UserRequest(
                 instruction = "add comments to the customstartup"
             )

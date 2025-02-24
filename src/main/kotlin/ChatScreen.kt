@@ -1,5 +1,4 @@
 import agent.domain.CodeFile
-import agent.domain.UserRequest
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
@@ -96,9 +95,7 @@ fun ChatScreen() {
     }
 
     val kompanion = remember {
-        runBlocking(Dispatchers.IO) {
-            Kompanion.builder().withInteractionHandler(interactionHandler).build()
-        }
+        Kompanion.default(interactionHandler)
     }
 
     val openFiles by kompanion.agent.fetchContextManager().getContext().collectAsState()
@@ -142,7 +139,7 @@ fun ChatScreen() {
             try {
                 withContext(Dispatchers.IO) {
                     val response = when (mode) {
-                        "code" -> kompanion.agent.processCodingRequest(UserRequest(userMessage)).explanation
+                        "code" -> kompanion.agent.processCodingRequest(userMessage).explanation
                         "ask" -> kompanion.agent.askQuestion(userMessage).reply
                         else -> "Invalid mode"
                     }

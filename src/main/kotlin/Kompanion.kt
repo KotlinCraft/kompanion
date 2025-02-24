@@ -1,12 +1,9 @@
 import agent.CodeGenerator
-import agent.CodeAgent
+import agent.CodingAgent
 import agent.ContextManager
 import agent.InMemoryContextManager
 import agent.coding.DefaultCodeGenerator
 import agent.domain.CodeApplier
-import agent.fileops.KompanionFileHandler
-import agent.interaction.AgentMessage
-import agent.interaction.AgentQuestion
 import agent.interaction.InteractionHandler
 import agent.reason.DefaultReasoner
 import agent.reason.Reasoner
@@ -17,7 +14,7 @@ import arrow.core.getOrElse
 import config.AppConfig
 
 class Kompanion(
-    val agent: CodeAgent
+    val agent: CodingAgent
 ) {
     companion object {
         fun builder(): KompanionBuilder {
@@ -26,8 +23,10 @@ class Kompanion(
             return KompanionBuilder()
         }
 
-        suspend fun default(): Kompanion {
-            return builder().build()
+        fun default(interactionHandler: InteractionHandler): Kompanion {
+            return builder()
+                .withInteractionHandler(interactionHandler)
+                .build()
         }
     }
 }
@@ -65,7 +64,7 @@ class KompanionBuilder {
         codeApplier = applier
     }
 
-    suspend fun build(): Kompanion {
+    fun build(): Kompanion {
         val finalContextManager = contextManager ?: InMemoryContextManager()
         val smallProvider = Either.catch {
             getFinalLLMProvider(AppConfig.load().model.small)
@@ -78,15 +77,12 @@ class KompanionBuilder {
         val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)
         val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
 
-        val agent = CodeAgent(
+        val agent = CodingAgent(
             finalContextManager,
             finalReasoner,
-            finalGenerator
-        ).also {
-            if (interactionHandler != null) {
-                it.registerHandler(interactionHandler!!)
-            }
-        }
+            finalGenerator,
+            interactionHandler!!,
+        )
         return Kompanion(agent)
     }
 

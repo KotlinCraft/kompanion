@@ -6,20 +6,19 @@ import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
-import agent.traits.Analyst
-import agent.traits.Coder
+import agent.traits.AnalystMode
+import agent.traits.CodingMode
 import agent.traits.Interactor
 import org.slf4j.LoggerFactory
 
-open class CodeAgent internal constructor(
+open class CodingAgent internal constructor(
     private val contextManager: ContextManager,
     private val reasoner: Reasoner,
-    private val codeGenerator: CodeGenerator
-) : Coder, Analyst, Interactor {
+    private val codeGenerator: CodeGenerator,
+    private val interactionHandler: InteractionHandler
+) : CodingMode, AnalystMode, Interactor {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
-
-    lateinit var interactionHandler: InteractionHandler
 
     suspend fun onLoad() {
         if (!KompanionFileHandler.folderExists()) {
@@ -46,10 +45,7 @@ open class CodeAgent internal constructor(
         }
     }
 
-    override suspend fun processCodingRequest(request: UserRequest): CodingAgentResponse {
-        logger.info("Processing user request: ${request.instruction}")
-        sendMessage("Analyzing your request...")
-        // 1. Analyze request and current context
+    override suspend fun processCodingRequest(request: String): CodingAgentResponse {
         val understanding = reasoner.analyzeRequest(request)
         sendMessage("I understand you want to: ${understanding.objective}")
 
@@ -146,11 +142,6 @@ open class CodeAgent internal constructor(
         val request = UserRequest(question)
         val understanding = reasoner.analyzeRequest(request)
         return reasoner.askQuestion(question, understanding)
-    }
-
-
-    fun registerHandler(interactionHandler: InteractionHandler) {
-        this.interactionHandler = interactionHandler
     }
 
     fun fetchContextManager(): ContextManager {
