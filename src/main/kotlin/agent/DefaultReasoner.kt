@@ -14,8 +14,7 @@ import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
 class DefaultReasoner(
-    private val LLMProvider: LLMProvider,
-    private val contextManager: ContextManager
+    private val LLMProvider: LLMProvider, private val contextManager: ContextManager
 ) : Reasoner {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -51,14 +50,12 @@ class DefaultReasoner(
                         |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
                         |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
                         ActionMethod(
-                            ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java),
-                            this
+                            ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java), this
                         )
                     )
                 ),
                 temperature = 0.3,
-                parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {}
-            )
+                parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {})
         }.getOrElse {
             throw IllegalArgumentException("I'm afraid I was unable to analyze your request.")
         }
@@ -67,9 +64,9 @@ class DefaultReasoner(
 
     fun requestFileContext(file: String): RequestFileResponse {
         logger.info("Looking up file: $file")
-        val filePath = Files.walk(Paths.get(contextManager.fetchWorkingDirectory()))
-            .filter { it.fileName.toString() == file }
-            .findFirst()
+        val filePath =
+            Files.walk(Paths.get(contextManager.fetchWorkingDirectory())).filter { it.fileName.toString() == file }
+                .findFirst()
 
         return if (filePath.isPresent) {
             val content = Files.readString(filePath.get())
@@ -79,9 +76,7 @@ class DefaultReasoner(
             contextManager.updateFiles(
                 listOf(
                     CodeFile(
-                        path = path,
-                        content = content,
-                        language = path.toString().substringAfterLast('.', "txt")
+                        path = path, content = content, language = path.toString().substringAfterLast('.', "txt")
                     )
                 )
             )
@@ -93,9 +88,7 @@ class DefaultReasoner(
     }
 
     data class RequestFileResponse(
-        val exists: Boolean,
-        val fullPath: String?,
-        val content: String?
+        val exists: Boolean, val fullPath: String?, val content: String?
     )
 
     override suspend fun createPlan(understanding: Understanding): GenerationPlan {
@@ -133,22 +126,17 @@ class DefaultReasoner(
         """.trimIndent()
 
         return LLMProvider.prompt(
-            input = prompt,
-            actions = listOf(
+            input = prompt, actions = listOf(
                 Action(
                     "request_file_context",
                     """Provide a file in context for the request. 
                         |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
                         |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
                     ActionMethod(
-                        ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java),
-                        this
+                        ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java), this
                     )
                 )
-            ),
-            temperature = 0.7,
-            parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {}
-        )
+            ), temperature = 0.7, parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})
     }
 
     override suspend fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation {
@@ -165,10 +153,9 @@ class DefaultReasoner(
             result.fileChanges.joinToString("\n\n") { fileChange ->
                 when (fileChange) {
                     is FileChange.CreateFile -> "New File ${fileChange.path}:\n${fileChange.content}"
-                    is FileChange.ModifyFile -> "Modify ${fileChange.path}:\n" +
-                            fileChange.changes.joinToString("\n") { change ->
-                                "- ${change.description}"
-                            }
+                    is FileChange.ModifyFile -> "Modify ${fileChange.path}:\n" + fileChange.changes.joinToString("\n") { change ->
+                        "- ${change.description}"
+                    }
                 }
             }
         }
@@ -196,8 +183,36 @@ class DefaultReasoner(
             input = prompt,
             actions = emptyList(),
             temperature = 0.7,
-            parameterizedTypeReference = object : ParameterizedTypeReference<CodeEvaluation>() {}
-        )
+            parameterizedTypeReference = object : ParameterizedTypeReference<CodeEvaluation>() {})
+    }
+
+    override suspend fun askQuestion(question: String, understanding: Understanding): CodebaseQuestionResponse {
+
+
+        val prompt = """
+            ${contextManager.currentContextPrompt()}
+            
+            The user asked a question about the codebase:
+            $question
+            
+            Objective: ${understanding.objective}
+            Required Features: 
+            ${understanding.requiredFeatures.joinToString("\n") { "- $it" }}
+            Context Relevance:
+            ${understanding.contextRelevance.entries.joinToString("\n") { "- ${it.key}: ${it.value}" }}
+            
+            Provide the best possible answer based on the context you have.
+            If you need more context about any file, you can request it with "request_file_context".
+            
+            Return your answer as a simple string and include the confidence level (0-1) of your answer.
+        """.trimIndent()
+
+        // Attempt to leverage the same LLM approach used in DefaultReasoner, if available
+        return LLMProvider.prompt(
+            input = prompt,
+            actions = emptyList(),
+            temperature = 0.3,
+            parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {})
     }
 
     override suspend fun learn(feedback: UserFeedback) {

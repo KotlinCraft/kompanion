@@ -1,6 +1,5 @@
 import agent.*
 import agent.domain.CodeApplier
-import agent.domain.FileSystemCodeApplier
 import agent.interaction.InteractionHandler
 import ai.LLMProvider
 import ai.LLMRegistry
@@ -65,9 +64,9 @@ class KompanionBuilder {
         val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
 
         val agent = CodingAgent(
-            reasoner = finalReasoner,
-            codeGenerator = finalGenerator,
-            finalContextManager
+            finalContextManager,
+            AutomatedCoder(finalReasoner, finalGenerator),
+            AutomatedAnalyst(finalReasoner)
         ).also {
             if (interactionHandler != null) {
                 it.registerHandler(interactionHandler!!)

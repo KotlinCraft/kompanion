@@ -4,12 +4,13 @@ import agent.domain.CodingAgentResponse
 import agent.domain.FileChange
 import agent.domain.GenerationResult
 import agent.domain.UserRequest
+import agent.traits.Coder
 import org.slf4j.LoggerFactory
 
-abstract class AutomatedCoder(
+class AutomatedCoder(
     val reasoner: Reasoner,
     val codeGenerator: CodeGenerator
-) : CodeAgent {
+) : Coder {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -80,6 +81,18 @@ abstract class AutomatedCoder(
             ),
             confidence = 0.7f
         )
+    }
+
+    override suspend fun sendMessage(message: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun askUser(question: String): String {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun confirmWithUser(message: String): Boolean {
+        TODO("Not yet implemented")
     }
 
     private fun formatFileChanges(fileChanges: List<FileChange>): String {

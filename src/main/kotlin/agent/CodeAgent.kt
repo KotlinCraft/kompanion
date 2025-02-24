@@ -1,22 +1,17 @@
 package agent
 
-import agent.domain.CodingAgentResponse
-import agent.domain.UserFeedback
-import agent.domain.UserRequest
 import agent.interaction.InteractionHandler
+import agent.traits.Analyst
+import agent.traits.Coder
+import agent.traits.Interactor
 
-interface CodeAgent {
-    suspend fun processCodingRequest(request: UserRequest): CodingAgentResponse
-    suspend fun addFeedback(feedback: UserFeedback)
+interface CodeAgent : Coder, Analyst, Interactor {
     fun registerHandler(interactionHandler: InteractionHandler)
     fun fetchContextManager(): ContextManager
-    suspend fun sendMessage(message: String)
-    suspend fun askQuestion(question: String): String
 
-
-    suspend fun confirmWithUser(message: String): Boolean {
+    override suspend fun confirmWithUser(message: String): Boolean {
         while (true) {
-            val response = askQuestion("$message\nPlease respond with Y or N:")
+            val response = askUser("$message\nPlease respond with Y or N:")
             when (response.trim().uppercase()) {
                 "Y" -> return true
                 "N" -> return false

@@ -1,10 +1,11 @@
 package agent
 
-import agent.domain.UserFeedback
+import agent.domain.CodebaseQuestionResponse
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
+import chat.ChatBot
 import kotlinx.coroutines.delay
 
 class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeAgent(), onMessage) {
@@ -41,7 +42,6 @@ class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeA
 
     private class FakeAgent : CodeAgent {
         override suspend fun processCodingRequest(request: UserRequest) = throw UnsupportedOperationException()
-        override suspend fun addFeedback(feedback: UserFeedback) = throw UnsupportedOperationException()
         override fun registerHandler(interactionHandler: InteractionHandler) {
             //don't do anything
         }
@@ -54,7 +54,11 @@ class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeA
             TODO("Not yet implemented")
         }
 
-        override suspend fun askQuestion(question: String): String {
+        override suspend fun askUser(question: String): String {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun askQuestion(question: String): CodebaseQuestionResponse {
             TODO("Not yet implemented")
         }
     }

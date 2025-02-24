@@ -1,5 +1,6 @@
-package agent
+package chat
 
+import agent.CodeAgent
 import agent.domain.UserRequest
 import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler

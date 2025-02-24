@@ -1,17 +1,16 @@
 package agent
 
-import agent.domain.UserFeedback
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
+import agent.traits.Analyst
+import agent.traits.Coder
 
 class CodingAgent internal constructor(
-    reasoner: Reasoner,
-    codeGenerator: CodeGenerator,
-    private val contextManager: ContextManager
-) : CodeAgent, AutomatedCoder(
-    reasoner, codeGenerator
-) {
+    private val contextManager: ContextManager,
+    coder: Coder,
+    analyst: Analyst
+) : CodeAgent, Coder by coder, Analyst by analyst {
 
     lateinit var interactionHandler: InteractionHandler
 
@@ -27,11 +26,7 @@ class CodingAgent internal constructor(
         interactionHandler.interact(AgentResponse(message))
     }
 
-    override suspend fun askQuestion(question: String): String {
+    override suspend fun askUser(question: String): String {
         return interactionHandler.interact(AgentQuestion(question))
-    }
-
-    override suspend fun addFeedback(feedback: UserFeedback) {
-        reasoner.learn(feedback)
     }
 }

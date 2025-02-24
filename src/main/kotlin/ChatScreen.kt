@@ -1,4 +1,3 @@
-import agent.ChatBot
 import agent.FakeChatBot
 import agent.domain.CodeFile
 import agent.interaction.AgentMessage
@@ -22,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import chat.ChatBot
 import config.AppConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -42,7 +42,6 @@ private data class SlashCommand(
     val run: () -> Unit = {}
 )
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ChatScreen() {
     val darkBackground = Color(0xFF343541)
