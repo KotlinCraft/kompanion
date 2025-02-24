@@ -65,8 +65,8 @@ class KompanionBuilder {
 
         val agent = CodingAgent(
             finalContextManager,
-            AutomatedCoder(finalReasoner, finalGenerator),
-            AutomatedAnalyst(finalReasoner)
+            finalReasoner,
+            finalGenerator
         ).also {
             if (interactionHandler != null) {
                 it.registerHandler(interactionHandler!!)
