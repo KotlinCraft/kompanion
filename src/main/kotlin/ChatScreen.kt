@@ -42,6 +42,7 @@ private data class SlashCommand(
     val run: () -> Unit = {}
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ChatScreen() {
     val darkBackground = Color(0xFF343541)
@@ -140,7 +141,11 @@ fun ChatScreen() {
         currentJob = coroutineScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    val response = chatBot.handleMessage(message = userMessage)
+                    val response = when (mode) {
+                        "code" -> chatBot.codingRequest(userMessage)
+                        "ask" -> chatBot.codeBaseQuestion(userMessage)
+                        else -> "Invalid mode"
+                    }
                     messages = messages + ChatMessage(response, false)
                     currentJob = null
                     isProcessing = false
@@ -247,16 +252,14 @@ fun ChatScreen() {
                 )
 
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(0.7f)
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     openFiles.forEach { file ->
                         FilePill(fileName = file.path.name)
                     }
                 }
             }
-
-
         }
 
         // Input area

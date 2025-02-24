@@ -8,7 +8,7 @@ interface ContextManager {
      * Retrieves the current context as a list of CodeFiles.
      * @return A list of CodeFiles representing the current context.
      */
-    fun getContext(): StateFlow<List<CodeFile>>
+    fun getContext(): StateFlow<Set<CodeFile>>
 
     /**
      * Updates the context with a list of CodeFiles.

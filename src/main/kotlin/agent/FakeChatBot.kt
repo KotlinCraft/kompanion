@@ -9,7 +9,7 @@ import chat.ChatBot
 import kotlinx.coroutines.delay
 
 class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeAgent(), onMessage) {
-    override suspend fun handleMessage(
+    override suspend fun codingRequest(
         message: String,
     ): String {
         delay(2000) // Simulate some initial processing

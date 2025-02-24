@@ -14,18 +14,14 @@ open class ChatBot(
         agent.registerHandler(this)
     }
 
-    open suspend fun handleMessage(
-        message: String
-    ): String {
-        // Process the request
-        val response = agent.processCodingRequest(
-            UserRequest(
-                instruction = message,
-            )
-        )
-
-        // Format response for chat
+    open suspend fun codingRequest(message: String): String {
+        val response = agent.processCodingRequest(UserRequest(message))
         return """ℹ️ ${response.explanation}""".trimIndent()
+    }
+
+    open suspend fun codeBaseQuestion(message: String): String {
+        val response = agent.askQuestion(message)
+        return """ℹ️ ${response.reply}""".trimIndent()
     }
 
     override suspend fun interact(agentMessage: AgentMessage): String {
