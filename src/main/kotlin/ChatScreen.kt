@@ -54,7 +54,7 @@ fun ChatScreen() {
     var mode by remember { mutableStateOf("code") }
 
     var showSuggestions by remember { mutableStateOf(false) }
-    var workingDirectory by remember { mutableStateOf(AppConfig.load().currentDirectory) }
+    var workingDirectory by remember { mutableStateOf(AppConfig.load().latestDirectory) }
     var pendingQuestion by remember { mutableStateOf<AgentQuestion?>(null) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -247,7 +247,7 @@ fun ChatScreen() {
                     onWorkingDirectoryChange = { newDir ->
                         workingDirectory = newDir
                         AppConfig.save(
-                            AppConfig.load().copy(currentDirectory = newDir)
+                            AppConfig.load().copy(latestDirectory = newDir)
                         )
                     },
                     darkSecondary = darkSecondary
