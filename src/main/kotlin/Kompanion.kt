@@ -1,5 +1,5 @@
 import agent.CodeGenerator
-import agent.CodingAgent
+import agent.CodeAgent
 import agent.ContextManager
 import agent.InMemoryContextManager
 import agent.coding.DefaultCodeGenerator
@@ -14,7 +14,7 @@ import arrow.core.getOrElse
 import config.AppConfig
 
 class Kompanion(
-    val agent: CodingAgent
+    val agent: CodeAgent
 ) {
     companion object {
         fun builder(): KompanionBuilder {
@@ -76,7 +76,7 @@ class KompanionBuilder {
         val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)
         val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
 
-        val agent = CodingAgent(
+        val agent = CodeAgent(
             finalContextManager,
             finalReasoner,
             finalGenerator

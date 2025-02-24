@@ -2,17 +2,15 @@ package agent.coding
 
 import agent.CodeGenerator
 import agent.ContextManager
-import agent.coding.domain.CodingResult
-import agent.coding.domain.ModifyFileRequest
-import agent.coding.domain.ModifyFileResponse
+import agent.coding.domain.*
 import agent.domain.CodeFile
 import agent.domain.GenerationPlan
 import agent.domain.GenerationResult
-import agent.reason.DefaultReasoner
 import agent.reason.domain.RequestFileResponse
 import ai.Action
 import ai.ActionMethod
 import ai.LLMProvider
+import arrow.core.Either
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
@@ -21,9 +19,29 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 
 class DefaultCodeGenerator(
-    private val LLMProvider: LLMProvider,
-    private val contextManager: ContextManager
+    private val LLMProvider: LLMProvider, private val contextManager: ContextManager
 ) : CodeGenerator {
+
+
+    val modifyFileAction = Action(
+        "modify_file",
+        """
+            |Modify a file, providing a regex search term and the replacement. 
+            |The entire file, post edit, will be returned so you can verify the changes.""".trimMargin(),
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "modifyFile", ModifyFileRequest::class.java), this
+        )
+    )
+
+    val createFileAction = Action(
+        "create_file",
+        """
+            |Modify a file, providing a regex search term and the replacement. 
+            |The entire file, post edit, will be returned so you can verify the changes.""".trimMargin(),
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "createFile", CreateFileRequest::class.java), this
+        )
+    )
 
 
     override suspend fun execute(
@@ -51,20 +69,9 @@ class DefaultCodeGenerator(
         """.trimIndent()
 
         return LLMProvider.prompt(
-            input = prompt,
-            actions = listOf(
-                Action(
-                    "modify_file",
-                    """Modify a file, providing a regex search term and the replacement. The entire file, post edit, will be returned so you can verify the changes.""".trimMargin(),
-                    ActionMethod(
-                        ReflectionUtils.findMethod(this::class.java, "modifyFile", ModifyFileRequest::class.java),
-                        this
-                    )
-                )
-            ),
-            temperature = 0.7,
-            parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {}
-        )
+            input = prompt, actions = listOf(
+                modifyFileAction, createFileAction
+            ), temperature = 0.7, parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {})
     }
 
 
@@ -119,16 +126,27 @@ class DefaultCodeGenerator(
             input = prompt,
             actions = emptyList(),
             temperature = 0.7,
-            parameterizedTypeReference = object : ParameterizedTypeReference<GenerationResult>() {}
-        )
+            parameterizedTypeReference = object : ParameterizedTypeReference<GenerationResult>() {})
     }
 
+    fun createFile(createFileRequest: CreateFileRequest): CreateFileResponse {
+        return Either.catch {
+            val fullPath = Paths.get(createFileRequest.absolutePath)
+
+            // Create parent directories if they don't exist
+            fullPath.parent?.toFile()?.mkdirs()
+
+            // Create and write to the file
+            fullPath.toFile().writeText(createFileRequest.content)
+        }.fold(
+            { CreateFileResponse(it.message) }, { CreateFileResponse(error = null) }
+        )
+    }
 
     fun modifyFile(modifyFileRequest: ModifyFileRequest): ModifyFileResponse {
         val path = modifyFileRequest.absolutePath
         val fullPath = if (Paths.get(path).exists()) Paths.get(path) else Paths.get(
-            contextManager.fetchWorkingDirectory(),
-            path
+            contextManager.fetchWorkingDirectory(), path
         )
 
         if (!fullPath.exists()) {
@@ -145,16 +163,14 @@ class DefaultCodeGenerator(
 
         file.writeText(newContent)
         return ModifyFileResponse(
-            error = null,
-            modifiedContent = originalContent,
-            anythingChanged = originalContent != newContent
+            error = null, modifiedContent = originalContent, anythingChanged = originalContent != newContent
         )
     }
 
     fun requestFileContext(file: String): RequestFileResponse {
-        val filePath = Files.walk(Paths.get(contextManager.fetchWorkingDirectory()))
-            .filter { it.fileName.toString() == file }
-            .findFirst()
+        val filePath =
+            Files.walk(Paths.get(contextManager.fetchWorkingDirectory())).filter { it.fileName.toString() == file }
+                .findFirst()
 
         return if (filePath.isPresent) {
             val content = Files.readString(filePath.get())
@@ -164,9 +180,7 @@ class DefaultCodeGenerator(
             contextManager.updateFiles(
                 listOf(
                     CodeFile(
-                        path = path,
-                        content = content,
-                        language = path.toString().substringAfterLast('.', "txt")
+                        path = path, content = content, language = path.toString().substringAfterLast('.', "txt")
                     )
                 )
             )

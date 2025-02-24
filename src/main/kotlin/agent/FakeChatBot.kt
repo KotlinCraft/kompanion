@@ -1,12 +1,14 @@
 package agent
 
-import agent.domain.CodebaseQuestionResponse
-import agent.domain.UserRequest
+import agent.coding.domain.CodingResult
+import agent.domain.*
 import agent.interaction.AgentMessage
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
+import agent.reason.Reasoner
 import chat.ChatBot
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 
 class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeAgent(), onMessage) {
     override suspend fun codingRequest(
@@ -40,15 +42,62 @@ class FakeChatBot(onMessage: suspend ((AgentMessage) -> String)) : ChatBot(FakeA
         """.trimIndent()
     }
 
-    private class FakeAgent : CodeAgent {
-        override suspend fun processCodingRequest(request: UserRequest) = throw UnsupportedOperationException()
-        override fun registerHandler(interactionHandler: InteractionHandler) {
-            //don't do anything
+    class FakeContextManager : ContextManager {
+        override fun getContext(): StateFlow<Set<CodeFile>> {
+            TODO("Not yet implemented")
         }
 
-        override fun fetchContextManager(): ContextManager {
-            throw UnsupportedOperationException()
+        override fun updateFiles(files: List<CodeFile>) {
+            TODO("Not yet implemented")
         }
+
+        override fun clearContext() {
+            TODO("Not yet implemented")
+        }
+
+        override fun fetchWorkingDirectory(): String {
+            TODO("Not yet implemented")
+        }
+
+        override fun getFullFileList(): String {
+            TODO("Not yet implemented")
+        }
+    }
+
+    class FakeReasoner(): Reasoner {
+        override suspend fun analyzeRequest(request: UserRequest): Understanding {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun createPlan(understanding: Understanding): GenerationPlan {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun askQuestion(question: String, understanding: Understanding): CodebaseQuestionResponse {
+            TODO("Not yet implemented")
+        }
+    }
+
+    class FakeCodeGenerator: CodeGenerator {
+        override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun execute(plan: GenerationPlan, generationResult: GenerationResult): CodingResult {
+            TODO("Not yet implemented")
+        }
+    }
+
+    private class FakeAgent : CodeAgent(
+        FakeContextManager(),
+        FakeReasoner(),
+        FakeCodeGenerator()
+    ){
+        override suspend fun processCodingRequest(request: UserRequest) = throw UnsupportedOperationException()
 
         override suspend fun sendMessage(message: String) {
             TODO("Not yet implemented")
