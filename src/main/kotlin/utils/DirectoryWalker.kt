@@ -14,7 +14,7 @@ fun walkDirectory(dir: File, builder: StringBuilder, indentLevel: Int) {
             builder.append("$indent${file.name}${if (file.isDirectory) "/" else ""}\n")
 
             // Add a brief summary for code files
-            if (!file.isDirectory && file.extension == "kt") {
+            if (!file.isDirectory && file.extension == "kt" || file.extension == "java") {
                 val firstFewLines = file.readLines().take(10).joinToString("\n")
                 val packageLine = firstFewLines.lines().find { it.startsWith("package ") }
                 val classLines = firstFewLines.lines().filter {
