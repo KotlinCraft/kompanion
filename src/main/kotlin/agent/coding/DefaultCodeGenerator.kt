@@ -78,13 +78,13 @@ class DefaultCodeGenerator(
     override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
         val prompt = """
             ${contextManager.currentContextPrompt()}
-            
-            You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
+            You're a software engineer with many years of experience and a deep understanding of the clean code and architecture.
 
             Based on the following generation plan, generate the necessary code changes. Use files in your current context to provide the changes. 
-            Both modification and adding new files requires absolute paths.
+            Handling files requires absolute paths.
             
             Your toolcalls can be used to create and modify files. Modifying files will apply the replacement to the first occurrence of the search content.
+            When creating the "searchContent", make sure to provide a unique string that can be found in the file. It shouldn't erroneously replace any other content.
             
             Plan Steps:
             ${
@@ -151,7 +151,7 @@ class DefaultCodeGenerator(
 
         if (!fullPath.exists()) {
             println("Error: File ${fullPath} does not exist")
-            return ModifyFileResponse(error = "File does not exist", modifiedContent = "", anythingChanged = false)
+            return ModifyFileResponse(error = "File does not exist", modifiedContent = "")
         }
 
         val file = fullPath.toFile()
@@ -163,7 +163,11 @@ class DefaultCodeGenerator(
 
         file.writeText(newContent)
         return ModifyFileResponse(
-            error = null, modifiedContent = originalContent, anythingChanged = originalContent != newContent
+            error = run {
+                if (originalContent == newContent) {
+                    "couldn't find search content in file"
+                } else null
+            }, modifiedContent = originalContent
         )
     }
 
