@@ -1,3 +1,5 @@
+import KompanionBuilder.AgentMode.ASK
+import KompanionBuilder.AgentMode.CODE
 import agent.domain.CodeFile
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
@@ -20,10 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.unit.sp
 import config.AppConfig
 import kotlinx.coroutines.*
@@ -94,23 +92,33 @@ fun ChatScreen() {
         }
     }
 
-    val kompanion = remember {
-        Kompanion.default(interactionHandler)
+    val codingKompanion = remember {
+        Kompanion.builder()
+            .withMode(CODE)
+            .withInteractionHandler(interactionHandler)
+            .build()
     }
 
-    val openFiles by kompanion.agent.fetchContextManager().getContext().collectAsState()
+    val analystKompanion = remember {
+        Kompanion.builder()
+            .withMode(ASK)
+            .withInteractionHandler(interactionHandler)
+            .build()
+    }
+
+    val openFiles by analystKompanion.agent.fetchContextManager().getContext().collectAsState()
 
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
         SlashCommand("/clear-context", "Clear the file context") {
-            kompanion.agent.fetchContextManager().clearContext()
+            analystKompanion.agent.fetchContextManager().clearContext()
             messages = messages + ChatMessage("File context cleared.", false)
         },
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
         SlashCommand("/add", "Switch to ask mode") {
-            kompanion.agent.fetchContextManager().updateFiles(
+            analystKompanion.agent.fetchContextManager().updateFiles(
                 listOf(
                     CodeFile(Path.of("/opt/test${Random(1000).nextInt()}.html"), "", "html")
                 )
@@ -139,8 +147,8 @@ fun ChatScreen() {
             try {
                 withContext(Dispatchers.IO) {
                     val response = when (mode) {
-                        "code" -> kompanion.agent.processCodingRequest(userMessage).explanation
-                        "ask" -> kompanion.agent.askQuestion(userMessage).reply
+                        "code" -> codingKompanion.agent.perform(userMessage)
+                        "ask" -> analystKompanion.agent.perform(userMessage)
                         else -> "Invalid mode"
                     }
                     messages = messages + ChatMessage(response, false)
@@ -231,7 +239,7 @@ fun ChatScreen() {
         }
 
         LaunchedEffect(key1 = workingDirectory) {
-            kompanion.agent.onLoad()
+            analystKompanion.agent.onLoad()
             isProcessing = false
             isWaitingForAnswer = false
         }
@@ -284,6 +292,15 @@ fun ChatScreen() {
                             } else if (event.key == Key.R && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
                                 performSlashCommand(slashCommands.first { it.command == "/clear" })
                                 true
+                            } else if (event.key == Key.Tab && showSuggestions) {
+                                val firstCommand = slashCommands
+                                    .sortedBy { it.command }.firstOrNull { it.command.startsWith(inputText.trim()) }
+
+                                if (firstCommand != null) {
+                                    inputText = firstCommand.command
+                                }
+
+                                true
                             } else false
                         }
                 ) {
@@ -329,6 +346,7 @@ fun ChatScreen() {
                                 modifier = Modifier.width(300.dp)
                             ) {
                                 slashCommands
+                                    .sortedBy { it.command }
                                     .filter { it.command.startsWith(inputText) }
                                     .take(1)
                                     .forEach { command ->

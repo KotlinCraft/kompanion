@@ -22,7 +22,7 @@ class DefaultReasoner(
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    override suspend fun analyzeRequest(request: UserRequest): Understanding {
+    override suspend fun analyzeRequest(request: String): Understanding {
         val prompt = """
             ${contextManager.currentContextPrompt()}
             
@@ -35,7 +35,7 @@ class DefaultReasoner(
 
             Make sure you have access to every file mentioned in the request before continuing. Navigate the context and files to come up with the best possible answer.
             
-            User Request: ${request.instruction}
+            User Request: $request
             
             Provide a structured analysis including:
             1. The main objective

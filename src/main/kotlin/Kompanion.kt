@@ -1,12 +1,11 @@
-import agent.CodeGenerator
-import agent.CodingAgent
-import agent.ContextManager
-import agent.InMemoryContextManager
+import agent.*
 import agent.coding.DefaultCodeGenerator
 import agent.domain.CodeApplier
 import agent.interaction.InteractionHandler
 import agent.reason.DefaultReasoner
 import agent.reason.Reasoner
+import agent.traits.AnalystMode
+import agent.traits.CodingMode
 import ai.LLMProvider
 import ai.LLMRegistry
 import arrow.core.Either
@@ -14,7 +13,7 @@ import arrow.core.getOrElse
 import config.AppConfig
 
 class Kompanion(
-    val agent: CodingAgent
+    val agent: Agent
 ) {
     companion object {
         fun builder(): KompanionBuilder {
@@ -32,6 +31,11 @@ class Kompanion(
 }
 
 class KompanionBuilder {
+
+    enum class AgentMode {
+        ASK, CODE
+    }
+
     private var reasoner: Reasoner? = null
     private var codeGenerator: CodeGenerator? = null
     private var codeApplier: CodeApplier? = null
@@ -39,6 +43,12 @@ class KompanionBuilder {
     private var smallLlmProvider: LLMProvider? = null
     private var bigLlmProvider: LLMProvider? = null
     private var interactionHandler: InteractionHandler? = null
+    private var mode: AgentMode = AgentMode.ASK
+
+
+    fun withMode(mode: AgentMode) = apply {
+        this.mode = mode
+    }
 
     fun withContextManager(customContextManager: ContextManager) = apply {
         contextManager = customContextManager
@@ -77,11 +87,16 @@ class KompanionBuilder {
         val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)
         val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
 
-        val agent = CodingAgent(
+
+        val mode = when (mode) {
+            AgentMode.ASK -> AnalystMode(finalReasoner)
+            AgentMode.CODE -> CodingMode(finalReasoner, finalGenerator, interactionHandler!!)
+        }
+
+        val agent = Agent(
             finalContextManager,
-            finalReasoner,
-            finalGenerator,
             interactionHandler!!,
+            mode
         )
         return Kompanion(agent)
     }
