@@ -106,7 +106,7 @@ open class CodeAgent internal constructor(
 
         return CodingAgentResponse(
             fileChanges = generationResult!!.fileChanges,
-            explanation = "Reached maximum iterations. Current best attempt provided.",
+            explanation = "I'm afraid I wasn't able to come up with a decent solution. Can you please be more specific in what you wanted to build?",
             nextSteps = listOf(
                 "Consider providing more specific requirements",
                 "Review current output and provide feedback"
