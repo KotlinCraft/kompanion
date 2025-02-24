@@ -1,5 +1,6 @@
 package agent
 
+import agent.coding.domain.CodingResult
 import agent.domain.GenerationPlan
 import agent.domain.GenerationResult
 
@@ -8,5 +9,5 @@ interface CodeGenerator {
     suspend fun execute(
         plan: GenerationPlan,
         generationResult: GenerationResult,
-    ): DefaultCodeGenerator.CodingResult
+    ): CodingResult
 }

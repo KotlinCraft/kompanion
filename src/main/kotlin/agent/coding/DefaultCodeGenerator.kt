@@ -1,13 +1,18 @@
-package agent
+package agent.coding
 
-import agent.DefaultReasoner.RequestFileResponse
+import agent.CodeGenerator
+import agent.ContextManager
+import agent.coding.domain.CodingResult
+import agent.coding.domain.ModifyFileRequest
+import agent.coding.domain.ModifyFileResponse
 import agent.domain.CodeFile
 import agent.domain.GenerationPlan
 import agent.domain.GenerationResult
+import agent.reason.DefaultReasoner
+import agent.reason.domain.RequestFileResponse
 import ai.Action
 import ai.ActionMethod
 import ai.LLMProvider
-import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
@@ -20,12 +25,6 @@ class DefaultCodeGenerator(
     private val contextManager: ContextManager
 ) : CodeGenerator {
 
-    private val logger = LoggerFactory.getLogger(this::class.java)
-
-    data class CodingResult(
-        val editedFiles: List<String>,
-        val createdFiles: List<String>
-    )
 
     override suspend fun execute(
         plan: GenerationPlan,
@@ -124,17 +123,6 @@ class DefaultCodeGenerator(
         )
     }
 
-    data class ModifyFileResponse(
-        val error: String?,
-        val modifiedContent: String?,
-        val anythingChanged: Boolean
-    )
-
-    data class ModifyFileRequest(
-        val absolutePath: String,
-        val searchContent: String,
-        val replaceContent: String
-    )
 
     fun modifyFile(modifyFileRequest: ModifyFileRequest): ModifyFileResponse {
         val path = modifyFileRequest.absolutePath

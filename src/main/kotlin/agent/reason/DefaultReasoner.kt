@@ -1,6 +1,8 @@
-package agent
+package agent.reason
 
+import agent.ContextManager
 import agent.domain.*
+import agent.reason.domain.RequestFileResponse
 import ai.Action
 import ai.ActionMethod
 import ai.LLMProvider
@@ -30,7 +32,7 @@ class DefaultReasoner(
             
             important: We cannot use files that are not in our context yet.
 
-            Make sure you have access to every file mentioned in the request before continuing.
+            Make sure you have access to every file mentioned in the request before continuing. Navigate the context and files to come up with the best possible answer.
             
             User Request: ${request.instruction}
             
@@ -43,24 +45,13 @@ class DefaultReasoner(
         return Either.catch {
             LLMProvider.prompt(
                 input = prompt,
-                actions = listOf(
-                    Action(
-                        "request_file_context",
-                        """Provide a file in context for the request. 
-                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
-                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
-                        ActionMethod(
-                            ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java), this
-                        )
-                    )
-                ),
-                temperature = 0.3,
+                actions = listOf(readFileAction),
+                temperature = 0.7,
                 parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {})
         }.getOrElse {
             throw IllegalArgumentException("I'm afraid I was unable to analyze your request.")
         }
     }
-
 
     fun requestFileContext(file: String): RequestFileResponse {
         logger.info("Looking up file: $file")
@@ -86,10 +77,6 @@ class DefaultReasoner(
             RequestFileResponse(false, null, null)
         }
     }
-
-    data class RequestFileResponse(
-        val exists: Boolean, val fullPath: String?, val content: String?
-    )
 
     override suspend fun createPlan(understanding: Understanding): GenerationPlan {
         val prompt = """
@@ -126,17 +113,10 @@ class DefaultReasoner(
         """.trimIndent()
 
         return LLMProvider.prompt(
-            input = prompt, actions = listOf(
-                Action(
-                    "request_file_context",
-                    """Provide a file in context for the request. 
-                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
-                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
-                    ActionMethod(
-                        ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java), this
-                    )
-                )
-            ), temperature = 0.7, parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})
+            input = prompt,
+            actions = listOf(readFileAction),
+            temperature = 0.5,
+            parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})
     }
 
     override suspend fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation {
@@ -182,7 +162,7 @@ class DefaultReasoner(
         return LLMProvider.prompt(
             input = prompt,
             actions = emptyList(),
-            temperature = 0.7,
+            temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodeEvaluation>() {})
     }
 
@@ -202,7 +182,7 @@ class DefaultReasoner(
             ${understanding.contextRelevance.entries.joinToString("\n") { "- ${it.key}: ${it.value}" }}
             
             Provide the best possible answer based on the context you have.
-            If you need more context about any file, you can request it with "request_file_context".
+            If you need the context of any file, you can request it with "request_file_context".
             
             Return your answer as a simple string and include the confidence level (0-1) of your answer.
         """.trimIndent()
@@ -210,12 +190,18 @@ class DefaultReasoner(
         // Attempt to leverage the same LLM approach used in DefaultReasoner, if available
         return LLMProvider.prompt(
             input = prompt,
-            actions = emptyList(),
+            actions = listOf(readFileAction),
             temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {})
     }
 
-    override suspend fun learn(feedback: UserFeedback) {
-        TODO("Not yet implemented")
-    }
+    val readFileAction = Action(
+        "request_file_context",
+        """Provide a file in context for the request. 
+                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
+                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java), this
+        )
+    )
 }

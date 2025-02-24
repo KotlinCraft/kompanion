@@ -4,6 +4,7 @@ import agent.domain.*
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
+import agent.reason.Reasoner
 import org.slf4j.LoggerFactory
 
 class CodingAgent internal constructor(

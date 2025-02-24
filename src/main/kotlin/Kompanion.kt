@@ -1,11 +1,19 @@
-import agent.*
+import agent.CodeGenerator
+import agent.CodingAgent
+import agent.ContextManager
+import agent.InMemoryContextManager
+import agent.coding.DefaultCodeGenerator
 import agent.domain.CodeApplier
 import agent.interaction.InteractionHandler
+import agent.reason.DefaultReasoner
+import agent.reason.Reasoner
 import ai.LLMProvider
 import ai.LLMRegistry
+import arrow.core.Either
+import arrow.core.getOrElse
 import config.AppConfig
 
-class Kompanion constructor(
+class Kompanion(
     val agent: CodingAgent
 ) {
     companion object {
@@ -57,8 +65,13 @@ class KompanionBuilder {
 
     fun build(): Kompanion {
         val finalContextManager = contextManager ?: InMemoryContextManager()
-        val smallProvider = getFinalLLMProvider(AppConfig.load().model.small)
-        val bigProvider = getFinalLLMProvider(AppConfig.load().model.big)
+        val smallProvider = Either.catch {
+            getFinalLLMProvider(AppConfig.load().model.small)
+        }.getOrElse { getFinalLLMProvider("gpt-4o-mini") }
+
+        val bigProvider = Either.catch {
+            getFinalLLMProvider(AppConfig.load().model.big)
+        }.getOrElse { getFinalLLMProvider("gpt-4o") }
 
         val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)
         val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
