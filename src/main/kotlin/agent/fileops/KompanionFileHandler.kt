@@ -8,13 +8,8 @@ private const val KOMPANION_FOLDER = ".kompanion"
 
 class KompanionFileHandler {
     companion object {
-        enum class KompanionFile(
-            val fileName: String
-        ) {
-            MESSAGE_HISTORY("message_history.txt"),
-        }
 
-        fun folderExists(): Boolean {
+        fun kompanionFolderExists(): Boolean {
             val latestDirectory = AppConfig.load().latestDirectory
             val folder = File("$latestDirectory/$KOMPANION_FOLDER")
             return folder.exists()
@@ -40,12 +35,15 @@ class KompanionFileHandler {
             }
         }
 
-        fun appendToKompanionFile(fileName: String, text: String) {
+        fun append(fileName: String, text: String) {
             val latestDirectory = AppConfig.load().latestDirectory
             val filePath = "$latestDirectory/$KOMPANION_FOLDER/$fileName"
             try {
                 val file = File(filePath)
-                file.appendText(text)
+                if (!file.exists()) {
+                    file.createNewFile()
+                }
+                file.appendText(text + "\n")
             } catch (e: IOException) {
                 println("Error appending to file: ${e.message}")
 
@@ -65,4 +63,11 @@ class KompanionFileHandler {
             }
         }
     }
+}
+
+
+enum class KompanionFile(
+    val fileName: String
+) {
+    MESSAGE_HISTORY("message_history.txt"),
 }

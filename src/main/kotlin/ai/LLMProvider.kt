@@ -6,7 +6,15 @@ import org.springframework.core.ParameterizedTypeReference
 /**
  * Provider interface for Large Language Models
  */
-interface LLMProvider {
+abstract class LLMProvider {
+
+    fun setModel(model: String): LLMProvider {
+        if (getSupportedModels().contains(model)) {
+            return this
+        } else {
+            throw IllegalArgumentException("Model $model is not supported by this provider")
+        }
+    }
 
     companion object {
         fun register(providerClass: Class<out LLMProvider>) {
@@ -35,7 +43,7 @@ interface LLMProvider {
         }
     }
 
-    suspend fun <T> prompt(
+    abstract suspend fun <T> prompt(
         input: String,
         actions: List<Action>,
         temperature: Double,
@@ -43,5 +51,5 @@ interface LLMProvider {
         retry: Boolean = true
     ): T
 
-    fun getSupportedModels(): List<String>
+    abstract fun getSupportedModels(): List<String>
 }

@@ -239,7 +239,7 @@ fun ChatScreen() {
         }
 
         LaunchedEffect(key1 = workingDirectory) {
-            analystKompanion.agent.onLoad()
+            analystKompanion.agent.onload()
             isProcessing = false
             isWaitingForAnswer = false
         }
@@ -299,7 +299,6 @@ fun ChatScreen() {
                                 if (firstCommand != null) {
                                     inputText = firstCommand.command
                                 }
-
                                 true
                             } else false
                         }

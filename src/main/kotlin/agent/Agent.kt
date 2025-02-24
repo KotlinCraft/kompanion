@@ -1,11 +1,11 @@
 package agent
 
+import agent.fileops.KompanionFile
 import agent.fileops.KompanionFileHandler
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
 import agent.traits.Interactor
 import agent.traits.Mode
-import org.slf4j.LoggerFactory
 
 class Agent internal constructor(
     private val contextManager: ContextManager,
@@ -18,13 +18,16 @@ class Agent internal constructor(
     }
 
     suspend fun perform(request: String): String {
-        return mode.perform(request)
+        return mode.perform(request).also { response ->
+            if (KompanionFileHandler.kompanionFolderExists()) {
+                KompanionFileHandler.append(KompanionFile.MESSAGE_HISTORY.fileName, "User: $request")
+                KompanionFileHandler.append(KompanionFile.MESSAGE_HISTORY.fileName, "User: $response")
+            }
+        }
     }
 
-    private val logger = LoggerFactory.getLogger(this::class.java)
-
-    suspend fun onLoad() {
-        if (!KompanionFileHandler.folderExists()) {
+    suspend fun onload() {
+        if (!KompanionFileHandler.kompanionFolderExists()) {
             val result =
                 confirmWithUser(
                     """Hello! I'm Kompanion 👋, your coding assistant. 
@@ -34,7 +37,7 @@ class Agent internal constructor(
                 )
 
             if (result) {
-                if (!KompanionFileHandler.folderExists()) {
+                if (!KompanionFileHandler.kompanionFolderExists()) {
                     KompanionFileHandler.createFolder()
                     interactionHandler.interact(
                         AgentResponse(
@@ -46,6 +49,8 @@ class Agent internal constructor(
                 }
             }
         }
+
+        mode.onload()
     }
 
     override fun interactionHandler(): InteractionHandler {

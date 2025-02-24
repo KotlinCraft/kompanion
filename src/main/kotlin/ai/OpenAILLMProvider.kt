@@ -20,7 +20,7 @@ import org.springframework.ai.openai.api.OpenAiApi
 import org.springframework.ai.util.JacksonUtils
 import org.springframework.core.ParameterizedTypeReference
 
-class OpenAILLMProvider : LLMProvider {
+class OpenAILLMProvider : LLMProvider() {
     val logger = LoggerFactory.getLogger(this::class.java)
 
     val objectmapper = jacksonObjectMapper().apply {

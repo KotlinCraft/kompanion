@@ -1,7 +1,7 @@
 package agent.interaction
 
-sealed class AgentMessage
+sealed class AgentMessage(val message: String, val important: Boolean)
 
 //message is either a question or a response
-data class AgentQuestion(val message: String) : AgentMessage()
-data class AgentResponse(val message: String) : AgentMessage()
+class AgentQuestion(message: String, important: Boolean = false) : AgentMessage(message, important)
+class AgentResponse(message: String, important: Boolean = false) : AgentMessage(message, important)

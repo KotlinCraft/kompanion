@@ -13,14 +13,8 @@ object LLMRegistry {
     }
 
     fun getProviderForModel(model: String): LLMProvider? {
-        return modelProviders[model]
-    }
-
-    fun getAllRegisteredModels(): Set<String> {
-        return modelProviders.keys
-    }
-
-    fun clear() {
-        modelProviders.clear()
+        return modelProviders[model].also {
+            it?.setModel(model)
+        }
     }
 }

@@ -1,6 +1,10 @@
 import agent.*
 import agent.coding.DefaultCodeGenerator
 import agent.domain.CodeApplier
+import agent.fileops.KompanionFile
+import agent.fileops.KompanionFileHandler
+import agent.fileops.KompanionFileHandler.Companion.kompanionFolderExists
+import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler
 import agent.reason.DefaultReasoner
 import agent.reason.Reasoner
@@ -93,9 +97,21 @@ class KompanionBuilder {
             AgentMode.CODE -> CodingMode(finalReasoner, finalGenerator, interactionHandler!!)
         }
 
+        val interactionSavingWrapper = object : InteractionHandler {
+            override suspend fun interact(agentMessage: AgentMessage): String {
+                if (agentMessage.important && kompanionFolderExists()) {
+                    KompanionFileHandler.append(
+                        KompanionFile.MESSAGE_HISTORY.fileName,
+                        "Kompanion: ${agentMessage.message}"
+                    )
+                }
+                return interactionHandler!!.interact(agentMessage)
+            }
+        }
+
         val agent = Agent(
             finalContextManager,
-            interactionHandler!!,
+            interactionSavingWrapper,
             mode
         )
         return Kompanion(agent)
