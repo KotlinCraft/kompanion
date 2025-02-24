@@ -21,6 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.unit.sp
 import config.AppConfig
 import kotlinx.coroutines.*
@@ -279,6 +283,9 @@ fun ChatScreen() {
                         .onKeyEvent { event ->
                             if (event.key == Key.Enter && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
                                 sendCurrentMessage()
+                                true
+                            } else if (event.key == Key.R && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
+                                performSlashCommand(slashCommands.first { it.command == "/clear" })
                                 true
                             } else false
                         }
