@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +34,8 @@ import ui.SettingsDialog
 import ui.chat.ChatMessage
 import ui.chat.MessageBubble
 import ui.chat.WorkingDirectorySelector
+import ui.info.InfoManager
+import ui.info.InfoTooltip
 import java.nio.file.Path
 import kotlin.io.path.name
 import kotlin.random.Random
@@ -59,10 +60,6 @@ fun ChatScreen() {
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
 
-    // Information messages state
-    var hasInfoMessages by remember { mutableStateOf(true) } // Set to true for demonstration
-    var showInfoTooltip by remember { mutableStateOf(false) }
-
     // Mode state variable: "code", "ask", or "blockchain"
     var mode by remember { mutableStateOf("code") }
 
@@ -77,6 +74,16 @@ fun ChatScreen() {
 
     var showSettings by remember { mutableStateOf(false) }
     var configState by remember { mutableStateOf(AppConfig.load()) }
+
+    // Initial check for configuration issues
+    LaunchedEffect(Unit) {
+        InfoManager.checkConfigurationIssues()
+    }
+
+    // Check configuration issues whenever configState changes
+    LaunchedEffect(configState) {
+        InfoManager.checkConfigurationIssues()
+    }
 
     val interactionHandler = object : InteractionHandler {
         override suspend fun interact(agentMessage: AgentMessage): String {
@@ -504,44 +511,7 @@ fun ChatScreen() {
                         }
                         
                         // Info icon (right side)
-                        if (hasInfoMessages) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(CircleShape)
-                                    .background(accentColor.copy(alpha = 0.2f))
-                                    .clickable { showInfoTooltip = !showInfoTooltip }
-                                    .padding(2.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Info,
-                                    contentDescription = "Information",
-                                    tint = accentColor,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                
-                                // Tooltip/balloon
-                                if (showInfoTooltip) {
-                                    Popup(alignment = Alignment.BottomEnd) {
-                                        Surface(
-                                            color = darkBackground,
-                                            elevation = 8.dp,
-                                            shape = RoundedCornerShape(8.dp),
-                                            modifier = Modifier
-                                                .padding(8.dp)
-                                        ) {
-                                            Text(
-                                                "Information will come here",
-                                                color = Color.White,
-                                                fontSize = 12.sp,
-                                                modifier = Modifier.padding(12.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        InfoTooltip(accentColor = accentColor, backgroundColor = darkBackground)
                     }
                 }
             }
