@@ -29,7 +29,6 @@ class AnthropicLLMProvider : LLMProvider() {
     }
 
     var temperature = 1.0
-    var modelName = "Claude 3.7 Sonnet"
 
     val client by lazy {
         createClient()
@@ -45,7 +44,7 @@ class AnthropicLLMProvider : LLMProvider() {
             .anthropicApi(AnthropicApi(key))
             .defaultOptions(
                 AnthropicChatOptions.builder()
-                    .model(modelName)
+                    .model(model)
                     .temperature(temperature)
                     .build()
             ).build()
@@ -113,6 +112,7 @@ class AnthropicLLMProvider : LLMProvider() {
     override fun getSupportedModels(): List<String> {
         return listOf(
             "claude-3-7-sonnet-latest",
+            "claude-3-5-haiku-latest",
         )
     }
 }

@@ -95,11 +95,11 @@ class KompanionBuilder {
         val finalAppConfig = appConfig ?: AppConfig.load()
         val finalContextManager = contextManager ?: InMemoryContextManager()
         val smallProvider = Either.catch {
-            getFinalLLMProvider(finalAppConfig.model.small)
+            getFinalLLMProvider(finalAppConfig.currentProvider.small)
         }.getOrElse { getFinalLLMProvider("gpt-4o-mini") }
 
         val bigProvider = Either.catch {
-            getFinalLLMProvider(finalAppConfig.model.big)
+            getFinalLLMProvider(finalAppConfig.currentProvider.big)
         }.getOrElse { getFinalLLMProvider("gpt-4o") }
 
         val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)

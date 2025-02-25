@@ -50,6 +50,7 @@ class DefaultReasoner(
                 temperature = 0.7,
                 parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {})
         }.getOrElse {
+            it.printStackTrace()
             throw IllegalArgumentException("I'm afraid I was unable to analyze your request.")
         }
     }

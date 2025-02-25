@@ -8,8 +8,11 @@ import org.springframework.core.ParameterizedTypeReference
  */
 abstract class LLMProvider {
 
+    lateinit var model: String
+
     fun setModel(model: String): LLMProvider {
         if (getSupportedModels().contains(model)) {
+            this.model = model
             return this
         } else {
             throw IllegalArgumentException("Model $model is not supported by this provider")

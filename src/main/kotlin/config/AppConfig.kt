@@ -5,15 +5,21 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.nio.file.Paths
 
-enum class Provider {
-    ANTHROPIC, OPENAI
+enum class Provider(val small: String, val big: String) {
+    ANTHROPIC(
+        "claude-3-5-haiku-latest",
+        "claude-3-7-sonnet-latest"
+    ),
+    OPENAI(
+        "gpt-4o-mini",
+        "gpt-4o"
+    )
 }
 
 data class AppConfig(
     val openAiKey: String = "",
     val anthropicKey: String = "",
     val latestDirectory: String = "~",
-    val model: ConfigModel = ConfigModel("gpt-4o-mini", "gpt-4o"),
     val etherscan: EtherscanConfig = EtherscanConfig(),
     val currentProvider: Provider = Provider.OPENAI,
 ) {

@@ -41,38 +41,35 @@ fun SettingsDialog(
 ) {
     var openAiKey by remember { mutableStateOf(initialConfig.openAiKey) }
     var anthropicKey by remember { mutableStateOf(initialConfig.anthropicKey) }
-    var smallModel by remember { mutableStateOf(initialConfig.model.small) }
-    var bigModel by remember { mutableStateOf(initialConfig.model.big) }
     var etherscanBaseApiKey by remember { mutableStateOf(initialConfig.etherscan.baseApiKey) }
     var etherscanEthereumApiKey by remember { mutableStateOf(initialConfig.etherscan.ethereumApiKey) }
     var currentProvider by remember { mutableStateOf(initialConfig.currentProvider) }
-    
+
     var showValidationErrors by remember { mutableStateOf(false) }
     var validationErrors by remember { mutableStateOf(listOf<ValidationError>()) }
-    
+
     val scrollState = rememberScrollState()
 
     fun validateSettings(): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
-        
+
         if (currentProvider == Provider.ANTHROPIC && anthropicKey.isBlank()) {
             errors.add(ValidationError("Anthropic API key is required when Anthropic is selected as provider"))
         }
-        
+
         if (currentProvider == Provider.OPENAI && openAiKey.isBlank()) {
             errors.add(ValidationError("OpenAI API key is required when OpenAI is selected as provider"))
         }
-        
+
         return errors
     }
-    
+
     fun saveSettings() {
         val errors = validateSettings()
         if (errors.isEmpty()) {
             onClose(
                 initialConfig.copy(
                     openAiKey = openAiKey,
-                    model = initialConfig.model.copy(small = smallModel, big = bigModel),
                     anthropicKey = anthropicKey,
                     etherscan = initialConfig.etherscan.copy(
                         baseApiKey = etherscanBaseApiKey,
@@ -109,7 +106,7 @@ fun SettingsDialog(
             ) {
                 Text(text = "Settings", style = MaterialTheme.typography.h6)
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Provider Selection
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -118,7 +115,7 @@ fun SettingsDialog(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "AI Provider", style = MaterialTheme.typography.subtitle1)
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 RadioButton(
@@ -127,7 +124,7 @@ fun SettingsDialog(
                                 )
                                 Text("OpenAI")
                             }
-                            
+
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 RadioButton(
                                     selected = currentProvider == Provider.ANTHROPIC,
@@ -172,23 +169,7 @@ fun SettingsDialog(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "OpenAI Configuration", style = MaterialTheme.typography.subtitle1)
                         Spacer(modifier = Modifier.height(8.dp))
-                        
-                        OutlinedTextField(
-                            value = smallModel,
-                            onValueChange = { smallModel = it },
-                            label = { Text("Small Model") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        OutlinedTextField(
-                            value = bigModel,
-                            onValueChange = { bigModel = it },
-                            label = { Text("Big Model") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         OutlinedTextField(
                             value = openAiKey,
                             onValueChange = { openAiKey = it },
@@ -205,7 +186,7 @@ fun SettingsDialog(
                         }
                     }
                 }
-                
+
                 // Etherscan Section
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -214,7 +195,7 @@ fun SettingsDialog(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "Etherscan Configuration", style = MaterialTheme.typography.subtitle1)
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         OutlinedTextField(
                             value = etherscanBaseApiKey,
                             onValueChange = { etherscanBaseApiKey = it },
@@ -223,7 +204,7 @@ fun SettingsDialog(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         OutlinedTextField(
                             value = etherscanEthereumApiKey,
                             onValueChange = { etherscanEthereumApiKey = it },
@@ -231,7 +212,7 @@ fun SettingsDialog(
                             placeholder = { Text("Enter your Etherscan Ethereum API key") },
                             modifier = Modifier.fillMaxWidth()
                         )
-                        
+
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "These API keys are required for Etherscan blockchain data integration",
@@ -240,7 +221,7 @@ fun SettingsDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
