@@ -12,6 +12,28 @@ import androidx.compose.ui.window.Dialog
 import config.AppConfig
 import config.Provider
 
+data class ValidationError(val message: String)
+
+@Composable
+fun ValidationErrorDialog(errors: List<ValidationError>, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Validation Errors") },
+        text = {
+            Column {
+                errors.forEach { error ->
+                    Text("• ${error.message}")
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("OK")
+            }
+        }
+    )
+}
+
 @Composable
 fun SettingsDialog(
     initialConfig: AppConfig,
@@ -25,9 +47,54 @@ fun SettingsDialog(
     var etherscanEthereumApiKey by remember { mutableStateOf(initialConfig.etherscan.ethereumApiKey) }
     var currentProvider by remember { mutableStateOf(initialConfig.currentProvider) }
     
+    var showValidationErrors by remember { mutableStateOf(false) }
+    var validationErrors by remember { mutableStateOf(listOf<ValidationError>()) }
+    
     val scrollState = rememberScrollState()
 
-    Dialog(onDismissRequest = { onClose(initialConfig.copy(openAiKey = openAiKey)) }) {
+    fun validateSettings(): List<ValidationError> {
+        val errors = mutableListOf<ValidationError>()
+        
+        if (currentProvider == Provider.ANTHROPIC && anthropicKey.isBlank()) {
+            errors.add(ValidationError("Anthropic API key is required when Anthropic is selected as provider"))
+        }
+        
+        if (currentProvider == Provider.OPENAI && openAiKey.isBlank()) {
+            errors.add(ValidationError("OpenAI API key is required when OpenAI is selected as provider"))
+        }
+        
+        return errors
+    }
+    
+    fun saveSettings() {
+        val errors = validateSettings()
+        if (errors.isEmpty()) {
+            onClose(
+                initialConfig.copy(
+                    openAiKey = openAiKey,
+                    model = initialConfig.model.copy(small = smallModel, big = bigModel),
+                    anthropicKey = anthropicKey,
+                    etherscan = initialConfig.etherscan.copy(
+                        baseApiKey = etherscanBaseApiKey,
+                        ethereumApiKey = etherscanEthereumApiKey
+                    ),
+                    currentProvider = currentProvider
+                )
+            )
+        } else {
+            validationErrors = errors
+            showValidationErrors = true
+        }
+    }
+
+    if (showValidationErrors) {
+        ValidationErrorDialog(
+            errors = validationErrors,
+            onDismiss = { showValidationErrors = false }
+        )
+    }
+
+    Dialog(onDismissRequest = { onClose(initialConfig) }) {
         Surface(
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colors.surface,
@@ -85,8 +152,16 @@ fun SettingsDialog(
                             onValueChange = { anthropicKey = it },
                             label = { Text("Anthropic Key") },
                             placeholder = { Text("Enter your Anthropic API key") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = currentProvider == Provider.ANTHROPIC && anthropicKey.isBlank()
                         )
+                        if (currentProvider == Provider.ANTHROPIC && anthropicKey.isBlank()) {
+                            Text(
+                                "Required when Anthropic is selected",
+                                color = MaterialTheme.colors.error,
+                                style = MaterialTheme.typography.caption
+                            )
+                        }
                     }
                 }
 
@@ -118,8 +193,16 @@ fun SettingsDialog(
                             value = openAiKey,
                             onValueChange = { openAiKey = it },
                             label = { Text("OpenAI Key") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isError = currentProvider == Provider.OPENAI && openAiKey.isBlank()
                         )
+                        if (currentProvider == Provider.OPENAI && openAiKey.isBlank()) {
+                            Text(
+                                "Required when OpenAI is selected",
+                                color = MaterialTheme.colors.error,
+                                style = MaterialTheme.typography.caption
+                            )
+                        }
                     }
                 }
                 
@@ -163,20 +246,7 @@ fun SettingsDialog(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = {
-                        onClose(
-                            initialConfig.copy(
-                                openAiKey = openAiKey,
-                                model = initialConfig.model.copy(small = smallModel, big = bigModel),
-                                anthropicKey = anthropicKey,
-                                etherscan = initialConfig.etherscan.copy(
-                                    baseApiKey = etherscanBaseApiKey,
-                                    ethereumApiKey = etherscanEthereumApiKey
-                                ),
-                                currentProvider = currentProvider
-                            )
-                        )
-                    }) {
+                    Button(onClick = { saveSettings() }) {
                         Text("Save and Close")
                     }
                 }

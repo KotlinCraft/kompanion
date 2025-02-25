@@ -29,6 +29,7 @@ import androidx.compose.ui.window.Popup
 import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
 import kotlinx.coroutines.*
+import org.slf4j.LoggerFactory
 import ui.FilePill
 import ui.SettingsDialog
 import ui.chat.ChatMessage
@@ -49,12 +50,15 @@ private data class SlashCommand(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ChatScreen() {
+
+    val logger = LoggerFactory.getLogger("ChatScreen")
+
     // Theme colors
     val darkBackground = Color(0xFF1E1E2E) // Darker background for better contrast
     val darkSecondary = Color(0xFF2D2D3F) // Slightly lighter for components
     val accentColor = Color(0xFF7289DA) // Discord-like accent color
     val successColor = Color(0xFF43B581) // Green for success indicators
-    
+
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
@@ -114,49 +118,76 @@ fun ChatScreen() {
     val inMemoryContextManager = remember {
         InMemoryContextManager()
     }
-    
+
     val etherscanClientManager = remember {
         EtherscanClientManager()
     }
 
-    val codingKompanion = remember {
-        Kompanion.builder()
+    fun createCodingKompanion(handler: InteractionHandler, contextManager: InMemoryContextManager): Kompanion {
+        logger.info("creating coder")
+        return Kompanion.builder()
             .withMode(CODE)
-            .withInteractionHandler(interactionHandler)
-            .withContextManager(inMemoryContextManager)
+            .withInteractionHandler(handler)
+            .withContextManager(contextManager)
+            .withAppConfig(configState)
             .build()
     }
 
-    val analystKompanion = remember {
-        Kompanion.builder()
+    // Function to create an analyst Kompanion
+    fun createAnalystKompanion(handler: InteractionHandler, contextManager: InMemoryContextManager): Kompanion {
+        logger.info("creating analyst")
+        return Kompanion.builder()
             .withMode(ASK)
-            .withInteractionHandler(interactionHandler)
-            .withContextManager(inMemoryContextManager)
-            .build()
-    }
-    
-    val blockchainKompanion = remember {
-        Kompanion.builder()
-            .withMode(BLOCKCHAIN)
-            .withInteractionHandler(interactionHandler)
-            .withContextManager(inMemoryContextManager)
-            .withEtherscanClientManager(etherscanClientManager)
+            .withInteractionHandler(handler)
+            .withContextManager(contextManager)
+            .withAppConfig(configState)
             .build()
     }
 
-    val openFiles by analystKompanion.agent.fetchContextManager().getContext().collectAsState()
+    // Function to create a blockchain Kompanion
+    fun createBlockchainKompanion(handler: InteractionHandler, contextManager: InMemoryContextManager, etherscanManager: EtherscanClientManager): Kompanion {
+        logger.info("creating blockchain kompanion")
+        return Kompanion.builder()
+            .withMode(BLOCKCHAIN)
+            .withInteractionHandler(handler)
+            .withContextManager(contextManager)
+            .withEtherscanClientManager(etherscanManager)
+            .withAppConfig(configState)
+            .build()
+    }
+
+    // Agent state to hold the three Kompanion agents
+    class AgentState {
+        var codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
+        var analystKompanion = createAnalystKompanion(interactionHandler, inMemoryContextManager)
+        var blockchainKompanion = createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
+    }
+
+    
+    // Create agents state and remember it
+    val agentState = remember { AgentState() }
+    
+    // Function to recreate all agents with the latest config
+    fun recreateAgents() {
+        logger.info("Recreating agents with new configuration")
+        agentState.codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
+        agentState.analystKompanion = createAnalystKompanion(interactionHandler, inMemoryContextManager)
+        agentState.blockchainKompanion = createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
+    }
+
+    val openFiles by agentState.analystKompanion.agent.fetchContextManager().getContext().collectAsState()
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
         SlashCommand("/clear-context", "Clear the file context") {
-            analystKompanion.agent.fetchContextManager().clearContext()
+            agentState.analystKompanion.agent.fetchContextManager().clearContext()
             messages = messages + ChatMessage("File context cleared.", false)
         },
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
         SlashCommand("/blockchain", "Switch to blockchain mode") { mode = "blockchain" },
         SlashCommand("/add", "Switch to ask mode") {
-            analystKompanion.agent.fetchContextManager().updateFiles(
+            agentState.analystKompanion.agent.fetchContextManager().updateFiles(
                 listOf(
                     CodeFile(Path.of("/opt/test${Random(1000).nextInt()}.html"), "", "html")
                 )
@@ -187,9 +218,9 @@ fun ChatScreen() {
             try {
                 withContext(Dispatchers.IO) {
                     val response = when (mode) {
-                        "code" -> codingKompanion.agent.perform(userMessage)
-                        "ask" -> analystKompanion.agent.perform(userMessage)
-                        "blockchain" -> blockchainKompanion.agent.perform(userMessage)
+                        "code" -> agentState.codingKompanion.agent.perform(userMessage)
+                        "ask" -> agentState.analystKompanion.agent.perform(userMessage)
+                        "blockchain" -> agentState.blockchainKompanion.agent.perform(userMessage)
                         else -> "Invalid mode"
                     }
                     messages = messages + ChatMessage(response, false)
@@ -254,9 +285,11 @@ fun ChatScreen() {
         )
 
         if (showSettings) {
-            SettingsDialog(initialConfig = configState, onClose = {
-                configState = it
-                AppConfig.save(it)
+            SettingsDialog(initialConfig = configState, onClose = { newConfig ->
+                configState = newConfig
+                AppConfig.save(newConfig)
+                // Recreate agents with the new configuration
+                recreateAgents()
                 InfoManager.checkConfigurationIssues()
                 showSettings = false
             })
@@ -284,7 +317,7 @@ fun ChatScreen() {
         }
 
         LaunchedEffect(key1 = workingDirectory) {
-            analystKompanion.agent.onload()
+            agentState.analystKompanion.agent.onload()
             isProcessing = false
             isWaitingForAnswer = false
         }
@@ -306,7 +339,7 @@ fun ChatScreen() {
                         fontSize = 12.sp,
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    
+
                     WorkingDirectorySelector(
                         workingDirectory = workingDirectory,
                         onWorkingDirectoryChange = { newDir ->
@@ -318,18 +351,18 @@ fun ChatScreen() {
                         darkSecondary = darkSecondary
                     )
                 }
-                
+
                 // Open Files display
                 if (openFiles.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         "Open Files:",
                         color = Color.White.copy(alpha = 0.7f),
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    
+
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -385,7 +418,7 @@ fun ChatScreen() {
                         }
                     }
                 }
-                
+
                 // Input textfield and send button
                 Row(
                     modifier = Modifier
@@ -472,7 +505,7 @@ fun ChatScreen() {
                         }
                     }
                 }
-                
+
                 // Keyboard shortcuts hint with info icon
                 Box(
                     modifier = Modifier
@@ -510,7 +543,7 @@ fun ChatScreen() {
                                 )
                             }
                         }
-                        
+
                         // Info icon (right side)
                         InfoTooltip(accentColor = accentColor, backgroundColor = darkBackground)
                     }
