@@ -1,4 +1,5 @@
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -20,20 +21,126 @@ import androidx.compose.ui.unit.sp
 fun TopBar(
     darkBackground: Color,
     mode: String,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onModeChange: (String) -> Unit = {}
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(darkBackground)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Settings button in top-right corner
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // App title
+            Text(
+                text = "Kompanion",
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            
+            // Mode selector
+            Card(
+                backgroundColor = Color(0xFF2D2D3F),
+                shape = RoundedCornerShape(24.dp),
+                elevation = 2.dp,
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Code mode button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { onModeChange("code") }
+                            .background(if (mode == "code") Color(0xFF2E6F40) else Color.Transparent)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Code,
+                                contentDescription = "Code mode",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Code",
+                                color = Color.White,
+                                fontWeight = if (mode == "code") FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Ask mode button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { onModeChange("ask") }
+                            .background(if (mode == "ask") Color(0xFF4A6FD0) else Color.Transparent)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.QuestionAnswer,
+                                contentDescription = "Ask mode",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Ask",
+                                color = Color.White,
+                                fontWeight = if (mode == "ask") FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // Blockchain mode button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { onModeChange("blockchain") }
+                            .background(if (mode == "blockchain") Color(0xFF936FBC) else Color.Transparent)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.AccountBalance,
+                                contentDescription = "Blockchain mode",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Blockchain",
+                                color = Color.White,
+                                fontWeight = if (mode == "blockchain") FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Settings button
             IconButton(
                 onClick = onSettingsClick,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
+                modifier = Modifier.padding(start = 8.dp)
             ) {
                 Icon(
                     Icons.Default.Settings,
@@ -43,74 +150,13 @@ fun TopBar(
             }
         }
         
-        // Main title and mode display
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Kompanion",
-                    color = Color.White,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                val backgroundColor = when (mode) {
-                    "code" -> Color(0xFF2E6F40)
-                    "ask" -> Color(0xFF4A6FD0)
-                    "blockchain" -> Color(0xFF936FBC)
-                    else -> Color.Gray
-                }
-                
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(backgroundColor)
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = when (mode) {
-                                "code" -> Icons.Default.Code
-                                "ask" -> Icons.Default.QuestionAnswer
-                                "blockchain" -> Icons.Default.AccountBalance
-                                else -> Icons.Default.QuestionAnswer
-                            },
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = when (mode) {
-                                "code" -> "Code Mode"
-                                "ask" -> "Ask Mode"
-                                "blockchain" -> "Blockchain Mode"
-                                else -> "Unknown Mode"
-                            },
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-        }
-        
-        // Add subtle divider
+        // Add subtle divider at the bottom
         Divider(
             color = Color.White.copy(alpha = 0.1f),
-            thickness = 1.dp
+            thickness = 1.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
         )
     }
 }

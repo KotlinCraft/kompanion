@@ -236,7 +236,8 @@ fun ChatScreen() {
         TopBar(
             darkBackground = darkBackground,
             mode = mode,
-            onSettingsClick = { showSettings = true }
+            onSettingsClick = { showSettings = true },
+            onModeChange = { newMode -> mode = newMode }
         )
 
         if (showSettings) {
@@ -245,106 +246,6 @@ fun ChatScreen() {
                 AppConfig.save(it)
                 showSettings = false
             })
-        }
-
-        // Mode Selector - moved from TopBar to here for better visibility
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Card(
-                modifier = Modifier
-                    .padding(4.dp),
-                backgroundColor = darkSecondary,
-                shape = RoundedCornerShape(24.dp),
-                elevation = 2.dp
-            ) {
-                Row(
-                    modifier = Modifier.padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Code mode button
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { mode = "code" }
-                            .background(if (mode == "code") Color(0xFF2E6F40) else Color.Transparent)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Code,
-                                contentDescription = "Code mode",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                "Code",
-                                color = Color.White,
-                                fontWeight = if (mode == "code") FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Ask mode button
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { mode = "ask" }
-                            .background(if (mode == "ask") Color(0xFF4A6FD0) else Color.Transparent)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.QuestionAnswer,
-                                contentDescription = "Ask mode",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                "Ask",
-                                color = Color.White,
-                                fontWeight = if (mode == "ask") FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.width(8.dp))
-                    
-                    // Blockchain mode button
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { mode = "blockchain" }
-                            .background(if (mode == "blockchain") Color(0xFF936FBC) else Color.Transparent)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.AccountBalance,
-                                contentDescription = "Blockchain mode",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                "Blockchain",
-                                color = Color.White,
-                                fontWeight = if (mode == "blockchain") FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    }
-                }
-            }
         }
 
         // Messages area
