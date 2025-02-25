@@ -33,6 +33,13 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
 
+    //mcp
+    implementation(platform("io.modelcontextprotocol.sdk:mcp-bom:0.7.0"))
+
+    implementation("io.modelcontextprotocol.sdk:mcp")
+    implementation("io.modelcontextprotocol.sdk:mcp-spring-webmvc")
+
+
     // JUnit for testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 
