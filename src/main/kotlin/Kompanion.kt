@@ -9,11 +9,14 @@ import agent.interaction.InteractionHandler
 import agent.reason.DefaultReasoner
 import agent.reason.Reasoner
 import agent.modes.AnalystMode
+import agent.modes.BlockchainMode
 import agent.modes.CodingMode
+import agent.modes.Mode
 import ai.LLMProvider
 import ai.LLMRegistry
 import arrow.core.Either
 import arrow.core.getOrElse
+import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
 
 class Kompanion(
@@ -37,7 +40,7 @@ class Kompanion(
 class KompanionBuilder {
 
     enum class AgentMode {
-        ASK, CODE
+        ASK, CODE, BLOCKCHAIN
     }
 
     private var reasoner: Reasoner? = null
@@ -47,6 +50,7 @@ class KompanionBuilder {
     private var smallLlmProvider: LLMProvider? = null
     private var bigLlmProvider: LLMProvider? = null
     private var interactionHandler: InteractionHandler? = null
+    private var etherscanClientManager: EtherscanClientManager? = null
     private var mode: AgentMode = AgentMode.ASK
 
 
@@ -77,6 +81,10 @@ class KompanionBuilder {
     fun withCustomCodeApplier(applier: CodeApplier) = apply {
         codeApplier = applier
     }
+    
+    fun withEtherscanClientManager(manager: EtherscanClientManager) = apply {
+        etherscanClientManager = manager
+    }
 
     fun build(): Kompanion {
         val finalContextManager = contextManager ?: InMemoryContextManager()
@@ -90,11 +98,17 @@ class KompanionBuilder {
 
         val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)
         val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
+        val finalEtherscanClientManager = etherscanClientManager ?: EtherscanClientManager()
 
+        // Ensure we have an interaction handler
+        if (interactionHandler == null) {
+            throw IllegalStateException("An interaction handler must be provided")
+        }
 
-        val mode = when (mode) {
+        val selectedMode: Mode = when (mode) {
             AgentMode.ASK -> AnalystMode(finalReasoner)
             AgentMode.CODE -> CodingMode(finalReasoner, finalGenerator, interactionHandler!!)
+            AgentMode.BLOCKCHAIN -> BlockchainMode(finalReasoner, finalEtherscanClientManager, interactionHandler!!)
         }
 
         val interactionSavingWrapper = object : InteractionHandler {
@@ -112,7 +126,7 @@ class KompanionBuilder {
         val agent = Agent(
             finalContextManager,
             interactionSavingWrapper,
-            mode
+            selectedMode
         )
         return Kompanion(agent)
     }

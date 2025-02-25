@@ -1,5 +1,4 @@
-import KompanionBuilder.AgentMode.ASK
-import KompanionBuilder.AgentMode.CODE
+import KompanionBuilder.AgentMode.*
 import agent.InMemoryContextManager
 import agent.domain.CodeFile
 import agent.interaction.AgentMessage
@@ -12,18 +11,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
 import kotlinx.coroutines.*
 import ui.FilePill
@@ -44,15 +46,18 @@ private data class SlashCommand(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ChatScreen() {
-    val darkBackground = Color(0xFF343541)
-    val darkSecondary = Color(0xFF40414F)
-
+    // Theme colors
+    val darkBackground = Color(0xFF1E1E2E) // Darker background for better contrast
+    val darkSecondary = Color(0xFF2D2D3F) // Slightly lighter for components
+    val accentColor = Color(0xFF7289DA) // Discord-like accent color
+    val successColor = Color(0xFF43B581) // Green for success indicators
+    
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
 
-    // Mode state variable: "code" or "ask"
+    // Mode state variable: "code", "ask", or "blockchain"
     var mode by remember { mutableStateOf("code") }
 
     var showSuggestions by remember { mutableStateOf(false) }
@@ -96,6 +101,10 @@ fun ChatScreen() {
     val inMemoryContextManager = remember {
         InMemoryContextManager()
     }
+    
+    val etherscanClientManager = remember {
+        EtherscanClientManager()
+    }
 
     val codingKompanion = remember {
         Kompanion.builder()
@@ -112,9 +121,17 @@ fun ChatScreen() {
             .withContextManager(inMemoryContextManager)
             .build()
     }
+    
+    val blockchainKompanion = remember {
+        Kompanion.builder()
+            .withMode(BLOCKCHAIN)
+            .withInteractionHandler(interactionHandler)
+            .withContextManager(inMemoryContextManager)
+            .withEtherscanClientManager(etherscanClientManager)
+            .build()
+    }
 
     val openFiles by analystKompanion.agent.fetchContextManager().getContext().collectAsState()
-
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
@@ -124,6 +141,7 @@ fun ChatScreen() {
         },
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
+        SlashCommand("/blockchain", "Switch to blockchain mode") { mode = "blockchain" },
         SlashCommand("/add", "Switch to ask mode") {
             analystKompanion.agent.fetchContextManager().updateFiles(
                 listOf(
@@ -137,8 +155,10 @@ fun ChatScreen() {
                 Available commands:
                 /code - Switch to code mode
                 /ask - Switch to ask mode
+                /blockchain - Switch to blockchain mode
                 /help - Show available commands
                 /clear - Clear chat history
+                /clear-context - Clear the file context
                 """.trimIndent(), false
             )
         },
@@ -156,6 +176,7 @@ fun ChatScreen() {
                     val response = when (mode) {
                         "code" -> codingKompanion.agent.perform(userMessage)
                         "ask" -> analystKompanion.agent.perform(userMessage)
+                        "blockchain" -> blockchainKompanion.agent.perform(userMessage)
                         else -> "Invalid mode"
                     }
                     messages = messages + ChatMessage(response, false)
@@ -226,6 +247,106 @@ fun ChatScreen() {
             })
         }
 
+        // Mode Selector - moved from TopBar to here for better visibility
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .padding(4.dp),
+                backgroundColor = darkSecondary,
+                shape = RoundedCornerShape(24.dp),
+                elevation = 2.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Code mode button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { mode = "code" }
+                            .background(if (mode == "code") Color(0xFF2E6F40) else Color.Transparent)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Code,
+                                contentDescription = "Code mode",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Code",
+                                color = Color.White,
+                                fontWeight = if (mode == "code") FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Ask mode button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { mode = "ask" }
+                            .background(if (mode == "ask") Color(0xFF4A6FD0) else Color.Transparent)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.QuestionAnswer,
+                                contentDescription = "Ask mode",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Ask",
+                                color = Color.White,
+                                fontWeight = if (mode == "ask") FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // Blockchain mode button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { mode = "blockchain" }
+                            .background(if (mode == "blockchain") Color(0xFF936FBC) else Color.Transparent)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.AccountBalance,
+                                contentDescription = "Blockchain mode",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Blockchain",
+                                color = Color.White,
+                                fontWeight = if (mode == "blockchain") FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Messages area
         LazyColumn(
             state = listState,
@@ -233,7 +354,7 @@ fun ChatScreen() {
                 .weight(1f)
                 .fillMaxWidth(),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(messages) { message ->
                 MessageBubble(message)
@@ -242,7 +363,9 @@ fun ChatScreen() {
 
         // Automatically scroll to the bottom on new messages
         LaunchedEffect(key1 = messages.size) {
-            listState.animateScrollToItem(messages.size)
+            if (messages.isNotEmpty()) {
+                listState.animateScrollToItem(messages.size - 1)
+            }
         }
 
         LaunchedEffect(key1 = workingDirectory) {
@@ -251,30 +374,55 @@ fun ChatScreen() {
             isWaitingForAnswer = false
         }
 
-        // Working Directory Selector (full width)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
+        // Bottom area: Working Directory + Open Files
+        Surface(
+            color = darkSecondary.copy(alpha = 0.8f),
+            modifier = Modifier.fillMaxWidth()
         ) {
-
-            Row(modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)) {
-                WorkingDirectorySelector(
-                    workingDirectory = workingDirectory,
-                    onWorkingDirectoryChange = { newDir ->
-                        workingDirectory = newDir
-                        AppConfig.save(
-                            AppConfig.load().copy(latestDirectory = newDir)
-                        )
-                    },
-                    darkSecondary = darkSecondary
-                )
-
-
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth()
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                // Working Directory Selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    openFiles.forEach { file ->
-                        FilePill(fileName = file.path.name)
+                    Text(
+                        "Working Directory:",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    
+                    WorkingDirectorySelector(
+                        workingDirectory = workingDirectory,
+                        onWorkingDirectoryChange = { newDir ->
+                            workingDirectory = newDir
+                            AppConfig.save(
+                                AppConfig.load().copy(latestDirectory = newDir)
+                            )
+                        },
+                        darkSecondary = darkSecondary
+                    )
+                }
+                
+                // Open Files display
+                if (openFiles.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        "Open Files:",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        openFiles.forEach { file ->
+                            FilePill(fileName = file.path.name)
+                        }
                     }
                 }
             }
@@ -283,131 +431,167 @@ fun ChatScreen() {
         // Input area
         Surface(
             color = darkSecondary,
+            elevation = 8.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .onKeyEvent { event ->
-                            if (event.key == Key.Enter && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
-                                sendCurrentMessage()
-                                true
-                            } else if (event.key == Key.R && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
-                                performSlashCommand(slashCommands.first { it.command == "/clear" })
-                                true
-                            } else if (event.key == Key.Tab && showSuggestions) {
-                                val firstCommand = slashCommands
-                                    .sortedBy { it.command }.firstOrNull { it.command.startsWith(inputText.trim()) }
-
-                                if (firstCommand != null) {
-                                    inputText = firstCommand.command
+            Column {
+                // Command suggestions
+                if (showSuggestions) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = darkSecondary.copy(alpha = 0.9f),
+                        elevation = 2.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            slashCommands
+                                .filter { it.command.startsWith(inputText) }
+                                .forEach { command ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { inputText = command.command + " " }
+                                            .padding(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = command.command,
+                                            color = accentColor,
+                                            fontWeight = FontWeight.Medium,
+                                            modifier = Modifier.width(100.dp)
+                                        )
+                                        Text(
+                                            text = command.description,
+                                            color = Color.White.copy(alpha = 0.7f)
+                                        )
+                                    }
                                 }
-                                true
-                            } else false
                         }
+                    }
+                }
+                
+                // Input textfield and send button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextField(
+                    // Input field
+                    OutlinedTextField(
                         value = inputText,
                         onValueChange = {
                             if (!isProcessing) {
                                 inputText = it
-                                // Only show suggestions if we're at the start of a command
                                 showSuggestions = it.startsWith("/")
                             }
                         },
                         enabled = !isProcessing || isWaitingForAnswer,
-                        colors = TextFieldDefaults.textFieldColors(
-                            backgroundColor = darkSecondary,
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
                             textColor = Color.White,
-                            cursorColor = Color.White,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
+                            cursorColor = accentColor,
+                            focusedBorderColor = accentColor,
+                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                            backgroundColor = darkSecondary
                         ),
-                        modifier = Modifier.fillMaxWidth(),
                         placeholder = {
                             Text(
-                                if (isProcessing && !isWaitingForAnswer) "Thinking really hard..."
-                                else if (isWaitingForAnswer) "Answer the question..."
-                                else "Ask me about your code...",
+                                when {
+                                    isProcessing && !isWaitingForAnswer -> "Thinking..."
+                                    isWaitingForAnswer -> "Please answer the question..."
+                                    else -> when (mode) {
+                                        "code" -> "Ask me to code something..."
+                                        "ask" -> "Ask me about your code..."
+                                        "blockchain" -> "Ask me about blockchain data..."
+                                        else -> "Type your message..."
+                                    }
+                                },
                                 color = Color.Gray
                             )
                         },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .onKeyEvent { event ->
+                                if (event.key == Key.Enter && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
+                                    sendCurrentMessage()
+                                    true
+                                } else if (event.key == Key.R && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
+                                    performSlashCommand(slashCommands.first { it.command == "/clear" })
+                                    true
+                                } else if (event.key == Key.Tab && showSuggestions) {
+                                    val firstCommand = slashCommands
+                                        .sortedBy { it.command }.firstOrNull { it.command.startsWith(inputText.trim()) }
+                                    if (firstCommand != null) {
+                                        inputText = firstCommand.command
+                                    }
+                                    true
+                                } else false
+                            }
                     )
 
-                    if (showSuggestions) {
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .offset(x = ((inputText.length) * 20).dp),
-                            elevation = 4.dp,
-                            shape = RoundedCornerShape(8.dp),
-                            color = darkSecondary
-                        ) {
-                            Column(
-                                modifier = Modifier.width(300.dp)
-                            ) {
-                                slashCommands
-                                    .sortedBy { it.command }
-                                    .filter { it.command.startsWith(inputText) }
-                                    .take(1)
-                                    .forEach { command ->
-                                        Surface(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable {
-                                                    inputText = command.command + " "
-                                                },
-                                            color = Color.Transparent
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(12.dp)
-                                            ) {
-                                                Text(
-                                                    text = command.command,
-                                                    color = Color.White,
-                                                    fontSize = 14.sp,
-                                                    modifier = Modifier.width(80.dp)
-                                                )
-                                                Text(
-                                                    text = command.description,
-                                                    color = Color.Gray,
-                                                    fontSize = 14.sp
-                                                )
-                                            }
-                                        }
-                                    }
-                            }
+                    Spacer(Modifier.width(12.dp))
+
+                    // Send button
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(if (isProcessing) Color.Red.copy(alpha = 0.7f) else accentColor)
+                            .clickable { sendCurrentMessage() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isProcessing && !isWaitingForAnswer) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                if (isProcessing) Icons.Default.Close else Icons.Default.Send,
+                                contentDescription = if (isProcessing) "Cancel" else "Send",
+                                tint = Color.White
+                            )
                         }
                     }
                 }
-
-                Spacer(Modifier.width(8.dp))
-
-                if (isProcessing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(Modifier.width(8.dp))
-                }
-
-                IconButton(
-                    onClick = { sendCurrentMessage() }
+                
+                // Keyboard shortcuts hint
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(darkSecondary)
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        if (isProcessing) Icons.Default.Close else Icons.Default.Send,
-                        contentDescription = if (isProcessing) "Cancel" else "Send",
-                        tint = Color.White
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "⌘+Enter to send",
+                            color = Color.Gray,
+                            fontSize = 12.sp
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            "⌘+R to clear",
+                            color = Color.Gray,
+                            fontSize = 12.sp
+                        )
+                        if (showSuggestions) {
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                "Tab to complete command",
+                                color = Color.Gray,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
-
