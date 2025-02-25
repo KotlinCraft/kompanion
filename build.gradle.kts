@@ -23,12 +23,11 @@ dependencies {
     implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0-M6"))
     implementation("org.springframework.ai:spring-ai-openai")
     implementation("org.slf4j:slf4j-api:2.0.7")
-    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation("ch.qos.logback:logback-classic:1.5.16")
     
     // Arrow
-    implementation(platform("io.arrow-kt:arrow-stack:1.2.1"))
-    implementation("io.arrow-kt:arrow-core")
-    implementation("io.arrow-kt:arrow-fx-coroutines")
+    implementation("io.arrow-kt:arrow-core:2.0.1")
+    implementation("io.arrow-kt:arrow-fx-coroutines:2.0.1")
     
     // Jackson for YAML
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2")
