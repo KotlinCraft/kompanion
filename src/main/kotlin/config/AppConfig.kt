@@ -5,12 +5,17 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.nio.file.Paths
 
+enum class Provider {
+    ANTHROPIC, OPENAI
+}
+
 data class AppConfig(
     val openAiKey: String = "",
     val anthropicKey: String = "",
     val latestDirectory: String = "~",
     val model: ConfigModel = ConfigModel("gpt-4o-mini", "gpt-4o"),
     val etherscan: EtherscanConfig = EtherscanConfig(),
+    val currentProvider: Provider = Provider.OPENAI,
 ) {
     companion object {
         private val configPath = Paths.get(System.getProperty("user.home"), ".kompanion", "config.yml")

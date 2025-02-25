@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import config.AppConfig
+import config.Provider
 
 @Composable
 fun SettingsDialog(
@@ -17,11 +18,12 @@ fun SettingsDialog(
     onClose: (AppConfig) -> Unit
 ) {
     var openAiKey by remember { mutableStateOf(initialConfig.openAiKey) }
-var anthropicKey by remember { mutableStateOf(initialConfig.anthropicKey) }
+    var anthropicKey by remember { mutableStateOf(initialConfig.anthropicKey) }
     var smallModel by remember { mutableStateOf(initialConfig.model.small) }
     var bigModel by remember { mutableStateOf(initialConfig.model.big) }
     var etherscanBaseApiKey by remember { mutableStateOf(initialConfig.etherscan.baseApiKey) }
     var etherscanEthereumApiKey by remember { mutableStateOf(initialConfig.etherscan.ethereumApiKey) }
+    var currentProvider by remember { mutableStateOf(initialConfig.currentProvider) }
     
     val scrollState = rememberScrollState()
 
@@ -41,25 +43,52 @@ var anthropicKey by remember { mutableStateOf(initialConfig.anthropicKey) }
                 Text(text = "Settings", style = MaterialTheme.typography.h6)
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // OpenAI Section
+                // Provider Selection
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    elevation = 2.dp
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "AI Provider", style = MaterialTheme.typography.subtitle1)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(
+                                    selected = currentProvider == Provider.OPENAI,
+                                    onClick = { currentProvider = Provider.OPENAI }
+                                )
+                                Text("OpenAI")
+                            }
+                            
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(
+                                    selected = currentProvider == Provider.ANTHROPIC,
+                                    onClick = { currentProvider = Provider.ANTHROPIC }
+                                )
+                                Text("Anthropic")
+                            }
+                        }
+                    }
+                }
 
-// Anthropic Section
-Card(
-    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-    elevation = 2.dp
-) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(text = "Anthropic Configuration", style = MaterialTheme.typography.subtitle1)
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = anthropicKey,
-            onValueChange = { anthropicKey = it },
-            label = { Text("Anthropic Key") },
-            placeholder = { Text("Enter your Anthropic API key") },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
+                // Anthropic Section
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    elevation = 2.dp
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Anthropic Configuration", style = MaterialTheme.typography.subtitle1)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = anthropicKey,
+                            onValueChange = { anthropicKey = it },
+                            label = { Text("Anthropic Key") },
+                            placeholder = { Text("Enter your Anthropic API key") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
 
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -140,10 +169,11 @@ Card(
                                 openAiKey = openAiKey,
                                 model = initialConfig.model.copy(small = smallModel, big = bigModel),
                                 anthropicKey = anthropicKey,
-    etherscan = initialConfig.etherscan.copy(
+                                etherscan = initialConfig.etherscan.copy(
                                     baseApiKey = etherscanBaseApiKey,
                                     ethereumApiKey = etherscanEthereumApiKey
-                                )
+                                ),
+                                currentProvider = currentProvider
                             )
                         )
                     }) {
