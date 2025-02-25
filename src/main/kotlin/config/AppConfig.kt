@@ -7,6 +7,7 @@ import java.nio.file.Paths
 
 data class AppConfig(
     val openAiKey: String = "",
+    val anthropicApiKey: String = "",
     val latestDirectory: String = "~",
     val model: ConfigModel = ConfigModel("gpt-4o-mini", "gpt-4o"),
     val etherscan: EtherscanConfig = EtherscanConfig(),
@@ -26,6 +27,7 @@ data class AppConfig(
 
             return try {
                 mapper.readValue(configFile, AppConfig::class.java)
+                    .copy(anthropicApiKey = mapper.readTree(configFile).path("anthropicApiKey").asText())
             } catch (e: Exception) {
                 println("Failed to load config: ${e.message}")
                 AppConfig()
