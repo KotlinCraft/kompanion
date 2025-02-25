@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
 import kotlinx.coroutines.*
@@ -56,6 +58,10 @@ fun ChatScreen() {
     var inputText by remember { mutableStateOf("") }
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
+
+    // Information messages state
+    var hasInfoMessages by remember { mutableStateOf(true) } // Set to true for demonstration
+    var showInfoTooltip by remember { mutableStateOf(false) }
 
     // Mode state variable: "code", "ask", or "blockchain"
     var mode by remember { mutableStateOf("code") }
@@ -459,36 +465,82 @@ fun ChatScreen() {
                     }
                 }
                 
-                // Keyboard shortcuts hint
+                // Keyboard shortcuts hint with info icon
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(darkSecondary)
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    contentAlignment = Alignment.Center
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "⌘+Enter to send",
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            "⌘+R to clear",
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                        if (showSuggestions) {
-                            Spacer(modifier = Modifier.width(16.dp))
+                        // Keyboard shortcuts (left side)
+                        Row(
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                "Tab to complete command",
+                                "⌘+Enter to send",
                                 color = Color.Gray,
                                 fontSize = 12.sp
                             )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                "⌘+R to clear",
+                                color = Color.Gray,
+                                fontSize = 12.sp
+                            )
+                            if (showSuggestions) {
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    "Tab to complete command",
+                                    color = Color.Gray,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                        
+                        // Info icon (right side)
+                        if (hasInfoMessages) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(accentColor.copy(alpha = 0.2f))
+                                    .clickable { showInfoTooltip = !showInfoTooltip }
+                                    .padding(2.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "Information",
+                                    tint = accentColor,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                
+                                // Tooltip/balloon
+                                if (showInfoTooltip) {
+                                    Popup(alignment = Alignment.BottomEnd) {
+                                        Surface(
+                                            color = darkBackground,
+                                            elevation = 8.dp,
+                                            shape = RoundedCornerShape(8.dp),
+                                            modifier = Modifier
+                                                .padding(8.dp)
+                                        ) {
+                                            Text(
+                                                "Information will come here",
+                                                color = Color.White,
+                                                fontSize = 12.sp,
+                                                modifier = Modifier.padding(12.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
