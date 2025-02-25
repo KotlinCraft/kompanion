@@ -15,9 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 
 @Composable
 fun InfoTooltip(
@@ -54,12 +57,30 @@ fun InfoTooltip(
             
             // Tooltip popup
             if (showTooltip) {
-                Popup(alignment = Alignment.BottomEnd) {
+                Popup(
+                    alignment = Alignment.BottomEnd,
+                    // This enables the popup to be dismissed when clicked outside
+                    properties = PopupProperties(
+                        focusable = true,
+                        dismissOnClickOutside = true
+                    ),
+                    onDismissRequest = { showTooltip = false }
+                ) {
                     Surface(
                         color = backgroundColor,
                         elevation = 8.dp,
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.padding(8.dp)
+                        modifier = Modifier
+                            .padding(8.dp)
+                            // Add key event handling for Escape key
+                            .onKeyEvent { keyEvent ->
+                                if (keyEvent.key == Key.Escape && keyEvent.type == KeyEventType.KeyUp) {
+                                    showTooltip = false
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp).widthIn(max = 300.dp)

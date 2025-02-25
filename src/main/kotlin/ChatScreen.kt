@@ -257,6 +257,7 @@ fun ChatScreen() {
             SettingsDialog(initialConfig = configState, onClose = {
                 configState = it
                 AppConfig.save(it)
+                InfoManager.checkConfigurationIssues()
                 showSettings = false
             })
         }
