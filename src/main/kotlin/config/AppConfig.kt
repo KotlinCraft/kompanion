@@ -38,7 +38,6 @@ data class AppConfig(
 
             return try {
                 mapper.readValue(configFile, AppConfig::class.java)
-                    .copy(anthropicKey = mapper.readTree(configFile).path("anthropicApiKey").asText())
             } catch (e: Exception) {
                 println("Failed to load config: ${e.message}")
                 AppConfig()
