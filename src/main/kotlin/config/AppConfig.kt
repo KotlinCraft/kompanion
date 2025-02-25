@@ -9,6 +9,7 @@ data class AppConfig(
     val openAiKey: String = "",
     val latestDirectory: String = "~",
     val model: ConfigModel = ConfigModel("gpt-4o-mini", "gpt-4o"),
+    val etherscan: EtherscanConfig = EtherscanConfig(),
 ) {
     companion object {
         private val configPath = Paths.get(System.getProperty("user.home"), ".kompanion", "config.yml")
@@ -44,4 +45,9 @@ data class AppConfig(
 data class ConfigModel(
     val small: String,
     val big: String
+)
+
+data class EtherscanConfig(
+    val baseApiKey: String = "",
+    val ethereumApiKey: String = ""
 )

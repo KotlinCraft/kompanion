@@ -52,6 +52,7 @@ class KompanionBuilder {
     private var interactionHandler: InteractionHandler? = null
     private var etherscanClientManager: EtherscanClientManager? = null
     private var mode: AgentMode = AgentMode.ASK
+    private var appConfig: AppConfig? = null
 
 
     fun withMode(mode: AgentMode) = apply {
@@ -81,19 +82,24 @@ class KompanionBuilder {
     fun withCustomCodeApplier(applier: CodeApplier) = apply {
         codeApplier = applier
     }
-    
+
     fun withEtherscanClientManager(manager: EtherscanClientManager) = apply {
         etherscanClientManager = manager
     }
 
+    fun withAppConfig(config: AppConfig) = apply {
+        appConfig = config
+    }
+
     fun build(): Kompanion {
+        val finalAppConfig = appConfig ?: AppConfig.load()
         val finalContextManager = contextManager ?: InMemoryContextManager()
         val smallProvider = Either.catch {
-            getFinalLLMProvider(AppConfig.load().model.small)
+            getFinalLLMProvider(finalAppConfig.model.small)
         }.getOrElse { getFinalLLMProvider("gpt-4o-mini") }
 
         val bigProvider = Either.catch {
-            getFinalLLMProvider(AppConfig.load().model.big)
+            getFinalLLMProvider(finalAppConfig.model.big)
         }.getOrElse { getFinalLLMProvider("gpt-4o") }
 
         val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)

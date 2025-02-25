@@ -16,10 +16,12 @@ import org.slf4j.LoggerFactory
  * 
  * @property baseUrl The base URL for the Etherscan API (e.g., "https://api.etherscan.io/api")
  * @property apiKey API key for accessing the Etherscan API
+ * @property networkType The type of network this client is for (e.g., "ethereum", "base")
  */
 class EtherscanClient(
     private val baseUrl: String,
-    private val apiKey: String
+    private val apiKey: String,
+    val networkType: String
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val httpClient = HttpClient.newBuilder().build()
@@ -71,5 +73,14 @@ class EtherscanClient(
             
             response.body()
         }
+    }
+    
+    /**
+     * Check if the client has a valid API key.
+     * 
+     * @return True if the API key is not empty, false otherwise
+     */
+    fun hasValidApiKey(): Boolean {
+        return apiKey.isNotBlank()
     }
 }

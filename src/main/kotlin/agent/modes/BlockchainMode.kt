@@ -91,6 +91,11 @@ class BlockchainMode(
                 etherscanClientManager.getRegisteredNetworks().joinToString()
             }"
         }
+        
+        // Check if the API key is configured
+        if (!etherscanClientManager.hasValidApiKey(networkName)) {
+            return "The API key for $networkName is not configured. Please configure it in settings."
+        }
 
         val results = StringBuilder()
         results.appendLine("Fetching contract data from $networkName network:")
