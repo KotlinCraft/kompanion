@@ -17,6 +17,7 @@ fun SettingsDialog(
     onClose: (AppConfig) -> Unit
 ) {
     var openAiKey by remember { mutableStateOf(initialConfig.openAiKey) }
+var anthropicKey by remember { mutableStateOf(initialConfig.anthropicKey) }
     var smallModel by remember { mutableStateOf(initialConfig.model.small) }
     var bigModel by remember { mutableStateOf(initialConfig.model.big) }
     var etherscanBaseApiKey by remember { mutableStateOf(initialConfig.etherscan.baseApiKey) }
@@ -41,6 +42,25 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // OpenAI Section
+
+// Anthropic Section
+Card(
+    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+    elevation = 2.dp
+) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(text = "Anthropic Configuration", style = MaterialTheme.typography.subtitle1)
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = anthropicKey,
+            onValueChange = { anthropicKey = it },
+            label = { Text("Anthropic Key") },
+            placeholder = { Text("Enter your Anthropic API key") },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     elevation = 2.dp
@@ -119,7 +139,8 @@ fun SettingsDialog(
                             initialConfig.copy(
                                 openAiKey = openAiKey,
                                 model = initialConfig.model.copy(small = smallModel, big = bigModel),
-                                etherscan = initialConfig.etherscan.copy(
+                                anthropicKey = anthropicKey,
+    etherscan = initialConfig.etherscan.copy(
                                     baseApiKey = etherscanBaseApiKey,
                                     ethereumApiKey = etherscanEthereumApiKey
                                 )
