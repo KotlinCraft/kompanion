@@ -44,6 +44,7 @@ class AnthropicLLMProvider : LLMProvider() {
             .anthropicApi(AnthropicApi(key))
             .defaultOptions(
                 AnthropicChatOptions.builder()
+                    .maxTokens(4000)
                     .model(model)
                     .temperature(temperature)
                     .build()

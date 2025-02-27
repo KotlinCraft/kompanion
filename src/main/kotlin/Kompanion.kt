@@ -1,4 +1,7 @@
-import agent.*
+import agent.Agent
+import agent.CodeGenerator
+import agent.ContextManager
+import agent.InMemoryContextManager
 import agent.coding.DefaultCodeGenerator
 import agent.domain.CodeApplier
 import agent.fileops.KompanionFile
@@ -6,12 +9,13 @@ import agent.fileops.KompanionFileHandler
 import agent.fileops.KompanionFileHandler.Companion.kompanionFolderExists
 import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler
-import agent.reason.DefaultReasoner
-import agent.reason.Reasoner
 import agent.modes.AnalystMode
 import agent.modes.BlockchainMode
 import agent.modes.CodingMode
 import agent.modes.Mode
+import agent.reason.BlockchainReasoner
+import agent.reason.DefaultReasoner
+import agent.reason.Reasoner
 import ai.LLMProvider
 import ai.LLMRegistry
 import arrow.core.Either
@@ -102,7 +106,7 @@ class KompanionBuilder {
             getFinalLLMProvider(finalAppConfig.currentProvider.big)
         }.getOrElse { getFinalLLMProvider("gpt-4o") }
 
-        val finalReasoner = reasoner ?: DefaultReasoner(smallProvider, finalContextManager)
+        val finalReasoner = reasoner
         val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
         val finalEtherscanClientManager = etherscanClientManager ?: EtherscanClientManager()
 
@@ -112,9 +116,19 @@ class KompanionBuilder {
         }
 
         val selectedMode: Mode = when (mode) {
-            AgentMode.ASK -> AnalystMode(finalReasoner)
-            AgentMode.CODE -> CodingMode(finalReasoner, finalGenerator, interactionHandler!!)
-            AgentMode.BLOCKCHAIN -> BlockchainMode(finalReasoner, finalEtherscanClientManager, interactionHandler!!)
+            AgentMode.ASK -> AnalystMode(finalReasoner ?: DefaultReasoner(smallProvider, finalContextManager))
+            AgentMode.CODE -> CodingMode(
+                finalReasoner ?: DefaultReasoner(smallProvider, finalContextManager),
+                finalGenerator,
+                interactionHandler!!
+            )
+
+            AgentMode.BLOCKCHAIN -> BlockchainMode(
+                BlockchainReasoner(
+                    bigProvider,
+                    finalContextManager
+                ), finalEtherscanClientManager, interactionHandler!!
+            )
         }
 
         val interactionSavingWrapper = object : InteractionHandler {

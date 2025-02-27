@@ -32,6 +32,7 @@ import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import ui.FilePill
 import ui.SettingsDialog
+import ui.ToolCounter
 import ui.chat.ChatMessage
 import ui.chat.MessageBubble
 import ui.chat.WorkingDirectorySelector
@@ -544,8 +545,14 @@ fun ChatScreen() {
                             }
                         }
 
-                        // Info icon (right side)
-                        InfoTooltip(accentColor = accentColor, backgroundColor = darkBackground)
+                        // Tool counter and info icon (right side)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            ToolCounter(accentColor = accentColor, backgroundColor = darkBackground)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            InfoTooltip(accentColor = accentColor, backgroundColor = darkBackground)
+                        }
                     }
                 }
             }

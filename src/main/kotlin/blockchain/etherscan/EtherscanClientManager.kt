@@ -25,25 +25,29 @@ class EtherscanClientManager {
 
         // Create Ethereum client
         val ethereumApiKey = AppConfig.load().etherscan.ethereumApiKey
-        registerClient(
-            networkName = "ethereum",
-            client = EtherscanClient(
-                baseUrl = "https://api.etherscan.io/api",
-                apiKey = ethereumApiKey,
-                networkType = "ethereum"
+        if (ethereumApiKey.isNotBlank()) {
+            registerClient(
+                networkName = "ethereum",
+                client = EtherscanClient(
+                    baseUrl = "https://api.etherscan.io/api",
+                    apiKey = ethereumApiKey,
+                    networkType = "ethereum"
+                )
             )
-        )
+        }
 
         // Create Base client
         val baseApiKey = AppConfig.load().etherscan.baseApiKey
-        registerClient(
-            networkName = "base",
-            client = EtherscanClient(
-                baseUrl = "https://api.basescan.org/api",
-                apiKey = baseApiKey,
-                networkType = "base"
+        if (baseApiKey.isNotBlank()) {
+            registerClient(
+                networkName = "base",
+                client = EtherscanClient(
+                    baseUrl = "https://api.basescan.org/api",
+                    apiKey = baseApiKey,
+                    networkType = "base"
+                )
             )
-        )
+        }
     }
 
     /**

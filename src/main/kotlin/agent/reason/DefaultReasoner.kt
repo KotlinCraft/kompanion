@@ -169,13 +169,17 @@ class DefaultReasoner(
             parameterizedTypeReference = object : ParameterizedTypeReference<CodeEvaluation>() {})
     }
 
-    override suspend fun askQuestion(question: String, understanding: Understanding): CodebaseQuestionResponse {
+    override suspend fun askQuestion(
+        question: String,
+        understanding: Understanding,
+        actions: List<Action>
+    ): CodebaseQuestionResponse {
 
 
         val prompt = """
             ${contextManager.currentContextPrompt()}
             
-            The user asked a question about the codebase:
+            The user asked a question about blockchain related (onchain) events:
             $question
             
             Objective: ${understanding.objective}
@@ -193,7 +197,7 @@ class DefaultReasoner(
         // Attempt to leverage the same LLM approach used in DefaultReasoner, if available
         return LLMProvider.prompt(
             input = prompt,
-            actions = listOf(readFileAction),
+            actions = listOf(readFileAction) + actions,
             temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {})
     }
