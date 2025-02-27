@@ -2,6 +2,7 @@ import agent.Agent
 import agent.CodeGenerator
 import agent.ContextManager
 import agent.InMemoryContextManager
+import agent.blockchain.bankless.BanklessClient
 import agent.coding.DefaultCodeGenerator
 import agent.domain.CodeApplier
 import agent.fileops.KompanionFile
@@ -127,7 +128,7 @@ class KompanionBuilder {
                 BlockchainReasoner(
                     bigProvider,
                     finalContextManager
-                ), finalEtherscanClientManager, interactionHandler!!
+                ), finalEtherscanClientManager, BanklessClient(), interactionHandler!!
             )
         }
 
