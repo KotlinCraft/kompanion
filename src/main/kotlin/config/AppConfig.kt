@@ -22,6 +22,7 @@ data class AppConfig(
     val latestDirectory: String = "~",
     val etherscan: EtherscanConfig = EtherscanConfig(),
     val currentProvider: Provider = Provider.OPENAI,
+    val banklessToken: String = ""
 ) {
     companion object {
         private val configPath = Paths.get(System.getProperty("user.home"), ".kompanion", "config.yml")
