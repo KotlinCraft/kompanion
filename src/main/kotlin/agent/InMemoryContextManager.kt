@@ -13,8 +13,18 @@ class InMemoryContextManager : ContextManager {
     private val _files = MutableStateFlow<Set<ContextFile>>(setOf())
     val files: StateFlow<Set<ContextFile>> = _files.asStateFlow()
 
+    val messages = mutableListOf<String>()
+
     override fun getContext(): StateFlow<Set<ContextFile>> {
         return files
+    }
+
+    override fun fetchMessages(): List<String> {
+        return messages
+    }
+
+    override fun storeMessage(message: String) {
+        messages.add(message)
     }
 
     override fun updateFiles(files: List<ContextFile>) {

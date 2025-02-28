@@ -1,5 +1,6 @@
 package agent.modes
 
+import agent.interaction.AgentAskConfirmation
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
@@ -16,7 +17,7 @@ interface Interactor {
 
     suspend fun confirmWithUser(message: String): Boolean {
         while (true) {
-            val response = askUser("$message\nPlease respond with Y or N:")
+            val response = interactionHandler().interact(AgentAskConfirmation(message))
             when (response.trim().uppercase()) {
                 "Y", "y", "yes" -> return true
                 "N", "n", "no" -> return false

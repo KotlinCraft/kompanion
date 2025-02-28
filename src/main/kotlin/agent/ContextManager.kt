@@ -10,6 +10,10 @@ interface ContextManager {
      */
     fun getContext(): StateFlow<Set<ContextFile>>
 
+    fun fetchMessages(): List<String>
+
+    fun storeMessage(message: String)
+
     /**
      * Updates the context with a list of CodeFiles.
      * @param files A list of CodeFiles to be updated in the context.

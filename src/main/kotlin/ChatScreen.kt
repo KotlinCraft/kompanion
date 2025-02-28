@@ -1,9 +1,6 @@
 import KompanionBuilder.AgentMode.*
 import agent.InMemoryContextManager
-import agent.interaction.AgentMessage
-import agent.interaction.AgentQuestion
-import agent.interaction.AgentResponse
-import agent.interaction.InteractionHandler
+import agent.interaction.*
 import agent.modes.Mode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -110,6 +107,11 @@ fun ChatScreen() {
                 is AgentResponse -> {
                     messages = messages + ChatMessage(agentMessage.message, false)
                     ""
+                }
+
+                is AgentAskConfirmation -> {
+                    //this should be handled as a popup where a user can confirm or deny the action
+                    TODO()
                 }
             }
         }
