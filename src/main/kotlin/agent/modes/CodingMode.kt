@@ -2,7 +2,6 @@ package agent.modes
 
 import agent.CodeGenerator
 import agent.domain.FileChange
-import agent.domain.GenerationResult
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import org.slf4j.LoggerFactory
@@ -24,46 +23,21 @@ class CodingMode(
         val plan = reasoner.createPlan(understanding)
 
         logger.debug("Generation plan created: {}", plan)
-        var iterations = 0
-        val maxIterations = 3
 
-        var generationResult: GenerationResult? = null
-
-        while (iterations < maxIterations) {
-            logger.info("Iteration $iterations: Generating code")
-            sendMessage("Generating code (iteration ${iterations + 1})...")
-            generationResult = codeGenerator.generate(plan, generationResult?.formatted() ?: "")
-
-            logger.debug("Generation result: {}", generationResult)
-            val evaluation = reasoner.evaluateCode(generationResult, understanding)
-
-            if (evaluation.meetsRequirements) {
-                logger.info("Requirements met. Asking for user confirmation.")
-                sendMessage("I've generated code that meets all requirements. Here's what I'm planning to change:")
-                sendMessage(formatFileChanges(generationResult.fileChanges))
-                sendMessage("\nExplanation of changes:")
-                sendMessage(generationResult.explanation)
-
-                val userConfirmed = confirmWithUser("Would you like me to apply these changes?")
-                if (!userConfirmed) {
-                    logger.info("User rejected changes.")
-                    return "Changes were rejected by user."
-                }
-
-                sendMessage("✅Proceeding with the changes!")
-
-                codeGenerator.execute(plan, generationResult)
-
-                logger.info("User confirmed changes. Returning successful response.")
-                return generationResult.explanation
-            }
-
-            iterations++
-
+        val userConfirmed = confirmWithUser("Would you like me to apply these changes?")
+        if (!userConfirmed) {
+            logger.info("User rejected changes.")
+            return "Changes were rejected by user."
         }
 
-        return "I'm afraid I wasn't able to come up with a decent solution. Can you please be more specific in what you wanted to build?"
+        sendMessage("✅Proceeding with the changes!")
+
+        val result = codeGenerator.execute(plan)
+
+        logger.info("User confirmed changes. Returning successful response.")
+        return result.explanation
     }
+
 
     override suspend fun getLoadedActionNames(): List<String> {
         return emptyList()

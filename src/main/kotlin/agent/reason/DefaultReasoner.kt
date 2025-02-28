@@ -123,53 +123,6 @@ class DefaultReasoner(
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})
     }
 
-    override suspend fun evaluateCode(result: GenerationResult, understanding: Understanding): CodeEvaluation {
-        val prompt = """
-            Evaluate the following generated code against the original requirements:
-            
-            Original Requirements:
-            - Objective: ${understanding.objective}
-            - Required Features:
-            ${understanding.requiredFeatures.joinToString("\n") { "- $it" }}
-            
-            Generated Code:
-            ${
-            result.fileChanges.joinToString("\n\n") { fileChange ->
-                when (fileChange) {
-                    is FileChange.CreateFile -> "New File ${fileChange.path}:\n${fileChange.content}"
-                    is FileChange.ModifyFile -> "Modify ${fileChange.path}:\n" + fileChange.changes.joinToString("\n") { change ->
-                        "- ${change.description}"
-                    }
-                }
-            }
-        }
-            
-            Explanation:
-            ${result.explanation}
-            
-            Evaluate and provide a response in this structure:
-            {
-                "meetsRequirements": boolean,
-                "confidence": float between 0.0 and 1.0,
-                "suggestedImprovements": [
-                    "list of specific improvements or recommendations"
-                ]
-            }
-            
-            Consider:
-            1. Does the code fully implement all required features?
-            2. Is the implementation correct and efficient?
-            3. Are there any potential issues or areas for improvement?
-            4. Does it follow best practices?
-        """.trimIndent()
-
-        return LLMProvider.prompt(
-            input = prompt,
-            actions = emptyList(),
-            temperature = 0.3,
-            parameterizedTypeReference = object : ParameterizedTypeReference<CodeEvaluation>() {})
-    }
-
     override suspend fun askQuestion(
         question: String,
         understanding: Understanding,

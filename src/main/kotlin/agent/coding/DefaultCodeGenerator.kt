@@ -4,7 +4,6 @@ import agent.CodeGenerator
 import agent.ContextManager
 import agent.coding.domain.*
 import agent.domain.GenerationPlan
-import agent.domain.GenerationResult
 import agent.domain.context.ContextFile
 import agent.reason.domain.RequestFileResponse
 import ai.Action
@@ -47,7 +46,6 @@ class DefaultCodeGenerator(
 
     override suspend fun execute(
         plan: GenerationPlan,
-        generationResult: GenerationResult,
     ): CodingResult {
         val prompt = """
             ${contextManager.currentContextPrompt()}
@@ -57,9 +55,13 @@ class DefaultCodeGenerator(
             Use files in your current context to understand your changes. 
             If the result is not what you expected, you can retry.
             
-            Code changes to be applied:
-            ${generationResult.formatted()}
-            
+            Plan Steps:
+                        ${
+            plan.steps.joinToString("\n") { step ->
+                "- Action: ${step.action}\n  Input: ${step.input}\n  Expected Output: ${step.expectedOutput}"
+            }
+        }
+        
             Expected Outcome:
             ${plan.expectedOutcome}
             
@@ -72,64 +74,10 @@ class DefaultCodeGenerator(
 
         return LLMProvider.prompt(
             input = prompt, actions = listOf(
-                modifyFileAction, createFileAction
-            ), temperature = 0.7, parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {})
+                modifyFileAction, createFileAction, readFileAction
+            ), temperature = 0.5, parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {})
     }
 
-
-    override suspend fun generate(plan: GenerationPlan, currentCode: String): GenerationResult {
-        val prompt = """
-            ${contextManager.currentContextPrompt()}
-            You're a software engineer with many years of experience and a deep understanding of the clean code and architecture.
-
-            Based on the following generation plan, generate the necessary code changes. Use files in your current context to provide the changes. 
-            Handling files requires absolute paths.
-            
-            Your toolcalls can be used to create and modify files. Modifying files will apply the replacement to the first occurrence of the search content.
-            When creating the "searchContent", make sure to provide a unique string that can be found in the file. It shouldn't erroneously replace any other content.
-            
-            Plan Steps:
-            ${
-            plan.steps.joinToString("\n") { step ->
-                "- Action: ${step.action}\n  Input: ${step.input}\n  Expected Output: ${step.expectedOutput}"
-            }
-        }
-            
-            Current Code Context:
-            $currentCode
-            
-            Expected Outcome:
-            ${plan.expectedOutcome}
-            
-            Validation Criteria:
-            ${plan.validationCriteria.joinToString("\n") { "- $it" }}
-            
-            Provide the code changes in the form of file operations:
-            {
-              "fileChanges": [
-                {
-                  "type": "CreateFile" or "ModifyFile",
-                  "path": "file path",
-                  "content": "file content for CreateFile",
-                  "changes": [
-                    {
-                      "searchContent": "exact content to search for, not regex.",
-                      "replaceContent": "content to replace with",
-                      "description": "description of the change"
-                    }
-                  ]
-                }
-              ],
-              "explanation": "detailed explanation of the changes"
-            }
-        """.trimIndent()
-
-        return LLMProvider.prompt(
-            input = prompt,
-            actions = emptyList(),
-            temperature = 0.7,
-            parameterizedTypeReference = object : ParameterizedTypeReference<GenerationResult>() {})
-    }
 
     fun createFile(createFileRequest: CreateFileRequest): CreateFileResponse {
         return Either.catch {
@@ -197,4 +145,15 @@ class DefaultCodeGenerator(
             RequestFileResponse(false, null, null)
         }
     }
+
+    val readFileAction = Action(
+        "request_file_context",
+        """Provide a file in context for the request. 
+                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
+                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java), this
+        )
+    )
+
 }
