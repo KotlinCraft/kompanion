@@ -2,6 +2,7 @@ package agent.reason
 
 import agent.ContextManager
 import agent.domain.*
+import agent.domain.context.ContextFile
 import agent.reason.domain.RequestFileResponse
 import ai.Action
 import ai.ActionMethod
@@ -68,7 +69,7 @@ class DefaultReasoner(
             // Add the file to context manager
             contextManager.updateFiles(
                 listOf(
-                    CodeFile(
+                    ContextFile(
                         path = path, content = content, language = path.toString().substringAfterLast('.', "txt")
                     )
                 )

@@ -1,6 +1,5 @@
 import KompanionBuilder.AgentMode.*
 import agent.InMemoryContextManager
-import agent.domain.CodeFile
 import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
@@ -25,7 +24,6 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
 import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
 import kotlinx.coroutines.*
@@ -146,7 +144,11 @@ fun ChatScreen() {
     }
 
     // Function to create a blockchain Kompanion
-    fun createBlockchainKompanion(handler: InteractionHandler, contextManager: InMemoryContextManager, etherscanManager: EtherscanClientManager): Kompanion {
+    fun createBlockchainKompanion(
+        handler: InteractionHandler,
+        contextManager: InMemoryContextManager,
+        etherscanManager: EtherscanClientManager
+    ): Kompanion {
         logger.info("creating blockchain kompanion")
         return Kompanion.builder()
             .withMode(BLOCKCHAIN)
@@ -161,19 +163,21 @@ fun ChatScreen() {
     class AgentState {
         var codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
         var analystKompanion = createAnalystKompanion(interactionHandler, inMemoryContextManager)
-        var blockchainKompanion = createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
+        var blockchainKompanion =
+            createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
     }
 
-    
+
     // Create agents state and remember it
     val agentState = remember { AgentState() }
-    
+
     // Function to recreate all agents with the latest config
     fun recreateAgents() {
         logger.info("Recreating agents with new configuration")
         agentState.codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
         agentState.analystKompanion = createAnalystKompanion(interactionHandler, inMemoryContextManager)
-        agentState.blockchainKompanion = createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
+        agentState.blockchainKompanion =
+            createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
     }
 
     val openFiles by agentState.analystKompanion.agent.fetchContextManager().getContext().collectAsState()
@@ -187,13 +191,6 @@ fun ChatScreen() {
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
         SlashCommand("/blockchain", "Switch to blockchain mode") { mode = "blockchain" },
-        SlashCommand("/add", "Switch to ask mode") {
-            agentState.analystKompanion.agent.fetchContextManager().updateFiles(
-                listOf(
-                    CodeFile(Path.of("/opt/test${Random(1000).nextInt()}.html"), "", "html")
-                )
-            )
-        },
         SlashCommand("/help", "Show available commands") {
             messages = messages + ChatMessage(
                 """
@@ -370,7 +367,7 @@ fun ChatScreen() {
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         openFiles.forEach { file ->
-                            FilePill(fileName = file.path.name)
+                            FilePill(fileName = file.name)
                         }
                     }
                 }

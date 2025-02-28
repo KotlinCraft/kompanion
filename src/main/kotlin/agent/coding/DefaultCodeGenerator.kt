@@ -3,9 +3,9 @@ package agent.coding
 import agent.CodeGenerator
 import agent.ContextManager
 import agent.coding.domain.*
-import agent.domain.CodeFile
 import agent.domain.GenerationPlan
 import agent.domain.GenerationResult
+import agent.domain.context.ContextFile
 import agent.reason.domain.RequestFileResponse
 import ai.Action
 import ai.ActionMethod
@@ -185,8 +185,9 @@ class DefaultCodeGenerator(
             // Add the file to context manager
             contextManager.updateFiles(
                 listOf(
-                    CodeFile(
-                        path = path, content = content, language = path.toString().substringAfterLast('.', "txt")
+                    ContextFile(
+                        name = path.absolutePathString(),
+                        content = content
                     )
                 )
             )

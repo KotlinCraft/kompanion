@@ -19,32 +19,32 @@ import java.net.http.HttpResponse
 
 /**
  * Client for interacting with Bankless API.
- * 
+ *
  * @property baseUrl The base URL for the Bankless API
  */
 class BanklessClient {
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val httpClient = HttpClient.newBuilder().build()
     private val objectMapper = ObjectMapper().registerKotlinModule()
-    
+
     private val baseUrl = "https://api.bankless.com/internal/chains"
-    
+
     /**
      * Reads contract state for a given network and contract.
-     * 
+     *
      * @param network The blockchain network (e.g., "ethereum", "base")
      * @param request The contract state read request containing address, method, and parameters
      * @return Either an error message or the contract state response
      */
     suspend fun readContractState(
-        network: String, 
+        network: String,
         request: EvmReadContractStateRequest
     ): Either<String, List<EthCallResultToTypeConverter.Result>> {
         val endpoint = "$baseUrl/$network/contract/read"
-        
+
         return try {
             val response = makePostRequest(endpoint, request)
-            
+
             // Parse the JSON response
             Either.catch {
                 objectMapper.readValue<List<EthCallResultToTypeConverter.Result>>(response)
@@ -54,13 +54,14 @@ class BanklessClient {
             }
         } catch (e: Exception) {
             logger.error("Error reading contract state: ${e.message}", e)
+            logger.info("request was ${objectMapper.writeValueAsString(request)}")
             "Failed to read contract state: ${e.message}".left()
         }
     }
-    
+
     /**
      * Makes an HTTP POST request to the specified endpoint.
-     * 
+     *
      * @param endpoint The complete URL to request
      * @param requestBody The body to send with the POST request
      * @return The response body as a string
@@ -68,20 +69,20 @@ class BanklessClient {
     private suspend fun makePostRequest(endpoint: String, requestBody: Any): String {
         return withContext(Dispatchers.IO) {
             val jsonBody = objectMapper.writeValueAsString(requestBody)
-            
+
             val request = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .header("Content-Type", "application/json")
                 .header("X-BANKLESS-TOKEN", AppConfig.load().banklessToken ?: "")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build()
-                
+
             val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-            
+
             if (response.statusCode() != 200) {
                 throw RuntimeException("API request failed with status code: ${response.statusCode()}")
             }
-            
+
             response.body()
         }
     }
@@ -91,10 +92,10 @@ class BanklessClient {
  * Request model for reading EVM contract state.
  */
 data class EvmReadContractStateRequest(
-    val contractAddress: String,
+    val contract: String,
     val method: String,
-    val inputs: List<Input<*>>,
-    val outputs: List<Output<*>>
+    val inputs: List<Input>,
+    val outputs: List<Output>
 )
 
 /**

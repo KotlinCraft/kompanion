@@ -1,6 +1,6 @@
 package agent
 
-import agent.domain.CodeFile
+import agent.domain.context.ContextFile
 import config.AppConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,36 +10,16 @@ import java.io.File
 
 class InMemoryContextManager : ContextManager {
 
-    private val _files = MutableStateFlow<Set<CodeFile>>(setOf())
-    val files: StateFlow<Set<CodeFile>> = _files.asStateFlow()
+    private val _files = MutableStateFlow<Set<ContextFile>>(setOf())
+    val files: StateFlow<Set<ContextFile>> = _files.asStateFlow()
 
-    init {
-        /*updateFiles(
-            listOf(
-                CodeFile(
-                    Path("/opt/projects/kotlincraft/kompanion/build.gradle.settings"),
-                    "package agent\n\nclass InMemoryContextManager : ContextManager {\n\n\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\n    \n    init {\n        updateFiles(listOf(\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\\n    \\n    init {\\n        updateFiles(listOf(\\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\\n    \\n    init {\\n        updateFiles(listOf(\\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n",
-                    language = "kotlin"
-                ), CodeFile(
-                    Path("/opt/projects/kotlincraft/kompanion/build.gradle.txt"),
-                    "package agent\n\nclass InMemoryContextManager : ContextManager {\n\n\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\n    \n    init {\n        updateFiles(listOf(\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\\n    \\n    init {\\n        updateFiles(listOf(\\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\\n    \\n    init {\\n        updateFiles(listOf(\\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n",
-                    language = "kotlin"
-                ), CodeFile(
-                    Path("/opt/projects/kotlincraft/kompanion/build.gradle.kts"),
-                    "package agent\n\nclass InMemoryContextManager : ContextManager {\n\n\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\n    \n    init {\n        updateFiles(listOf(\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\\n    \\n    init {\\n        updateFiles(listOf(\\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n    private val _files = MutableStateFlow<MutableMap<String, CodeFile>>(mutableMapOf())\\n    val files: StateFlow<MutableMap<String, CodeFile>> = _files.asStateFlow()\\n    \\n    init {\\n        updateFiles(listOf(\\n            CodeFile(\"src/main/kotlin/agent/InMemoryContextManager.kt\", \"package agent\\n\\nimport agent.domain.CodeFile\\nimport config.AppConfig\\nimport kotlinx.coroutines.flow.MutableStateFlow\\nimport kotlinx.coroutines.flow.StateFlow\\nimport kotlinx.coroutines.flow.asStateFlow\\nimport utils.walkDirectory\\nimport java.io.File\\n\\nclass InMemoryContextManager : ContextManager {\\n\\n\\n",
-                    language = "kotlin"
-                )
-            )
-        ) */
-    }
-
-    override fun getContext(): StateFlow<Set<CodeFile>> {
+    override fun getContext(): StateFlow<Set<ContextFile>> {
         return files
     }
 
-    override fun updateFiles(files: List<CodeFile>) {
+    override fun updateFiles(files: List<ContextFile>) {
         files.forEach { file ->
-            val removedPreviousEntries = this.files.value.filter { it.path != file.path }
+            val removedPreviousEntries = this.files.value.filter { it.name != file.name }
             val unique = (files + removedPreviousEntries).toSet()
             this._files.value = unique
         }

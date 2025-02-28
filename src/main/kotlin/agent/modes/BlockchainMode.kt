@@ -31,12 +31,12 @@ class BlockchainMode(
     override suspend fun perform(request: String): String {
         // Define actions based on available features
         val actions = mutableListOf(get_contract_source)
-        
+
         // Add Bankless actions only if supported
         if (isBanklessSupported()) {
             actions.add(read_contract)
         }
-        
+
         return reasoner.askQuestion(request, actions).reply
     }
 
@@ -55,18 +55,18 @@ class BlockchainMode(
             |
             example: 
             |{
-  "contract": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+  "contract": "address",
   "method": "implementation",
   "network": "base",
-  "inputs": [
-  ],
+  "inputs": [],
   "outputs": [
     {
       "type": "address"
     }
   ]
 }
-            | Only attempt to read if the fucntion is fully supported by our input and output types.
+            | Only attempt to read if the function is fully supported by our input and output types.
+            | Don't call a function if you didn't get a source or ABI for the contract.
             | supported input types: address, bytes4, bytes32, input
             | supported output types: bool, bytes4, string, uint256
         """.trimMargin(),
@@ -89,8 +89,8 @@ class BlockchainMode(
         val network: String,
         val address: String,
         val method: String,
-        val inputs: List<Input<*>> = emptyList(),
-        val outputs: List<Output<*>> = emptyList()
+        val inputs: List<Input> = emptyList(),
+        val outputs: List<Output> = emptyList()
     )
 
     data class ReadContractResponse(
@@ -104,8 +104,14 @@ class BlockchainMode(
                 it.result.joinToString {
                     it.sourceCode
                 }
+            }?.also {
+                it.onRight {
+                    runBlocking(Dispatchers.IO) {
+                        sendMessage("📜Fetched contract source for address ${request.address} on network ${request.network}")
+                    }
+                }
             }?.getOrElse {
-                "no source"
+                "no source found"
             }
         }
         return GetContractSourceResponse(source ?: "no source found")
@@ -119,24 +125,24 @@ class BlockchainMode(
         return runBlocking(Dispatchers.IO) {
             try {
                 val banklessRequest = EvmReadContractStateRequest(
-                    contractAddress = request.address,
+                    contract = request.address,
                     method = request.method,
                     inputs = request.inputs,
                     outputs = request.outputs
                 )
-                
+
                 val result = banklessClient.readContractState(request.network, banklessRequest)
-                
+
                 result.fold(
                     { error -> ReadContractResponse(null, error) },
-                    { results -> 
+                    { results ->
                         val mappedResults = results.map {
                             mapOf(
                                 "value" to it.value,
                                 "type" to it.type
                             )
                         }
-                        ReadContractResponse(mappedResults, null) 
+                        ReadContractResponse(mappedResults, null)
                     }
                 )
             } catch (e: Exception) {

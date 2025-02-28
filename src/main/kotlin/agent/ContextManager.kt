@@ -1,6 +1,6 @@
 package agent
 
-import agent.domain.CodeFile
+import agent.domain.context.ContextFile
 import kotlinx.coroutines.flow.StateFlow
 
 interface ContextManager {
@@ -8,13 +8,13 @@ interface ContextManager {
      * Retrieves the current context as a list of CodeFiles.
      * @return A list of CodeFiles representing the current context.
      */
-    fun getContext(): StateFlow<Set<CodeFile>>
+    fun getContext(): StateFlow<Set<ContextFile>>
 
     /**
      * Updates the context with a list of CodeFiles.
      * @param files A list of CodeFiles to be updated in the context.
      */
-    fun updateFiles(files: List<CodeFile>)
+    fun updateFiles(files: List<ContextFile>)
 
     /**
      * Clears all CodeFiles from the current context.
@@ -33,13 +33,12 @@ interface ContextManager {
      */
     fun getFullFileList(): String
 
-
     /**
      * Generates a string prompt that describes the current context, including working directory and files.
      * @return A formatted string detailing the current context.
      */
     fun currentContextPrompt(): String {
-        val codeFiles = getContext().value
+        val files = getContext().value
 
         return """     
             Current working directory is: ${fetchWorkingDirectory()}
@@ -48,9 +47,9 @@ interface ContextManager {
             
             Files in your current context: 
             ${
-            if (codeFiles.isEmpty()) "no files in context yet" else
-                codeFiles.joinToString("\n") {
-                    """File: ${it.path} (language: ${it.language})
+            if (files.isEmpty()) "no files in context yet" else
+                files.joinToString("\n") {
+                    """File: ${it.name}
                             |Content: ${it.content}
                         """.trimMargin()
                 }
