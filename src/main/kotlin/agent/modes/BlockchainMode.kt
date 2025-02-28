@@ -30,47 +30,6 @@ class BlockchainMode(
 
     val logger = LoggerFactory.getLogger(this::class.java)
 
-    val get_contract_source = Action(
-        "get_contract_source",
-        """Get the contract source for an address.""".trimMargin(),
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "getContractSource", GetContractSourceRequest::class.java),
-            this
-        )
-    )
-
-    val ask_question = Action(
-        "ask_question",
-        "Ask the user a question, in order to clarify certain things.",
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "askQuestion", String::class.java),
-            this
-        )
-    )
-
-    val loadedActions = mutableListOf(
-        get_contract_source, ask_question
-    ) + run {
-        if (isBanklessSupported()) {
-            listOf(read_contract, get_claimables)
-        } else emptyList()
-    }
-
-    override suspend fun perform(request: String): String {
-        // Define actions based on available features
-        // Add Bankless actions only if supported
-
-
-        return reasoner.askQuestion(request, loadedActions).reply
-    }
-
-    override suspend fun getLoadedActionNames(): List<String> {
-        return loadedActions.map {
-            it.name
-        }
-    }
-
-
     val read_contract = Action(
         "read_contract",
         """Read a contract's state using Bankless API.
@@ -109,6 +68,47 @@ class BlockchainMode(
             this
         )
     )
+
+    val get_contract_source = Action(
+        "get_contract_source",
+        """Get the contract source for an address.""".trimMargin(),
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "getContractSource", GetContractSourceRequest::class.java),
+            this
+        )
+    )
+
+    val ask_question = Action(
+        "ask_question",
+        "Ask the user a question, in order to clarify certain things.",
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "askQuestion", String::class.java),
+            this
+        ),
+        showUpInTools = false
+    )
+
+    val loadedActions = mutableListOf(
+        get_contract_source, ask_question
+    ) + run {
+        if (isBanklessSupported()) {
+            listOf(read_contract, get_claimables)
+        } else emptyList()
+    }
+
+    override suspend fun perform(request: String): String {
+        // Define actions based on available features
+        // Add Bankless actions only if supported
+
+
+        return reasoner.askQuestion(request, loadedActions).reply
+    }
+
+    override suspend fun getLoadedActionNames(): List<String> {
+        return loadedActions.filter(Action::showUpInTools).map {
+            it.name
+        }
+    }
 
     fun askQuestion(question: String): String {
         return runBlocking(Dispatchers.IO) {

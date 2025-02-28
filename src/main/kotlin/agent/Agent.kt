@@ -10,7 +10,7 @@ import agent.modes.Mode
 class Agent internal constructor(
     private val contextManager: ContextManager,
     private val interactionHandler: InteractionHandler,
-    private val mode: Mode
+    val mode: Mode
 ) : Interactor {
 
     fun fetchContextManager(): ContextManager {

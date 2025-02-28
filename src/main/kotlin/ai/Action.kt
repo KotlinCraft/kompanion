@@ -10,6 +10,7 @@ data class Action(
     val name: String,
     val description: String,
     val actionMethod: ActionMethod,
+    val showUpInTools: Boolean = true,
 ) {
 
     fun toFunctionCallback(): ToolCallback? {

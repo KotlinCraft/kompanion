@@ -4,6 +4,7 @@ import agent.interaction.AgentMessage
 import agent.interaction.AgentQuestion
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
+import agent.modes.Mode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -181,6 +182,16 @@ fun ChatScreen() {
     }
 
     val openFiles by agentState.analystKompanion.agent.fetchContextManager().getContext().collectAsState()
+
+    // Get the current active mode based on the mode state
+    val activeMode: Mode = remember(mode) {
+        when (mode) {
+            "code" -> agentState.codingKompanion.agent.mode
+            "ask" -> agentState.analystKompanion.agent.mode
+            "blockchain" -> agentState.blockchainKompanion.agent.mode
+            else -> agentState.analystKompanion.agent.mode // Default to ask mode
+        }
+    }
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
@@ -546,7 +557,11 @@ fun ChatScreen() {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            ToolCounter(accentColor = accentColor, backgroundColor = darkBackground)
+                            ToolCounter(
+                                accentColor = accentColor,
+                                backgroundColor = darkBackground,
+                                activeMode = activeMode
+                            )
                             Spacer(modifier = Modifier.width(12.dp))
                             InfoTooltip(accentColor = accentColor, backgroundColor = darkBackground)
                         }

@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import agent.modes.Mode
+import kotlinx.coroutines.runBlocking
 
 /**
  * A component that displays the number of available tools and shows a tooltip with tool details when clicked.
@@ -28,22 +30,20 @@ import androidx.compose.ui.window.PopupProperties
 @Composable
 fun ToolCounter(
     accentColor: Color,
-    backgroundColor: Color
+    backgroundColor: Color,
+    activeMode: Mode? = null
 ) {
-    // Hardcoded number of tools (can be replaced with actual count later)
-    val toolCount = 8
+    // Get tool names from the active mode
+    val toolNames = remember(activeMode) {
+        if (activeMode != null) {
+            runBlocking { activeMode.getLoadedActionNames() }
+        } else {
+            emptyList()
+        }
+    }
     
-    // Hardcoded list of tool names (replace with actual tools later)
-    val toolNames = listOf(
-        "fetch", 
-        "intellij_get_context", 
-        "get_file_content", 
-        "write_file", 
-        "search_files", 
-        "run_command", 
-        "list_directory", 
-        "intellij_editor_content"
-    )
+    // Tool count is the size of the tool names list
+    val toolCount = toolNames.size
     
     var showTooltip by remember { mutableStateOf(false) }
     
@@ -114,13 +114,22 @@ fun ToolCounter(
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             
-                            toolNames.forEach { toolName ->
+                            if (toolNames.isEmpty()) {
                                 Text(
-                                    text = "• $toolName",
-                                    color = Color.White,
+                                    text = "No tools available for the current mode",
+                                    color = Color.White.copy(alpha = 0.7f),
                                     fontSize = 12.sp,
                                     modifier = Modifier.padding(vertical = 2.dp)
                                 )
+                            } else {
+                                toolNames.forEach { toolName ->
+                                    Text(
+                                        text = "• $toolName",
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.padding(vertical = 2.dp)
+                                    )
+                                }
                             }
                         }
                     }
