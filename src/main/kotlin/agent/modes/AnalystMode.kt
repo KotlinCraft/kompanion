@@ -7,4 +7,8 @@ class AnalystMode(private val reasoner: Reasoner) : Mode {
         val understanding = reasoner.analyzeRequest(request)
         return reasoner.askQuestion(request, understanding, emptyList()).reply
     }
+
+    override suspend fun getLoadedActionNames(): List<String> {
+        return emptyList()
+    }
 }

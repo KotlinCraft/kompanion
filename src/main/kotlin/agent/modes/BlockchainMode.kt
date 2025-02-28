@@ -64,6 +64,12 @@ class BlockchainMode(
         return reasoner.askQuestion(request, loadedActions).reply
     }
 
+    override suspend fun getLoadedActionNames(): List<String> {
+        return loadedActions.map {
+            it.name
+        }
+    }
+
 
     val read_contract = Action(
         "read_contract",

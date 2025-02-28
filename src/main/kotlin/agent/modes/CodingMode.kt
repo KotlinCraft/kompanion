@@ -65,6 +65,10 @@ class CodingMode(
         return "I'm afraid I wasn't able to come up with a decent solution. Can you please be more specific in what you wanted to build?"
     }
 
+    override suspend fun getLoadedActionNames(): List<String> {
+        return emptyList()
+    }
+
     private fun formatFileChanges(fileChanges: List<FileChange>): String {
         return buildString {
             appendLine("File changes overview:")
