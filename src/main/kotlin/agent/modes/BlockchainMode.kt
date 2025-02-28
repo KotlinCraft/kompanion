@@ -30,19 +30,6 @@ class BlockchainMode(
 
     val logger = LoggerFactory.getLogger(this::class.java)
 
-    override suspend fun perform(request: String): String {
-        // Define actions based on available features
-        val actions = mutableListOf(get_contract_source, ask_question)
-
-        // Add Bankless actions only if supported
-        if (isBanklessSupported()) {
-            actions.add(read_contract)
-            actions.add(get_claimables)
-        }
-
-        return reasoner.askQuestion(request, actions).reply
-    }
-
     val get_contract_source = Action(
         "get_contract_source",
         """Get the contract source for an address.""".trimMargin(),
@@ -51,6 +38,32 @@ class BlockchainMode(
             this
         )
     )
+
+    val ask_question = Action(
+        "ask_question",
+        "Ask the user a question, in order to clarify certain things.",
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "askQuestion", String::class.java),
+            this
+        )
+    )
+
+    val loadedActions = mutableListOf(
+        get_contract_source, ask_question
+    ) + run {
+        if (isBanklessSupported()) {
+            listOf(read_contract, get_claimables)
+        } else emptyList()
+    }
+
+    override suspend fun perform(request: String): String {
+        // Define actions based on available features
+        // Add Bankless actions only if supported
+
+
+        return reasoner.askQuestion(request, loadedActions).reply
+    }
+
 
     val read_contract = Action(
         "read_contract",
@@ -87,15 +100,6 @@ class BlockchainMode(
                 "Claimed tokens are included, but only for historical reasons.",
         ActionMethod(
             ReflectionUtils.findMethod(this::class.java, "get_claimables", String::class.java),
-            this
-        )
-    )
-
-    val ask_question = Action(
-        "ask_question",
-        "Ask the user a question, in order to clarify certain things.",
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "askQuestion", String::class.java),
             this
         )
     )
