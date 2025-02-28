@@ -5,6 +5,7 @@ import agent.blockchain.bankless.EvmReadContractStateRequest
 import agent.blockchain.tool.domain.ReadContractResponse
 import agent.modes.BlockchainMode.ReadContractRequest
 import agent.tool.Tool
+import agent.tool.ToolsProvider
 import ai.Action
 import ai.ActionMethod
 import arrow.core.getOrElse

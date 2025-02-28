@@ -5,6 +5,7 @@ import agent.blockchain.tool.domain.GetContractSourceResponse
 import agent.interaction.InteractionHandler
 import agent.modes.Interactor
 import agent.tool.Tool
+import agent.tool.ToolsProvider
 import ai.Action
 import ai.ActionMethod
 import arrow.core.getOrElse

@@ -1,7 +1,6 @@
-package agent.blockchain.tool
+package agent.tool
 
 import agent.ToolManager
-import agent.tool.Tool
 
 interface ToolsProvider {
 

@@ -1,27 +1,20 @@
 package agent.reason
 
 import agent.ContextManager
-import agent.domain.*
-import agent.domain.context.ContextFile
-import agent.reason.domain.RequestFileResponse
-import ai.Action
-import ai.ActionMethod
+import agent.ToolManager
+import agent.domain.CodebaseQuestionResponse
+import agent.domain.GenerationPlan
+import agent.domain.Understanding
 import ai.LLMProvider
 import arrow.core.Either
 import arrow.core.getOrElse
-import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
-import org.springframework.util.ReflectionUtils
-import java.nio.file.Files
-import java.nio.file.Paths
-import kotlin.io.path.absolutePathString
 
 class DefaultReasoner(
     private val LLMProvider: LLMProvider,
-    private val contextManager: ContextManager
+    private val contextManager: ContextManager,
+    private val toolManager: ToolManager,
 ) : Reasoner {
-
-    private val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun analyzeRequest(request: String): Understanding {
         val prompt = """
@@ -47,38 +40,12 @@ class DefaultReasoner(
         return Either.catch {
             LLMProvider.prompt(
                 input = prompt,
-                actions = listOf(readFileAction),
+                actions = listOf(),
                 temperature = 0.7,
                 parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {})
         }.getOrElse {
             it.printStackTrace()
             throw IllegalArgumentException("I'm afraid I was unable to analyze your request.")
-        }
-    }
-
-    fun requestFileContext(file: String): RequestFileResponse {
-        logger.info("Looking up file: $file")
-        val filePath =
-            Files.walk(Paths.get(contextManager.fetchWorkingDirectory())).filter { it.fileName.toString() == file }
-                .findFirst()
-
-        return if (filePath.isPresent) {
-            val content = Files.readString(filePath.get())
-            val path = filePath.get()
-
-            // Add the file to context manager
-            contextManager.updateFiles(
-                listOf(
-                    ContextFile(
-                        name = path.absolutePathString(), content = content
-                    )
-                )
-            )
-            logger.info("exists: file $file")
-
-            RequestFileResponse(true, path.absolutePathString(), content)
-        } else {
-            RequestFileResponse(false, null, null)
         }
     }
 
@@ -118,7 +85,7 @@ class DefaultReasoner(
 
         return LLMProvider.prompt(
             input = prompt,
-            actions = listOf(readFileAction),
+            actions = toolManager.tools.map { it.action },
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})
     }
@@ -126,7 +93,6 @@ class DefaultReasoner(
     override suspend fun askQuestion(
         question: String,
         understanding: Understanding,
-        actions: List<Action>
     ): CodebaseQuestionResponse {
 
 
@@ -151,18 +117,8 @@ class DefaultReasoner(
         // Attempt to leverage the same LLM approach used in DefaultReasoner, if available
         return LLMProvider.prompt(
             input = prompt,
-            actions = listOf(readFileAction) + actions,
+            actions =  toolManager.tools.map { it.action },
             temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {})
     }
-
-    val readFileAction = Action(
-        "request_file_context",
-        """Provide a file in context for the request. 
-                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
-                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java), this
-        )
-    )
 }

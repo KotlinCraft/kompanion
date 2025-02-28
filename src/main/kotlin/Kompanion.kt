@@ -1,7 +1,4 @@
-import agent.Agent
-import agent.CodeGenerator
-import agent.ContextManager
-import agent.InMemoryContextManager
+import agent.*
 import agent.blockchain.bankless.BanklessClient
 import agent.coding.DefaultCodeGenerator
 import agent.domain.CodeApplier
@@ -97,6 +94,7 @@ class KompanionBuilder {
     }
 
     fun build(): Kompanion {
+        val toolManager = ToolManager()
         val finalAppConfig = appConfig ?: AppConfig.load()
         val finalContextManager = contextManager ?: InMemoryContextManager()
         val smallProvider = Either.catch {
@@ -108,8 +106,7 @@ class KompanionBuilder {
         }.getOrElse { getFinalLLMProvider("gpt-4o") }
 
         val finalReasoner = reasoner
-        val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager)
-        val finalEtherscanClientManager = etherscanClientManager ?: EtherscanClientManager()
+        val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager, toolManager)
 
         // Ensure we have an interaction handler
         if (interactionHandler == null) {
@@ -117,11 +114,20 @@ class KompanionBuilder {
         }
 
         val selectedMode: Mode = when (mode) {
-            AgentMode.ASK -> AnalystMode(finalReasoner ?: DefaultReasoner(smallProvider, finalContextManager))
+            AgentMode.ASK -> AnalystMode(
+                finalReasoner ?: DefaultReasoner(
+                    smallProvider,
+                    finalContextManager,
+                    toolManager
+                ), interactionHandler!!, finalContextManager, toolManager
+            )
+
             AgentMode.CODE -> CodingMode(
-                finalReasoner ?: DefaultReasoner(smallProvider, finalContextManager),
+                finalReasoner ?: DefaultReasoner(smallProvider, finalContextManager, toolManager),
                 finalGenerator,
-                interactionHandler!!
+                interactionHandler!!,
+                finalContextManager,
+                toolManager
             )
 
             AgentMode.BLOCKCHAIN -> BlockchainMode(

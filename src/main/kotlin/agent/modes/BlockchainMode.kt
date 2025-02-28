@@ -1,25 +1,16 @@
 package agent.modes
 
 import agent.ToolManager
-import agent.blockchain.bankless.BanklessClient
-import agent.blockchain.bankless.EvmReadContractStateRequest
 import agent.blockchain.bankless.model.input.Input
 import agent.blockchain.bankless.model.output.Output
 import agent.blockchain.tool.BanklessTools
 import agent.blockchain.tool.EtherscanTools
-import agent.blockchain.tool.GeneralTools
+import agent.tool.GeneralTools
 import agent.interaction.InteractionHandler
 import agent.reason.BlockchainReasoner
 import ai.Action
-import ai.ActionMethod
-import arrow.core.getOrElse
-import blockchain.etherscan.EtherscanClientManager
-import com.bankless.claimable.rest.vo.ClaimableVO
 import config.AppConfig
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
-import org.springframework.util.ReflectionUtils
 
 /**
  * Mode for blockchain-related operations.

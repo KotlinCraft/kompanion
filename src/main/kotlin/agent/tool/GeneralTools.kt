@@ -1,8 +1,7 @@
-package agent.blockchain.tool
+package agent.tool
 
 import agent.interaction.InteractionHandler
 import agent.modes.Interactor
-import agent.tool.Tool
 import ai.Action
 import ai.ActionMethod
 import kotlinx.coroutines.Dispatchers

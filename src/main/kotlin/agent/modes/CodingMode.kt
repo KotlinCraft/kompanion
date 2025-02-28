@@ -1,19 +1,31 @@
 package agent.modes
 
 import agent.CodeGenerator
+import agent.ContextManager
+import agent.InMemoryContextManager
+import agent.ToolManager
+import agent.coding.tool.LocalFileCodingTools
 import agent.domain.FileChange
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
+import agent.tool.FileTools
 import org.slf4j.LoggerFactory
 
 
 class CodingMode(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
-    private val interactionHandler: InteractionHandler
+    private val interactionHandler: InteractionHandler,
+    contextManager: ContextManager,
+    toolManager: ToolManager
 ) : Mode, Interactor {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    init {
+        LocalFileCodingTools(contextManager).register(toolManager)
+        FileTools(interactionHandler, contextManager).register(toolManager)
+    }
 
     override suspend fun perform(request: String): String {
         val understanding = reasoner.analyzeRequest(request)
