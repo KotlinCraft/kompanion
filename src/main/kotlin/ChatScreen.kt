@@ -22,6 +22,7 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
 import kotlinx.coroutines.*
@@ -75,6 +76,10 @@ fun ChatScreen() {
 
     var showSettings by remember { mutableStateOf(false) }
     var configState by remember { mutableStateOf(AppConfig.load()) }
+    
+    // New state for confirmation dialog
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+    var pendingConfirmation by remember { mutableStateOf<AgentAskConfirmation?>(null) }
 
     // Initial check for configuration issues
     LaunchedEffect(Unit) {
@@ -110,8 +115,21 @@ fun ChatScreen() {
                 }
 
                 is AgentAskConfirmation -> {
-                    //this should be handled as a popup where a user can confirm or deny the action
-                    TODO()
+                    messages = messages + ChatMessage(agentMessage.message, false)
+                    pendingConfirmation = agentMessage
+                    showConfirmationDialog = true
+                    isProcessing = false
+                    
+                    // Wait for user response
+                    while (showConfirmationDialog) {
+                        delay(100)
+                    }
+                    
+                    val result = if (userResponse == "yes") "yes" else "no"
+                    userResponse = ""
+                    pendingConfirmation = null
+                    isProcessing = true
+                    result
                 }
             }
         }
@@ -279,6 +297,82 @@ fun ChatScreen() {
                 userResponse = userMessage
             } else {
                 sendToBot(userMessage)
+            }
+        }
+    }
+
+    // Confirmation Dialog
+    if (showConfirmationDialog && pendingConfirmation != null) {
+        Dialog(onDismissRequest = {
+            showConfirmationDialog = false
+            userResponse = "no" // Default to no if dismissed
+        }) {
+            Card(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                backgroundColor = darkSecondary,
+                shape = RoundedCornerShape(16.dp),
+                elevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Confirmation",
+                        tint = accentColor,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = pendingConfirmation?.message ?: "Confirm action?",
+                        style = MaterialTheme.typography.h6,
+                        color = Color.White
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        // No button
+                        Button(
+                            onClick = {
+                                userResponse = "no"
+                                showConfirmationDialog = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = Color.Gray
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        ) {
+                            Text("No")
+                        }
+                        
+                        // Yes button
+                        Button(
+                            onClick = {
+                                userResponse = "yes"
+                                showConfirmationDialog = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = successColor
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp)
+                        ) {
+                            Text("Yes")
+                        }
+                    }
+                }
             }
         }
     }

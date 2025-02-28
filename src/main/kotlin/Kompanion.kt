@@ -128,7 +128,8 @@ class KompanionBuilder {
                 BlockchainReasoner(
                     bigProvider,
                     finalContextManager
-                ), finalEtherscanClientManager, BanklessClient(), interactionHandler!!
+                ),
+                interactionHandler!!
             )
         }
 
