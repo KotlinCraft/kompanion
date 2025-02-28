@@ -97,10 +97,6 @@ class BlockchainMode(
     }
 
     override suspend fun perform(request: String): String {
-        // Define actions based on available features
-        // Add Bankless actions only if supported
-
-
         return reasoner.askQuestion(request, loadedActions).reply
     }
 
