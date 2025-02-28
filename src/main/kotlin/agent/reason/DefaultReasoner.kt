@@ -70,7 +70,7 @@ class DefaultReasoner(
             contextManager.updateFiles(
                 listOf(
                     ContextFile(
-                        path = path, content = content, language = path.toString().substringAfterLast('.', "txt")
+                        name = path.absolutePathString(), content = content
                     )
                 )
             )

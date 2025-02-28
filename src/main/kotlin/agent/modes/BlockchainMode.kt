@@ -6,11 +6,11 @@ import agent.blockchain.bankless.model.input.Input
 import agent.blockchain.bankless.model.output.Output
 import agent.interaction.InteractionHandler
 import agent.reason.BlockchainReasoner
-import agent.reason.Reasoner
 import ai.Action
 import ai.ActionMethod
 import arrow.core.getOrElse
 import blockchain.etherscan.EtherscanClientManager
+import com.bankless.claimable.rest.vo.ClaimableVO
 import config.AppConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -28,13 +28,16 @@ class BlockchainMode(
     private val interactionHandler: InteractionHandler
 ) : Mode, Interactor {
 
+    val logger = LoggerFactory.getLogger(this::class.java)
+
     override suspend fun perform(request: String): String {
         // Define actions based on available features
-        val actions = mutableListOf(get_contract_source)
+        val actions = mutableListOf(get_contract_source, ask_question)
 
         // Add Bankless actions only if supported
         if (isBanklessSupported()) {
             actions.add(read_contract)
+            actions.add(get_claimables)
         }
 
         return reasoner.askQuestion(request, actions).reply
@@ -76,6 +79,41 @@ class BlockchainMode(
         )
     )
 
+    val get_claimables = Action(
+        "get_claimables",
+        "Fetch the claimables for an address. " +
+                "Claimables are opportunities a user has to claim tokens. It's something they can do onchain." +
+                "This action will return a list of claimables for the given address. " +
+                "Claimed tokens are included, but only for historical reasons.",
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "get_claimables", String::class.java),
+            this
+        )
+    )
+
+    val ask_question = Action(
+        "ask_question",
+        "Ask the user a question, in order to clarify certain things.",
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "askQuestion", String::class.java),
+            this
+        )
+    )
+
+    fun askQuestion(question: String): String {
+        return runBlocking(Dispatchers.IO) {
+            askUser(question)
+        }
+    }
+
+    fun get_claimables(address: String): List<ClaimableVO> {
+        return runBlocking(Dispatchers.IO) {
+            banklessClient.getClaimables(address).getOrElse { emptyList() }
+        }.also {
+            logger.info("Fetched ${it.size} claimables for address $address")
+        }
+    }
+
     data class GetContractSourceRequest(
         val network: String,
         val address: String
@@ -111,10 +149,10 @@ class BlockchainMode(
                     }
                 }
             }?.getOrElse {
-                "no source found"
+                "not a contract or no source found"
             }
         }
-        return GetContractSourceResponse(source ?: "no source found")
+        return GetContractSourceResponse(source ?: "not a contract or no source found")
     }
 
     fun readContract(request: ReadContractRequest): ReadContractResponse {

@@ -17,7 +17,7 @@ class BlockchainReasoner(
     ): CodebaseQuestionResponse {
         val prompt = """
             You're a blockchain expert and EVM sleuth.
-            Provide the best possible answer by using your available tools and resources. 
+            Provide the best possible answer to a user's question by using your available tools and resources. 
             You are able to fetch contract source codes and read contracts. 
             By fetching a contract, you are able to understand what the smart contract is able to accomplish and can provide a more accurate answer.
             
@@ -26,10 +26,13 @@ class BlockchainReasoner(
             - you can then call the `get_contract_source` action with the implementation contract address to fetch the source code.
             - you can then read the contract state calling functions from the implementation contract on the proxy contract.
             
+            
             Your context already consists of:
             ${contextManager.currentContextPrompt()}
             
-            Return your answer as a string. If you had to navigate contracts, explain in bullet points how you got to your answer.
+            Return your answer as a string. 
+            If you had to navigate contracts, explain in bullet points how you got to your answer.
+            If the question is not related to contracts, you don't have to fetch any contracts. 
             
             The user asked a question about an onchain related topic:
             $question

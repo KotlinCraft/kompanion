@@ -4,7 +4,7 @@ import agent.blockchain.bankless.model.input.Input
 import agent.blockchain.bankless.model.output.Output
 import arrow.core.Either
 import arrow.core.left
-import arrow.core.right
+import com.bankless.claimable.rest.vo.ClaimableVO
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -28,6 +28,8 @@ class BanklessClient {
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     private val baseUrl = "https://api.bankless.com/internal/chains"
+    private val claimablesBaseUrl = "https://api.bankless.com/claimables"
+
 
     /**
      * Reads contract state for a given network and contract.
@@ -56,6 +58,57 @@ class BanklessClient {
             logger.error("Error reading contract state: ${e.message}", e)
             logger.info("request was ${objectMapper.writeValueAsString(request)}")
             "Failed to read contract state: ${e.message}".left()
+        }
+    }
+
+
+    /**
+     * Makes an HTTP GET request to the specified endpoint.
+     *
+     * @param endpoint The complete URL to request
+     * @return The response body as a string
+     */
+    private suspend fun makeGetRequest(endpoint: String): String {
+        return withContext(Dispatchers.IO) {
+            val request = HttpRequest.newBuilder()
+                .uri(URI.create(endpoint))
+                .header("Content-Type", "application/json")
+                .header("X-BANKLESS-TOKEN", AppConfig.load().banklessToken ?: "")
+                .GET()
+                .build()
+
+            val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+            if (response.statusCode() != 200) {
+                throw RuntimeException("API request failed with status code: ${response.statusCode()}")
+            }
+
+            response.body()
+        }
+    }
+
+    /**
+     * Fetches all claimables for a given wallet address.
+     *
+     * @param address The wallet address to fetch claimables for
+     * @return Either an error message or a list of ClaimableVO objects
+     */
+    suspend fun getClaimables(address: String): Either<String, List<ClaimableVO>> {
+        val endpoint = "$claimablesBaseUrl/$address"
+
+        return try {
+            val response = makeGetRequest(endpoint)
+
+            // Parse the JSON response
+            Either.catch {
+                objectMapper.readValue<List<ClaimableVO>>(response)
+            }.mapLeft { error ->
+                logger.error("Error parsing claimables response: ${error.message}", error)
+                "Failed to parse claimables data: ${error.message}"
+            }
+        } catch (e: Exception) {
+            logger.error("Error fetching claimables: ${e.message}", e)
+            "Failed to fetch claimables: ${e.message}".left()
         }
     }
 
