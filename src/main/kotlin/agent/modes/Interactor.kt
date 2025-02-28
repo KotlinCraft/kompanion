@@ -19,8 +19,8 @@ interface Interactor {
         while (true) {
             val response = interactionHandler().interact(AgentAskConfirmation(message))
             when (response.trim().uppercase()) {
-                "Y", "y", "yes" -> return true
-                "N", "n", "no" -> return false
+                "Y", "YES" -> return true
+                "N", "NO" -> return false
                 else -> sendMessage("Invalid response. Please answer with Y or N.")
             }
         }
