@@ -1,17 +1,19 @@
 package ai
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import config.AppConfig
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import io.micrometer.core.instrument.config.validate.Validated.Invalid
+import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import org.springframework.ai.anthropic.AnthropicChatModel
 import org.springframework.ai.anthropic.AnthropicChatOptions
 import org.springframework.ai.anthropic.api.AnthropicApi
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
@@ -80,18 +82,24 @@ class AnthropicLLMProvider : LLMProvider() {
             prompt = action.enrichPrompt(prompt)
         }
 
-        val content = withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
 
         return Either.catch {
-            converter.convert(content)
+            val content = prompt.call().content() ?: ""
+            Either.catch { converter.convert(content) }.getOrElse { throw InvalidStructuredResponse() }
         }.fold({
             if (retry) {
-                logger.info("response was: $content")
+                if (it.message?.contains("429") == true) {
+                    logger.info("delaying 20 seconds because we got a 429 error")
+                    delay(10000)
+                }
                 logger.info("retrying, because we got the following error: $it")
                 var prompt = client.prompt(
                     Prompt(
                         UserMessage(input),
-                        UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
+                        if (it is InvalidStructuredResponse) UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again")
+                        else SystemMessage(
+                            ""
+                        ),
                         outputMessage
                     )
                 )
@@ -117,3 +125,5 @@ class AnthropicLLMProvider : LLMProvider() {
         )
     }
 }
+
+class InvalidStructuredResponse : IllegalArgumentException()

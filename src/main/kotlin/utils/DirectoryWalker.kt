@@ -7,7 +7,7 @@ fun walkDirectory(dir: File, builder: StringBuilder, indentLevel: Int) {
         val files = dir.listFiles() ?: return
 
         files.sortedWith(compareBy({ !it.isDirectory }, { it.name })).forEach { file ->
-            if (file.name.startsWith(".") || file.name == "build" || file.name == "out") {
+            if (file.name.startsWith(".") || file.name == "build" || file.name == "out" || file.name == "target") {
                 return@forEach  // Skip hidden and build directories
             }
 
