@@ -11,8 +11,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
 
 class FileTools(
     private val contextManager: ContextManager
@@ -20,9 +23,13 @@ class FileTools(
 
 
     fun requestFileContext(file: String): RequestFileResponse {
-        val filePath =
+
+        val filePath = Optional.of(Path.of(file)).filter(Path::exists).or {
+            Optional.of(Path.of(contextManager.fetchWorkingDirectory() + "/" + file)).filter(Path::exists)
+        }.or {
             Files.walk(Paths.get(contextManager.fetchWorkingDirectory())).filter { it.fileName.toString() == file }
                 .findFirst()
+        }
 
         return if (filePath.isPresent) {
             val content = Files.readString(filePath.get())
@@ -47,6 +54,7 @@ class FileTools(
     val readFileAction = Action(
         "request_file_context",
         """Provide a file in context for the request. 
+            | Always use the full path (absolute) file.
                         |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
                         |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
         ActionMethod(
