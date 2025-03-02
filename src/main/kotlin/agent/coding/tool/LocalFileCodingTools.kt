@@ -12,15 +12,14 @@ import ai.ActionMethod
 import arrow.core.Either
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Paths
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 
 class LocalFileCodingTools(private val contextManager: ContextManager) : ToolsProvider {
 
     val modifyFileAction = Action(
-        "modify_file",
-        """
-            |Modify a file, providing an exact search search and the replacement. 
-            |note: make the search content unique to avoid replacing unintended content.
+        "modify_file_contents",
+        """Modify a file, replacing its entire content with new content. 
             |The entire file, post edit, will be returned so you can verify the changes.""".trimMargin(),
         ActionMethod(
             ReflectionUtils.findMethod(this::class.java, "modifyFile", ModifyFileRequest::class.java), this
@@ -45,23 +44,20 @@ class LocalFileCodingTools(private val contextManager: ContextManager) : ToolsPr
 
         if (!fullPath.exists()) {
             println("Error: File ${fullPath} does not exist")
-            return ModifyFileResponse(error = "File does not exist", modifiedContent = "")
+            return ModifyFileResponse(
+                path = fullPath.absolutePathString(),
+                error = "File does not exist",
+                newContent = null
+            )
         }
 
         val file = fullPath.toFile()
 
-        val originalContent = file.readText()
-        val newContent = originalContent.replaceFirst(modifyFileRequest.searchContent, modifyFileRequest.replaceContent)
-
-        // Write the modified content back to the file
-
-        file.writeText(newContent)
+        file.writeText(modifyFileRequest.newContent)
         return ModifyFileResponse(
-            error = run {
-                if (originalContent == newContent) {
-                    "couldn't find search content in file"
-                } else null
-            }, modifiedContent = originalContent
+            error = null,
+            path = fullPath.absolutePathString(),
+            newContent = modifyFileRequest.newContent
         )
     }
 

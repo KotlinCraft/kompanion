@@ -1,6 +1,5 @@
 import agent.*
-import agent.blockchain.bankless.BanklessClient
-import agent.coding.DefaultCodeGenerator
+import agent.coding.CodeGenerator
 import agent.domain.CodeApplier
 import agent.fileops.KompanionFile
 import agent.fileops.KompanionFileHandler
@@ -106,7 +105,7 @@ class KompanionBuilder {
         }.getOrElse { getFinalLLMProvider("gpt-4o") }
 
         val finalReasoner = reasoner
-        val finalGenerator = codeGenerator ?: DefaultCodeGenerator(bigProvider, finalContextManager, toolManager)
+        val finalGenerator = codeGenerator ?: CodeGenerator(bigProvider, finalContextManager, toolManager)
 
         // Ensure we have an interaction handler
         if (interactionHandler == null) {
@@ -126,8 +125,8 @@ class KompanionBuilder {
                 finalReasoner ?: DefaultReasoner(smallProvider, finalContextManager, toolManager),
                 finalGenerator,
                 interactionHandler!!,
+                toolManager,
                 finalContextManager,
-                toolManager
             )
 
             AgentMode.BLOCKCHAIN -> BlockchainMode(

@@ -1,14 +1,14 @@
 package agent.modes
 
-import agent.CodeGenerator
 import agent.ContextManager
-import agent.InMemoryContextManager
 import agent.ToolManager
+import agent.coding.CodeGenerator
 import agent.coding.tool.LocalFileCodingTools
 import agent.domain.FileChange
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import agent.tool.FileTools
+import ai.Action
 import org.slf4j.LoggerFactory
 
 
@@ -16,8 +16,8 @@ class CodingMode(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
     private val interactionHandler: InteractionHandler,
+    private val toolManager: ToolManager,
     contextManager: ContextManager,
-    toolManager: ToolManager
 ) : Mode, Interactor {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -52,7 +52,9 @@ class CodingMode(
 
 
     override suspend fun getLoadedActionNames(): List<String> {
-        return emptyList()
+        return toolManager.tools.map { it.action }.filter(Action::showUpInTools).map {
+            it.name
+        }
     }
 
     private fun formatFileChanges(fileChanges: List<FileChange>): String {

@@ -439,7 +439,7 @@ fun ChatScreen() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Working Directory:",
+                        "Workdir:",
                         color = Color.White.copy(alpha = 0.7f),
                         fontSize = 12.sp,
                         modifier = Modifier.padding(end = 8.dp)

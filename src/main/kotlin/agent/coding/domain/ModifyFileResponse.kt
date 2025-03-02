@@ -1,6 +1,7 @@
 package agent.coding.domain
 
 data class ModifyFileResponse(
+    val path: String,
     val error: String?,
-    val modifiedContent: String?,
+    val newContent: String?
 )
