@@ -32,26 +32,26 @@ class CodingMode(
     init {
 
         try {
-            var params: ServerParameters = ServerParameters.builder("npx")
-                .args("-y", "@jetbrains/mcp-proxy")
-                .build()
-            var transport = StdioClientTransport(params)
+            /*  var params: ServerParameters = ServerParameters.builder("npx")
+                  .args("-y", "@jetbrains/mcp-proxy")
+                  .build()
+              var transport = StdioClientTransport(params)
 
-            var client: McpSyncClient = McpClient.sync(transport)
-                .requestTimeout(Duration.ofSeconds(5))
-                .capabilities(
-                    McpSchema.ClientCapabilities.builder()
-                        .build()
-                ).build()
+              var client: McpSyncClient = McpClient.sync(transport)
+                  .requestTimeout(Duration.ofSeconds(5))
+                  .capabilities(
+                      McpSchema.ClientCapabilities.builder()
+                          .build()
+                  ).build()
 
-            val callbacks = McpToolUtils.getToolCallbacksFromSyncClients(client)
-            toolManager.registerCallbacks(callbacks)
+              val callbacks = McpToolUtils.getToolCallbacksFromSyncClients(client)
+              toolManager.registerCallbacks(callbacks) */
+            throw UnsupportedOperationException("MCP server is not supported yet")
         } catch (ex: Exception) {
-            logger.error("Failed to connect to MCP server, no intellij support", ex)
+            logger.error("Failed to connect to MCP server, no intellij support")
             LocalFileCodingTools(interactionHandler, contextManager).register(toolManager)
+            FileTools(contextManager).register(toolManager)
         }
-
-   //     FileTools(contextManager).register(toolManager)
     }
 
     override suspend fun perform(request: String): String {
