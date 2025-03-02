@@ -26,6 +26,7 @@ class CodeGenerator(
             
              ## Project Context:
             Based on the files in your current context, you understand the existing code structure and patterns.
+            You can still pull in files in order to understand the codebase better.
             Look for similar implementations in the current codebase to maintain consistency.
            
              ## Coding Task:

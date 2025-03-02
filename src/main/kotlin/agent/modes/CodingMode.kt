@@ -36,8 +36,8 @@ class CodingMode(
 
         logger.debug("Generation plan created: {}", plan)
 
-        val userConfirmed = confirmWithUser("Would you like me to apply these changes?")
-        if (!userConfirmed) {
+        //val userConfirmed = confirmWithUser("Would you like me to apply these changes?")
+        if (false) {
             logger.info("User rejected changes.")
             return "Changes were rejected by user."
         }
