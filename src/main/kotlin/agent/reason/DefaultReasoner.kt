@@ -23,7 +23,7 @@ class DefaultReasoner(
             Analyze the following code-related request and extract key information.
             The content for various files (but not all) might be provided for context. 
             If you think a file already exists but its contents was not provided yet, request it using "request_file_context". 
-            Only attempt to read files you could find in the outline.
+            Only attempt to read files you could find in the outline and use their absolute path like you found them in the outline.
             
             important: We cannot use files that are not in our context yet.
 
