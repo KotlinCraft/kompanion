@@ -20,6 +20,7 @@ class LocalFileCodingTools(private val contextManager: ContextManager) : ToolsPr
     val modifyFileAction = Action(
         "modify_file_contents",
         """Modify a file, replacing its entire content with new content. 
+            |Example request: {"path": "/absolute/path/to/file", "content": "new content"}
             |The entire file, post edit, will be returned so you can verify the changes.""".trimMargin(),
         ActionMethod(
             ReflectionUtils.findMethod(this::class.java, "modifyFile", ModifyFileRequest::class.java), this
@@ -37,7 +38,7 @@ class LocalFileCodingTools(private val contextManager: ContextManager) : ToolsPr
     )
 
     fun modifyFile(modifyFileRequest: ModifyFileRequest): ModifyFileResponse {
-        val path = modifyFileRequest.absolutePath
+        val path = modifyFileRequest.path
         val fullPath = if (Paths.get(path).exists()) Paths.get(path) else Paths.get(
             contextManager.fetchWorkingDirectory(), path
         )
@@ -53,11 +54,11 @@ class LocalFileCodingTools(private val contextManager: ContextManager) : ToolsPr
 
         val file = fullPath.toFile()
 
-        file.writeText(modifyFileRequest.newContent)
+        file.writeText(modifyFileRequest.content)
         return ModifyFileResponse(
             error = null,
             path = fullPath.absolutePathString(),
-            newContent = modifyFileRequest.newContent
+            newContent = modifyFileRequest.content
         )
     }
 
