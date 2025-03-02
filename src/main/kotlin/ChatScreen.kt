@@ -2,6 +2,7 @@ import KompanionBuilder.AgentMode.*
 import agent.InMemoryContextManager
 import agent.interaction.*
 import agent.modes.Mode
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +13,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,9 +38,6 @@ import ui.chat.MessageBubble
 import ui.chat.WorkingDirectorySelector
 import ui.info.InfoManager
 import ui.info.InfoTooltip
-import java.nio.file.Path
-import kotlin.io.path.name
-import kotlin.random.Random
 
 private data class SlashCommand(
     val command: String,
@@ -591,22 +591,28 @@ fun ChatScreen() {
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(if (isProcessing) Color.Red.copy(alpha = 0.7f) else accentColor)
-                            .clickable { sendCurrentMessage() },
+                            .background(if (isProcessing) successColor else accentColor)
+                            .clickable { 
+                                if (!isProcessing) {
+                                    sendCurrentMessage()
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isProcessing && !isWaitingForAnswer) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                if (isProcessing) Icons.Default.Close else Icons.Default.Send,
-                                contentDescription = if (isProcessing) "Cancel" else "Send",
-                                tint = Color.White
-                            )
+                        Crossfade(targetState = isProcessing) { processing ->
+                            if (processing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.Send,
+                                    contentDescription = "Send",
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
                 }
