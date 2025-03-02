@@ -9,6 +9,7 @@ import ai.Action
 import ai.ActionMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
 import java.nio.file.Path
@@ -21,6 +22,7 @@ class FileTools(
     private val contextManager: ContextManager
 ) : ToolsProvider {
 
+    val logger = LoggerFactory.getLogger(this::class.java)
 
     fun requestFileContext(file: String): RequestFileResponse {
 
@@ -45,7 +47,9 @@ class FileTools(
                 )
             )
 
-            RequestFileResponse(true, path.absolutePathString(), content)
+            RequestFileResponse(true, path.absolutePathString(), content).also {
+                logger.info("File $file found and added to context")
+            }
         } else {
             RequestFileResponse(false, null, null)
         }

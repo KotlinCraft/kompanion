@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import utils.walkDirectory
 import java.io.File
+import java.nio.file.Path
 
 class InMemoryContextManager : ContextManager {
 
@@ -45,7 +46,7 @@ class InMemoryContextManager : ContextManager {
 
     override fun getFullFileList(): String {
         return buildString {
-            walkDirectory(File(AppConfig.load().latestDirectory.trim()), this, 0)
+            walkDirectory(File(AppConfig.load().latestDirectory.trim()), this, File(AppConfig.load().latestDirectory).absolutePath)
         }
     }
 }
