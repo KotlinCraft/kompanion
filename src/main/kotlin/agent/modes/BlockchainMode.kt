@@ -43,6 +43,8 @@ class BlockchainMode(
     override suspend fun getLoadedActionNames(): List<String> {
         return toolManager.tools.map { it.action }.filter(Action::showUpInTools).map {
             it.name
+        } + toolManager.toolCallbacks.map {
+            it.toolDefinition.name()
         }
     }
 

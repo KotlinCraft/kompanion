@@ -1,6 +1,7 @@
 package ai
 
 import org.reflections.Reflections
+import org.springframework.ai.tool.ToolCallback
 import org.springframework.core.ParameterizedTypeReference
 
 /**
@@ -51,7 +52,8 @@ abstract class LLMProvider {
         actions: List<Action>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
-        retry: Boolean = true
+        retry: Boolean = true,
+        toolcallbacks: MutableList<ToolCallback>
     ): T
 
     abstract fun getSupportedModels(): List<String>

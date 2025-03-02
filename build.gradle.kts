@@ -9,6 +9,8 @@ plugins {
 repositories {
     google()
     mavenCentral()
+    maven("https://repo.spring.io/milestone")
+    maven("https://repo.spring.io/snapshot")
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
 
@@ -20,9 +22,10 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.materialIconsExtended)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
-    implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0-M6"))
+    implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0-SNAPSHOT"))
     implementation("org.springframework.ai:spring-ai-openai")
     implementation("org.springframework.ai:spring-ai-anthropic")
+    implementation("org.springframework.ai:spring-ai-mcp-client-spring-boot-starter")
     implementation("org.slf4j:slf4j-api:2.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.16")
     

@@ -64,6 +64,8 @@ class CodeGenerator(
             input = prompt,
             actions = toolManager.tools.map { it.action },
             temperature = 0.5,
-            parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {})
+            parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {},
+            toolcallbacks = toolManager.toolCallbacks
+        )
     }
 }

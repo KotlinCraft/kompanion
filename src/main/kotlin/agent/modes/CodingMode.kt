@@ -4,12 +4,18 @@ import agent.ContextManager
 import agent.ToolManager
 import agent.coding.CodeGenerator
 import agent.coding.tool.LocalFileCodingTools
-import agent.domain.FileChange
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import agent.tool.FileTools
 import ai.Action
+import io.modelcontextprotocol.client.McpClient
+import io.modelcontextprotocol.client.McpSyncClient
+import io.modelcontextprotocol.client.transport.ServerParameters
+import io.modelcontextprotocol.client.transport.StdioClientTransport
+import io.modelcontextprotocol.spec.McpSchema
 import org.slf4j.LoggerFactory
+import org.springframework.ai.mcp.McpToolUtils
+import java.time.Duration
 
 
 class CodingMode(
@@ -20,10 +26,31 @@ class CodingMode(
     contextManager: ContextManager,
 ) : Mode, Interactor {
 
+
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     init {
-        LocalFileCodingTools(contextManager).register(toolManager)
+
+        try {
+            var params: ServerParameters = ServerParameters.builder("npx")
+                .args("-y", "@jetbrains/mcp-proxy")
+                .build()
+            var transport = StdioClientTransport(params)
+
+            var client: McpSyncClient = McpClient.sync(transport)
+                .requestTimeout(Duration.ofSeconds(5))
+                .capabilities(
+                    McpSchema.ClientCapabilities.builder()
+                        .build()
+                ).build()
+
+            val callbacks = McpToolUtils.getToolCallbacksFromSyncClients(client)
+            toolManager.registerCallbacks(callbacks)
+        } catch (ex: Exception) {
+            logger.error("Failed to connect to MCP server, no intellij support", ex)
+            LocalFileCodingTools(interactionHandler, contextManager).register(toolManager)
+        }
+
         FileTools(contextManager).register(toolManager)
     }
 
@@ -50,37 +77,11 @@ class CodingMode(
         return result.explanation
     }
 
-
     override suspend fun getLoadedActionNames(): List<String> {
         return toolManager.tools.map { it.action }.filter(Action::showUpInTools).map {
             it.name
-        }
-    }
-
-    private fun formatFileChanges(fileChanges: List<FileChange>): String {
-        return buildString {
-            appendLine("File changes overview:")
-            appendLine("----------------------")
-            fileChanges.forEach { change ->
-                when (change) {
-                    is FileChange.CreateFile -> {
-                        appendLine("📄 CREATE NEW FILE: ${change.path}")
-                        appendLine("   Content preview (first 200 chars):")
-                        appendLine("   ${change.content.take(200)}${if (change.content.length > 200) "..." else ""}")
-                        appendLine()
-                    }
-
-                    is FileChange.ModifyFile -> {
-                        appendLine("📝 MODIFY FILE: ${change.path}")
-                        change.changes.forEachIndexed { index, modification ->
-                            appendLine("   Change #${index + 1}: ${modification.description}")
-                            appendLine("   - Remove: ${modification.searchContent.take(100)}${if (modification.searchContent.length > 100) "..." else ""}")
-                            appendLine("   + Add: ${modification.replaceContent.take(100)}${if (modification.replaceContent.length > 100) "..." else ""}")
-                        }
-                        appendLine()
-                    }
-                }
-            }
+        } + toolManager.toolCallbacks.map {
+            it.toolDefinition.name()
         }
     }
 

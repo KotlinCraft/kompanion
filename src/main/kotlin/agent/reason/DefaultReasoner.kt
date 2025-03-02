@@ -42,7 +42,9 @@ class DefaultReasoner(
                 input = prompt,
                 actions = toolManager.tools.map { it.action },
                 temperature = 0.7,
-                parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {})
+                parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {},
+                toolcallbacks = toolManager.toolCallbacks
+            )
         }.getOrElse {
             it.printStackTrace()
             throw IllegalArgumentException("I'm afraid I was unable to analyze your request.")
@@ -86,6 +88,7 @@ class DefaultReasoner(
         return LLMProvider.prompt(
             input = prompt,
             actions = toolManager.tools.map { it.action },
+            toolcallbacks = toolManager.toolCallbacks,
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})
     }
@@ -119,6 +122,8 @@ class DefaultReasoner(
             input = prompt,
             actions = toolManager.tools.map { it.action },
             temperature = 0.3,
-            parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {})
+            parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
+            toolcallbacks = toolManager.toolCallbacks
+        )
     }
 }

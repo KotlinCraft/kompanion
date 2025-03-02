@@ -3,7 +3,6 @@ package ai
 import arrow.core.Either
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import config.AppConfig
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +16,7 @@ import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.openai.OpenAiChatModel
 import org.springframework.ai.openai.OpenAiChatOptions
 import org.springframework.ai.openai.api.OpenAiApi
+import org.springframework.ai.tool.ToolCallback
 import org.springframework.ai.util.JacksonUtils
 import org.springframework.core.ParameterizedTypeReference
 
@@ -57,7 +57,8 @@ class OpenAILLMProvider : LLMProvider() {
         actions: List<Action>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
-        retry: Boolean
+        retry: Boolean,
+        toolcallbacks: MutableList<ToolCallback>
     ): T {
 
         val converter = BeanOutputConverter(parameterizedTypeReference, objectmapper)
@@ -75,6 +76,8 @@ class OpenAILLMProvider : LLMProvider() {
         actions.forEach { action ->
             prompt = action.enrichPrompt(prompt)
         }
+
+
 
         val content = withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
 

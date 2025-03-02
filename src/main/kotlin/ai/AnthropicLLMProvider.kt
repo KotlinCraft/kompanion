@@ -6,7 +6,6 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import config.AppConfig
-import io.micrometer.core.instrument.config.validate.Validated.Invalid
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import org.springframework.ai.anthropic.AnthropicChatModel
@@ -18,6 +17,7 @@ import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
 import org.springframework.ai.converter.BeanOutputConverter
+import org.springframework.ai.tool.ToolCallback
 import org.springframework.ai.util.JacksonUtils
 import org.springframework.core.ParameterizedTypeReference
 
@@ -62,7 +62,8 @@ class AnthropicLLMProvider : LLMProvider() {
         actions: List<Action>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
-        retry: Boolean
+        retry: Boolean,
+        toolcallbacks: MutableList<ToolCallback>
     ): T {
         this.temperature = temperature
 
@@ -82,6 +83,7 @@ class AnthropicLLMProvider : LLMProvider() {
             prompt = action.enrichPrompt(prompt)
         }
 
+        prompt.tools(toolcallbacks)
 
         return Either.catch {
             val content = prompt.call().content() ?: ""

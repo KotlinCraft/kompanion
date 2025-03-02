@@ -45,6 +45,8 @@ class BlockchainReasoner(
             input = prompt,
             actions = actions,
             temperature = 0.3,
-            parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {})
+            parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
+            toolcallbacks = mutableListOf()
+        )
     }
 }
