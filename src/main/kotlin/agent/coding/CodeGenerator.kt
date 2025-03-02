@@ -1,6 +1,7 @@
 package agent.coding
 
 import agent.ContextManager
+import agent.InMemoryContextManager
 import agent.ToolManager
 import agent.coding.domain.CodingResult
 import agent.domain.GenerationPlan
@@ -18,6 +19,8 @@ class CodeGenerator(
     ): CodingResult {
         val prompt = """
             ${contextManager.currentContextPrompt()}
+            
+            ${getMessageHistoryPrompt()}
             
             You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
             Based on the following generation plan you have generated the necessary code changes. 
@@ -57,7 +60,10 @@ class CodeGenerator(
 
     
             Goal: 
-            Use the available tools to implement the requested changes to the codebase. Not only provide reasoning, but also perform the changes.
+            Use the available tools to implement the requested changes to the codebase. 
+            Not only provide reasoning, but also perform the changes.
+            
+            Afterwards, provide a detailed explanation of the changes you made and how they improve the codebase.
         """.trimIndent()
 
         return LLMProvider.prompt(
@@ -67,5 +73,35 @@ class CodeGenerator(
             parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {},
             toolcallbacks = toolManager.toolCallbacks
         )
+    }
+    
+    /**
+     * Get formatted message history for prompts
+     */
+    private fun getMessageHistoryPrompt(): String {
+        // If we have an InMemoryContextManager, use its formatted history
+        val formattedHistory = (contextManager as? InMemoryContextManager)?.getFormattedMessageHistory()
+            ?: buildMessageHistoryFromContext()
+            
+        return if (formattedHistory.isNotEmpty()) {
+            """
+            Previous conversation history (consider this as context for this continuation):
+            $formattedHistory
+            """
+        } else {
+            "" // Empty string if no history
+        }
+    }
+    
+    /**
+     * Build message history from context if not using InMemoryContextManager
+     */
+    private fun buildMessageHistoryFromContext(): String {
+        val messages = contextManager.fetchMessages()
+        return if (messages.isNotEmpty()) {
+            messages.joinToString("\n")
+        } else {
+            ""
+        }
     }
 }

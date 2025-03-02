@@ -18,12 +18,18 @@ class Agent internal constructor(
     }
 
     suspend fun perform(request: String): String {
-        return mode.perform(request).also { response ->
-            if (KompanionFileHandler.kompanionFolderExists()) {
-                KompanionFileHandler.append(KompanionFile.MESSAGE_HISTORY.fileName, "User: $request")
-                KompanionFileHandler.append(KompanionFile.MESSAGE_HISTORY.fileName, "Kompanion: $response")
-            }
-        }
+        // Store user message in context manager first
+        (contextManager as? InMemoryContextManager)?.addUserMessage(request) 
+            ?: contextManager.storeMessage("User: $request")
+        
+        // Perform the action
+        val response = mode.perform(request)
+        
+        // Store agent response in context manager
+        (contextManager as? InMemoryContextManager)?.addAgentMessage(response)
+            ?: contextManager.storeMessage("Kompanion: $response")
+        
+        return response
     }
 
     suspend fun onload() {

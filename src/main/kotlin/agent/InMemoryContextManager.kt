@@ -14,18 +14,52 @@ class InMemoryContextManager : ContextManager {
     private val _files = MutableStateFlow<Set<ContextFile>>(setOf())
     val files: StateFlow<Set<ContextFile>> = _files.asStateFlow()
 
-    val messages = mutableListOf<String>()
+    // Replace direct messages list with MessageManager
+    private val messageManager = MessageManager()
+
+    init {
+        // Load message history from file on initialization
+        messageManager.loadFromFile()
+    }
 
     override fun getContext(): StateFlow<Set<ContextFile>> {
         return files
     }
 
     override fun fetchMessages(): List<String> {
-        return messages
+        // Convert Message objects to simple strings for backward compatibility
+        return messageManager.getMessages().map { 
+            when (it.type) {
+                MessageType.USER -> "User: ${it.content}"
+                MessageType.AGENT -> "Kompanion: ${it.content}"
+            }
+        }
     }
 
     override fun storeMessage(message: String) {
-        messages.add(message)
+        // Determine message type and store in MessageManager
+        if (message.startsWith("User: ")) {
+            messageManager.addUserMessage(message.substringAfter("User: "))
+        } else if (message.startsWith("Kompanion: ")) {
+            messageManager.addAgentMessage(message.substringAfter("Kompanion: "))
+        } else {
+            // If no prefix, assume it's a user message
+            messageManager.addUserMessage(message)
+        }
+    }
+
+    // Add convenience methods for adding user and agent messages directly
+    fun addUserMessage(content: String) {
+        messageManager.addUserMessage(content)
+    }
+
+    fun addAgentMessage(content: String) {
+        messageManager.addAgentMessage(content)
+    }
+
+    // Get formatted history for prompts
+    fun getFormattedMessageHistory(): String {
+        return messageManager.getFormattedHistory()
     }
 
     override fun updateFiles(files: List<ContextFile>) {
