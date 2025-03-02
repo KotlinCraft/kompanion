@@ -40,7 +40,7 @@ class DefaultReasoner(
         return Either.catch {
             LLMProvider.prompt(
                 input = prompt,
-                actions = listOf(),
+                actions = toolManager.tools.map { it.action },
                 temperature = 0.7,
                 parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {})
         }.getOrElse {
@@ -117,7 +117,7 @@ class DefaultReasoner(
         // Attempt to leverage the same LLM approach used in DefaultReasoner, if available
         return LLMProvider.prompt(
             input = prompt,
-            actions =  toolManager.tools.map { it.action },
+            actions = toolManager.tools.map { it.action },
             temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {})
     }

@@ -24,7 +24,7 @@ class CodingMode(
 
     init {
         LocalFileCodingTools(contextManager).register(toolManager)
-        FileTools(interactionHandler, contextManager).register(toolManager)
+        FileTools(contextManager).register(toolManager)
     }
 
     override suspend fun perform(request: String): String {

@@ -64,6 +64,4 @@ class CodeGenerator(
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {})
     }
-
-
 }

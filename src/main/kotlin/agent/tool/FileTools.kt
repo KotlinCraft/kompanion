@@ -15,7 +15,6 @@ import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
 class FileTools(
-    private val interactionHandler: InteractionHandler,
     private val contextManager: ContextManager
 ) : ToolsProvider {
 

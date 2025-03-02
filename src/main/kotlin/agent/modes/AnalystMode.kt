@@ -15,7 +15,7 @@ class AnalystMode(
 ) : Mode {
 
     init {
-        FileTools(interactionHandler, contextManager).register(toolManager)
+        FileTools(contextManager).register(toolManager)
     }
 
     override suspend fun perform(request: String): String {
