@@ -24,13 +24,15 @@ class CodeGenerator(
             Use files in your current context to understand your changes. 
             If the result is not what you expected, you can retry.
             
+            If the user doesn't ask for it specifically, don't add tests.
+            
              ## Project Context:
             Based on the files in your current context, you understand the existing code structure and patterns.
             You can still pull in files in order to understand the codebase better.
             Look for similar implementations in the current codebase to maintain consistency.
            
              ## Coding Task:
-            Based on the following generation plan, implement the necessary code changes. 
+            Based on the following generation plan, implement the necessary code changes using your tools (by adding and changing files). 
             First explore the codebase to understand the current structure before making changes.
                        
             
