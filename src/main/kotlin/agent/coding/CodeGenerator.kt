@@ -57,8 +57,7 @@ class CodeGenerator(
 
     
             Goal: 
-            Use the available tools to implement the requested changes to the codebase.
-            Explain your reasoning for each significant change.
+            Use the available tools to implement the requested changes to the codebase. Not only provide reasoning, but also perform the changes.
         """.trimIndent()
 
         return LLMProvider.prompt(
