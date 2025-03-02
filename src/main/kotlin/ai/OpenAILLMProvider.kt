@@ -77,7 +77,7 @@ class OpenAILLMProvider : LLMProvider() {
             prompt = action.enrichPrompt(prompt)
         }
 
-
+        prompt = prompt.tools(toolcallbacks)
 
         val content = withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
 
