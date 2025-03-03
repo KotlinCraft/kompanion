@@ -22,7 +22,7 @@ class BlockchainReasoner(
             By fetching a contract, you are able to understand what the smart contract is able to accomplish and can provide a more accurate answer.
             
             How to handle proxy contracts:
-            - If the contract is a proxy contract, you can fetch the implementation contract by calling the `implementation` method.
+            - If the contract is a proxy contract, you can fetch the implementation contract by calling the `implementation` method. Alternatively, if that fails, try the `_implementation` function. 
             - you can then call the `get_contract_source` action with the implementation contract address to fetch the source code.
             - you can then read the contract state calling functions from the implementation contract on the proxy contract.
             

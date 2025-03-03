@@ -118,6 +118,7 @@ class OpenAILLMProvider : LLMProvider() {
         return listOf(
             "gpt-4o",
             "o3-mini",
+            "o1"
         )
     }
 }
