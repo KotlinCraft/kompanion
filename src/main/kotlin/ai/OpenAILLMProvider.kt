@@ -30,7 +30,6 @@ class OpenAILLMProvider : LLMProvider() {
     }
 
     var temperature = 1.0
-    var modelName = "gpt-4o"
 
     val client by lazy {
         createClient()
@@ -44,7 +43,7 @@ class OpenAILLMProvider : LLMProvider() {
 
         return OpenAiChatModel.builder().openAiApi(OpenAiApi.builder().apiKey(key).build()).defaultOptions(
                 OpenAiChatOptions.builder()
-                    .model(modelName)
+                    .model(model)
                     .reasoningEffort("medium")
                     .temperature(temperature).build()
             ).build()

@@ -23,8 +23,13 @@ abstract class LLMProvider {
     companion object {
         fun register(providerClass: Class<out LLMProvider>) {
             try {
-                val instance = providerClass.getDeclaredConstructor().newInstance()
-                LLMRegistry.registerModels(instance, instance.getSupportedModels())
+                val stub = providerClass.getDeclaredConstructor().newInstance()
+                stub.getSupportedModels().forEach {
+                    LLMRegistry.registerModel(
+                        providerClass.getDeclaredConstructor().newInstance(),
+                        it
+                    )
+                }
             } catch (e: Exception) {
                 // Skip registration if we can't instantiate
             }

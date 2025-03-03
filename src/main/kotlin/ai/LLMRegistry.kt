@@ -6,15 +6,11 @@ package ai
 object LLMRegistry {
     private val modelProviders = mutableMapOf<String, LLMProvider>()
 
-    fun registerModels(provider: LLMProvider, models: List<String>) {
-        models.forEach { model ->
-            modelProviders[model] = provider
-        }
+    fun registerModel(provider: LLMProvider, model: String) {
+        modelProviders[model] = provider.setModel(model)
     }
 
     fun getProviderForModel(model: String): LLMProvider? {
-        return modelProviders[model].also {
-            it?.setModel(model)
-        }
+        return modelProviders[model]
     }
 }
