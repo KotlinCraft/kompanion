@@ -30,14 +30,14 @@ class BlockchainMode(
             EtherscanTools(interactionHandler).register(toolManager)
         }
         if (isBanklessSupported()) {
-            BanklessTools().register(toolManager)
+            BanklessTools(interactionHandler).register(toolManager)
         }
     }
 
     val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun perform(request: String): String {
-        return reasoner.askQuestion(request, toolManager.tools.map { it.action }).reply
+        return reasoner.askQuestion(request).reply
     }
 
     override suspend fun getLoadedActionNames(): List<String> {

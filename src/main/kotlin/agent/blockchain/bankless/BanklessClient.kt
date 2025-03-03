@@ -160,6 +160,7 @@ class EthCallResultToTypeConverter {
      */
     data class Result(
         val value: Any,
-        val type: String
+        val type: String,
+        val error: String?
     )
 }

@@ -3,7 +3,9 @@ package agent.blockchain.tool
 import agent.blockchain.bankless.BanklessClient
 import agent.blockchain.bankless.EvmReadContractStateRequest
 import agent.blockchain.tool.domain.ReadContractResponse
+import agent.interaction.InteractionHandler
 import agent.modes.BlockchainMode.ReadContractRequest
+import agent.modes.Interactor
 import agent.tool.Tool
 import agent.tool.ToolsProvider
 import ai.Action
@@ -15,7 +17,7 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.util.ReflectionUtils
 
-class BanklessTools : ToolsProvider {
+class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsProvider, Interactor {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -83,10 +85,12 @@ class BanklessTools : ToolsProvider {
             result.fold(
                 { error -> ReadContractResponse(null, error) },
                 { results ->
+
                     val mappedResults = results.map {
                         mapOf(
                             "value" to it.value,
-                            "type" to it.type
+                            "type" to it.type,
+                            "error" to (it.error ?: "")
                         )
                     }
                     ReadContractResponse(mappedResults, null)
@@ -102,5 +106,9 @@ class BanklessTools : ToolsProvider {
             Tool(get_claimables),
             Tool(read_contract)
         )
+    }
+
+    override fun interactionHandler(): InteractionHandler {
+        return interactionHandler
     }
 }

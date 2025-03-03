@@ -1,5 +1,7 @@
 package agent.blockchain.tool
 
+import agent.blockchain.tool.domain.GetContractAbiRequest
+import agent.blockchain.tool.domain.GetContractAbiResponse
 import agent.blockchain.tool.domain.GetContractSourceRequest
 import agent.blockchain.tool.domain.GetContractSourceResponse
 import agent.interaction.InteractionHandler
@@ -25,6 +27,15 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
         )
     )
 
+    val get_contract_abi = Action(
+        "get_contract_abi",
+        """Get the contract ABI for an address. Use this if the source was not available""".trimMargin(),
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "getContractAbi", GetContractAbiRequest::class.java),
+            this
+        )
+    )
+
     fun getContractSource(request: GetContractSourceRequest): GetContractSourceResponse {
         val source = runBlocking(Dispatchers.IO) {
             etherscanClientManager.getClient(request.network)?.getContractSource(request.address)?.map {
@@ -41,12 +52,34 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
                 "not a contract or no source found"
             }
         }
+
+        if ((source ?: "").split(" ").size > 10000) {
+            return GetContractSourceResponse("source code too long, use get_contract_abi instead")
+        }
         return GetContractSourceResponse(source ?: "not a contract or no source found")
+    }
+
+    fun getContractAbi(request: GetContractAbiRequest): GetContractAbiResponse {
+        val abi = runBlocking(Dispatchers.IO) {
+            etherscanClientManager.getClient(request.network)?.getContractAbi(request.address)?.map {
+                it.result
+            }?.also {
+                it.onRight {
+                    runBlocking(Dispatchers.IO) {
+                        sendMessage("📋Fetched contract ABI for address ${request.address} on network ${request.network}")
+                    }
+                }
+            }?.getOrElse {
+                "not a contract or no ABI found"
+            }
+        }
+        return GetContractAbiResponse(abi ?: "not a contract or no ABI found")
     }
 
     override fun getTools(): List<Tool> {
         return listOf(
-            Tool(get_contract_source)
+            Tool(get_contract_source),
+            Tool(get_contract_abi)
         )
     }
 

@@ -132,6 +132,7 @@ class KompanionBuilder {
             AgentMode.BLOCKCHAIN -> BlockchainMode(
                 BlockchainReasoner(
                     bigProvider,
+                    toolManager,
                     finalContextManager
                 ),
                 interactionHandler!!

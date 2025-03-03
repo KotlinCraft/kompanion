@@ -53,6 +53,31 @@ class EtherscanClient(
     }
     
     /**
+     * Fetches contract ABI for a given contract address.
+     * 
+     * @param contractAddress The contract address to fetch the ABI for
+     * @return Either an error message or the contract ABI data
+     */
+    suspend fun getContractAbi(contractAddress: String): Either<String, ContractAbiResponse> {
+        val endpoint = "$baseUrl?module=contract&action=getabi&address=$contractAddress&apikey=$apiKey"
+        
+        return try {
+            val response = makeRequest(endpoint)
+            
+            // Parse the JSON response
+            Either.catch {
+                ContractAbiResponse.fromJson(response)
+            }.mapLeft { error ->
+                logger.error("Error parsing contract ABI response: ${error.message}", error)
+                "Failed to parse contract ABI data: ${error.message}"
+            }
+        } catch (e: Exception) {
+            logger.error("Error fetching contract ABI: ${e.message}", e)
+            "Failed to fetch contract ABI: ${e.message}".left()
+        }
+    }
+    
+    /**
      * Makes an HTTP request to the specified endpoint.
      * 
      * @param endpoint The complete URL to request
