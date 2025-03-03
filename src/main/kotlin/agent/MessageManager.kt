@@ -62,30 +62,6 @@ class MessageManager {
             KompanionFileHandler.append(KompanionFile.MESSAGE_HISTORY.fileName, formattedMessage)
         }
     }
-
-    /**
-     * Load message history from file
-     */
-    fun loadFromFile() {
-        if (KompanionFileHandler.kompanionFolderExists()) {
-            val history = KompanionFileHandler.readFromKompanionDirectory(KompanionFile.MESSAGE_HISTORY.fileName)
-            if (history.isNotEmpty()) {
-                val lines = history.lines()
-                lines.forEach { line ->
-                    when {
-                        line.startsWith("User: ") -> {
-                            val content = line.substringAfter("User: ")
-                            messages.add(Message(MessageType.USER, content))
-                        }
-                        line.startsWith("Kompanion: ") -> {
-                            val content = line.substringAfter("Kompanion: ")
-                            messages.add(Message(MessageType.AGENT, content))
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 /**

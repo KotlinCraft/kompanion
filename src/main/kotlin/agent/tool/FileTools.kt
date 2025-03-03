@@ -47,11 +47,14 @@ class FileTools(
                 )
             )
 
-            RequestFileResponse(true, path.absolutePathString(), content).also {
+            RequestFileResponse(
+                true, path.absolutePathString(), content,
+                contextManager.findRelatedFiles(path.fileName.toString()).map { it.name }
+            ).also {
                 logger.info("File $file found and added to context")
             }
         } else {
-            RequestFileResponse(false, null, null)
+            RequestFileResponse(false, null, null, emptyList())
         }
     }
 

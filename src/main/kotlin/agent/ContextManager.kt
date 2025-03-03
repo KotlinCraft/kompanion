@@ -2,6 +2,7 @@ package agent
 
 import agent.domain.context.ContextFile
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 
 interface ContextManager {
     /**
@@ -60,4 +61,6 @@ interface ContextManager {
         }""".trimIndent()
     }
 
+
+    fun findRelatedFiles(relatedFiles: String): List<File>
 }
