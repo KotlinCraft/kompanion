@@ -42,11 +42,14 @@ class OpenAILLMProvider : LLMProvider() {
         }
 
         return OpenAiChatModel.builder().openAiApi(OpenAiApi.builder().apiKey(key).build()).defaultOptions(
-                OpenAiChatOptions.builder()
-                    .model(model)
-                    .reasoningEffort("medium")
-                    .temperature(temperature).build()
-            ).build()
+            OpenAiChatOptions.builder()
+                .model(model).apply {
+                    if (model == "o3-mini") {
+                        this.reasoningEffort("medium")
+                    }
+                }
+                .temperature(temperature).build()
+        ).build()
     }
 
 
