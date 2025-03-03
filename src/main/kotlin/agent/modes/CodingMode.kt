@@ -8,14 +8,7 @@ import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import agent.tool.FileTools
 import ai.Action
-import io.modelcontextprotocol.client.McpClient
-import io.modelcontextprotocol.client.McpSyncClient
-import io.modelcontextprotocol.client.transport.ServerParameters
-import io.modelcontextprotocol.client.transport.StdioClientTransport
-import io.modelcontextprotocol.spec.McpSchema
 import org.slf4j.LoggerFactory
-import org.springframework.ai.mcp.McpToolUtils
-import java.time.Duration
 
 
 class CodingMode(
@@ -62,14 +55,6 @@ class CodingMode(
         val plan = reasoner.createPlan(understanding)
 
         logger.debug("Generation plan created: {}", plan)
-
-        //val userConfirmed = confirmWithUser("Would you like me to apply these changes?")
-        if (false) {
-            logger.info("User rejected changes.")
-            return "Changes were rejected by user."
-        }
-
-        sendMessage("✅Proceeding with the changes!")
 
         val result = codeGenerator.execute(plan)
 
