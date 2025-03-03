@@ -154,6 +154,7 @@ class KompanionBuilder {
             interactionSavingWrapper,
             selectedMode
         )
+
         return Kompanion(agent)
     }
 

@@ -5,10 +5,16 @@ import agent.ToolManager
 import agent.coding.CodeGenerator
 import agent.coding.tool.LocalFileCodingTools
 import agent.domain.GenerationPlan
+import agent.fileops.KompanionFileHandler
+import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import agent.tool.FileTools
 import ai.Action
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 
 
@@ -20,6 +26,33 @@ class CodingMode(
     contextManager: ContextManager,
 ) : Mode, Interactor {
 
+
+    init {
+        GlobalScope.launch {
+            if (!KompanionFileHandler.kompanionFolderExists()) {
+                val result =
+                    confirmWithUser(
+                        """Hello! I'm Kompanion 👋, your coding assistant. 
+                    |Would you like to initialize this repository?
+                    |This is not required, but will make me smarter and more helpful! 🧠
+                    |""".trimMargin()
+                    )
+
+                if (result) {
+                    if (!KompanionFileHandler.kompanionFolderExists()) {
+                        KompanionFileHandler.createFolder()
+                        interactionHandler.interact(
+                            AgentResponse(
+                                """Repository initialized ✅.
+                        |I'm ready to help you with your coding tasks! 🚀
+                    """.trimMargin()
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 

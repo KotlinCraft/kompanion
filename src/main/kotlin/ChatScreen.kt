@@ -205,6 +205,7 @@ fun ChatScreen() {
 
     // Get the current active mode based on the mode state
     val activeMode: Mode = remember(mode) {
+
         when (mode) {
             "code" -> agentState.codingKompanion.agent.mode
             "ask" -> agentState.analystKompanion.agent.mode
@@ -421,8 +422,9 @@ fun ChatScreen() {
             }
         }
 
+        // Listen for changes in the working directory and recreate agents
         LaunchedEffect(key1 = workingDirectory) {
-            agentState.analystKompanion.agent.onload()
+            recreateAgents()
             isProcessing = false
             isWaitingForAnswer = false
         }
