@@ -75,6 +75,7 @@ class DefaultReasoner(
                - Expected output
             2. A clear description of the expected final outcome
             3. A list of specific validation criteria to verify the implementation
+            4. Ask questions if things are unclear.
             
             Ensure the response is structured to match:
             {

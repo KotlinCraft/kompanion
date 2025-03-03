@@ -56,12 +56,13 @@ class CodeGenerator(
             1. First use the project structure and file search tools to understand the codebase
             2. Implement one change at a time and validate it works correctly
             3. Look for opportunities to improve existing code while preserving functionality
+            4. Verify all imports are correct and all used-libraries are available in the project
             
-
-    
+            ##
             Goal: 
             Use the available tools to implement the requested changes to the codebase. 
             Not only provide reasoning, but also perform the changes.
+            Function calling: Always execute the required function calls before you respond.
             
             Afterwards, provide a detailed explanation of the changes you made and how they improve the codebase.
         """.trimIndent()
