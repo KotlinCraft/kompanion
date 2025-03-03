@@ -43,7 +43,10 @@ class OpenAILLMProvider : LLMProvider() {
         }
 
         return OpenAiChatModel.builder().openAiApi(OpenAiApi.builder().apiKey(key).build()).defaultOptions(
-                OpenAiChatOptions.builder().model(modelName).temperature(temperature).build()
+                OpenAiChatOptions.builder()
+                    .model(modelName)
+                    .reasoningEffort("medium")
+                    .temperature(temperature).build()
             ).build()
     }
 
@@ -111,8 +114,8 @@ class OpenAILLMProvider : LLMProvider() {
 
     override fun getSupportedModels(): List<String> {
         return listOf(
-            "gpt-4o-mini",
             "gpt-4o",
+            "o3-mini",
         )
     }
 }
