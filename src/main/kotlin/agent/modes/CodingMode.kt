@@ -4,6 +4,7 @@ import agent.ContextManager
 import agent.ToolManager
 import agent.coding.CodeGenerator
 import agent.coding.tool.LocalFileCodingTools
+import agent.domain.GenerationPlan
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import agent.tool.FileTools
@@ -50,6 +51,7 @@ class CodingMode(
     override suspend fun perform(request: String): String {
         val understanding = reasoner.analyzeRequest(request)
         sendMessage("I understand you want to: ${understanding.objective}")
+        sendGenerationPlanToUser(reasoner.createPlan(understanding))
 
         logger.debug("Understanding generated: {}", understanding)
         val plan = reasoner.createPlan(understanding)
@@ -60,6 +62,10 @@ class CodingMode(
 
         logger.info("User confirmed changes. Returning successful response.")
         return result.explanation
+    }
+
+    private suspend fun sendGenerationPlanToUser(plan: GenerationPlan) {
+        sendMessage("Here's the detailed plan: \nSteps: ${plan.steps.joinToString { it.toString() }}\nExpected Outcome: ${plan.expectedOutcome}\nValidation Criteria: ${plan.validationCriteria.joinToString()}")
     }
 
     override suspend fun getLoadedActionNames(): List<String> {
