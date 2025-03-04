@@ -18,10 +18,10 @@ import org.slf4j.LoggerFactory
  */
 class BlockchainMode(
     private val reasoner: BlockchainReasoner,
+    private val toolManager: ToolManager,
     private val interactionHandler: InteractionHandler,
 ) : Mode, Interactor {
 
-    private val toolManager: ToolManager = ToolManager()
 
     init {
         GeneralTools(interactionHandler).register(toolManager)

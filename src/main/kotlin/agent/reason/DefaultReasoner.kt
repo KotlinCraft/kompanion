@@ -19,7 +19,7 @@ class DefaultReasoner(
 
     override suspend fun analyzeRequest(request: String): Understanding {
         val prompt = """
-            ${contextManager.currentContextPrompt()}
+            ${contextManager.currentContextPrompt(true)}
             
             ${getMessageHistoryPrompt()}
             
@@ -56,7 +56,7 @@ class DefaultReasoner(
 
     override suspend fun createPlan(understanding: Understanding): GenerationPlan {
         val prompt = """
-            ${contextManager.currentContextPrompt()}
+            ${contextManager.currentContextPrompt(true)}
             
             ${getMessageHistoryPrompt()}
             
@@ -106,7 +106,7 @@ class DefaultReasoner(
 
 
         val prompt = """
-            ${contextManager.currentContextPrompt()}
+            ${contextManager.currentContextPrompt(true)}
             
             ${getMessageHistoryPrompt()}
             

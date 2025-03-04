@@ -135,6 +135,7 @@ class KompanionBuilder {
                     toolManager,
                     finalContextManager
                 ),
+                toolManager,
                 interactionHandler!!
             )
         }

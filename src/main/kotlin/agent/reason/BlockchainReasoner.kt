@@ -29,11 +29,13 @@ class BlockchainReasoner(
             - you can then call the `get_contract_source` action with the implementation contract address to fetch the source code.
             - you can then read the contract state calling functions from the implementation contract on the proxy contract.
             
+            Not only tell the user how to do things, but navigate the contracts in order to provide the best possible answer.
+            
             ${getMessageHistoryPrompt()}
             
             
             Your context already consists of:
-            ${contextManager.currentContextPrompt()}
+            ${contextManager.currentContextPrompt(false)}
             
             Return your answer as a string. 
             If you had to navigate contracts, explain in bullet points how you got to your answer.

@@ -88,7 +88,6 @@ class BanklessClient {
         }
     }
 
-
     /**
      * Makes an HTTP GET request to the specified endpoint.
      *

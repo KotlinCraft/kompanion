@@ -42,13 +42,25 @@ interface ContextManager {
      * Generates a string prompt that describes the current context, including working directory and files.
      * @return A formatted string detailing the current context.
      */
-    fun currentContextPrompt(): String {
+    fun currentContextPrompt(includeFolderOutline: Boolean): String {
         val files = getContext().value
+
+        val fullFileList = run {
+            if (includeFolderOutline) {
+                """
+                    The full codebase outline looks like this:
+                    ${getFullFileList()}
+                """.trimIndent()
+
+            } else {
+                ""
+            }
+        }
 
         return """     
             Current working directory is: ${fetchWorkingDirectory()}
-            The full codebase outline looks like this:
-            ${getFullFileList()}
+            
+            ${fullFileList}
             
             Files in your current context: 
             ${

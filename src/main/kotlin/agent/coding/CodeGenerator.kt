@@ -18,7 +18,7 @@ class CodeGenerator(
         plan: GenerationPlan,
     ): CodingResult {
         val prompt = """
-            ${contextManager.currentContextPrompt()}
+            ${contextManager.currentContextPrompt(true)}
             
             ${getMessageHistoryPrompt()}
             
@@ -55,7 +55,7 @@ class CodeGenerator(
             ## Implementation Approach:
             1. First use the project structure and file search tools to understand the codebase
             2. Implement one change at a time and validate it works correctly
-            3. Look for opportunities to improve existing code while preserving functionality
+            3. Do not change the existing code unless necessary
             4. Verify all imports are correct and all used-libraries are available in the project
             
             ##

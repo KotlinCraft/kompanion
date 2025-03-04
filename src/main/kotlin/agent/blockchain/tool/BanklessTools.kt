@@ -2,6 +2,8 @@ package agent.blockchain.tool
 
 import agent.blockchain.bankless.BanklessClient
 import agent.blockchain.bankless.EvmReadContractStateRequest
+import agent.blockchain.tool.domain.GetProxyRequest
+import agent.blockchain.tool.domain.GetProxyResponse
 import agent.blockchain.tool.domain.ReadContractResponse
 import agent.interaction.InteractionHandler
 import agent.modes.BlockchainMode.ReadContractRequest
@@ -39,30 +41,27 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         return runBlocking(Dispatchers.IO) {
             banklessClient.getClaimables(address).getOrElse { emptyList() }
         }.also {
-            logger.info("Fetched ${it.size} claimables for address $address")
+            logger.info("Fetched it.size claimables for address address")
         }
     }
 
     val read_contract = Action(
         "read_contract",
-        """Read a contract's state using Bankless API.
-            |
-            example: 
-            |{
-  "contract": "address",
-  "method": "implementation",
-  "network": "base",
-  "inputs": [],
-  "outputs": [
+        """ Call to the Bankless API to read a contract's state. The request and response must equally match the supported types. This tool requires ABI and source of the contract to succeed. Several types are supported, including:
     {
-      "type": "address"
+      "contract": "address",
+      "method": "implementation",
+      "network": "base",
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address"
+        }
+      ]
     }
-  ]
-}
-            | Only attempt to read if the function is fully supported by our input and output types.
-            | Don't call a function if you didn't get a source or ABI for the contract.
-            | supported input types: address, bytes4, bytes32, input
-            | supported output types: bool, bytes4, string, uint256
+     Don't call a function if you didn't get a source or ABI for the contract.
+     supported input types: address, bytes4, bytes32, input
+     supported output types: bool, bytes4, string, uint256
         """.trimMargin(),
         ActionMethod(
             ReflectionUtils.findMethod(this::class.java, "readContract", ReadContractRequest::class.java),
@@ -85,7 +84,6 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
             result.fold(
                 { error -> ReadContractResponse(null, error) },
                 { results ->
-
                     val mappedResults = results.map {
                         mapOf(
                             "value" to it.value,
@@ -97,14 +95,37 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                 }
             )
         } catch (e: Exception) {
-            ReadContractResponse(null, "Error reading contract: ${e.message}")
+            ReadContractResponse(null, "Error reading contract: e.message")
+        }
+    }
+
+    val get_proxy = Action(
+        "get_proxy",
+        "Retrieve the proxy address for a given contract and network. The action takes network and contract as inputs.",
+        ActionMethod(
+            ReflectionUtils.findMethod(this::class.java, "getProxy", GetProxyRequest::class.java),
+            this
+        )
+    )
+
+    fun getProxy(request: GetProxyRequest): GetProxyResponse {
+        return try {
+            val result = runBlocking(Dispatchers.IO) { banklessClient.getProxy(request.network, request.contract) }
+
+            result.fold(
+                { error -> GetProxyResponse(null, error) },
+                { proxy -> GetProxyResponse(proxy.implementation, null) }
+            )
+        } catch (e: Exception) {
+            GetProxyResponse(null, "Error retrieving proxy: e.message")
         }
     }
 
     override fun getTools(): List<Tool> {
         return listOf(
             Tool(get_claimables),
-            Tool(read_contract)
+            Tool(read_contract),
+            Tool(get_proxy)
         )
     }
 
