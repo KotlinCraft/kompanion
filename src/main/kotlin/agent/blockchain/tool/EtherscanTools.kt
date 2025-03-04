@@ -1,9 +1,11 @@
 package agent.blockchain.tool
 
+import agent.ContextManager
 import agent.blockchain.tool.domain.GetContractAbiRequest
 import agent.blockchain.tool.domain.GetContractAbiResponse
 import agent.blockchain.tool.domain.GetContractSourceRequest
 import agent.blockchain.tool.domain.GetContractSourceResponse
+import agent.domain.context.ContextFile
 import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.Interactor
@@ -19,7 +21,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.springframework.util.ReflectionUtils
 
-class EtherscanTools(private val interactionHandler: InteractionHandler) : ToolsProvider, Interactor {
+class EtherscanTools(
+    private val interactionHandler: InteractionHandler,
+    private val contextManager: ContextManager
+) : ToolsProvider, Interactor {
 
     val etherscanClientManager = EtherscanClientManager()
 
@@ -48,8 +53,7 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
             }?.also {
                 it.onRight {
                     runBlocking(Dispatchers.IO) {
-                        toolUsage(
-                            toolName = "Contract",
+                        customToolUsage(
                             status = ToolStatus.COMPLETED,
                             toolIndicator = {
                                 ContractSourceFetchIndicator(
@@ -60,7 +64,15 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
                     }
                 }
             }?.map {
-                cleanSolidityCode(it)
+                cleanSolidityCode(it).also {
+                    if (it.isNotBlank()) {
+                        contextManager.updateFiles(
+                            listOf(
+                                ContextFile(request.address + "_" + request.network + "_source.sol", it)
+                            )
+                        )
+                    }
+                }
             }?.getOrElse {
                 "not a contract or no source found"
             }
@@ -79,8 +91,7 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
             }?.also {
                 it.onRight {
                     runBlocking(Dispatchers.IO) {
-                        toolUsage(
-                            toolName = "Contract",
+                        customToolUsage(
                             status = ToolStatus.COMPLETED,
                             message = "Fetched contract ABI for address ${request.address} on network ${request.network}",
                             toolIndicator = {
@@ -88,6 +99,14 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
                                     request.address, request.network, ToolStatus.COMPLETED
                                 )
                             },
+                        )
+                    }
+
+                    if (it.isNotBlank()) {
+                        contextManager.updateFiles(
+                            listOf(
+                                ContextFile(request.address + "_" + request.network + "_abi.json", it)
+                            )
                         )
                     }
                 }

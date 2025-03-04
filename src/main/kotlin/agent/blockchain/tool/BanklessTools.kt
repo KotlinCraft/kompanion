@@ -6,6 +6,7 @@ import agent.blockchain.tool.domain.GetProxyRequest
 import agent.blockchain.tool.domain.GetProxyResponse
 import agent.blockchain.tool.domain.ReadContractResponse
 import agent.interaction.InteractionHandler
+import agent.interaction.ToolStatus
 import agent.modes.BlockchainMode.ReadContractRequest
 import agent.modes.Interactor
 import agent.tool.Tool
@@ -18,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.util.ReflectionUtils
+import ui.chat.ContractReadIndicator
 
 class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsProvider, Interactor {
 
@@ -89,6 +91,20 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                             "value" to it.value,
                             "type" to it.type,
                             "error" to (it.error ?: "")
+                        )
+                    }
+
+                    runBlocking(Dispatchers.IO) {
+                        customToolUsage(
+                            status = ToolStatus.COMPLETED,
+                            toolIndicator = {
+                                ContractReadIndicator(
+                                    request.address,
+                                    request.method,
+                                    request.network,
+                                    ToolStatus.COMPLETED,
+                                )
+                            }
                         )
                     }
                     ReadContractResponse(mappedResults, null)

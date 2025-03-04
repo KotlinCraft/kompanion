@@ -1,5 +1,6 @@
 package agent.modes
 
+import agent.ContextManager
 import agent.ToolManager
 import agent.blockchain.bankless.model.input.Input
 import agent.blockchain.bankless.model.output.Output
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory
 class BlockchainMode(
     private val reasoner: BlockchainReasoner,
     private val toolManager: ToolManager,
+    contextManager: ContextManager,
     private val interactionHandler: InteractionHandler,
 ) : Mode, Interactor {
 
@@ -27,7 +29,7 @@ class BlockchainMode(
         GeneralTools(interactionHandler).register(toolManager)
 
         if (isEtherscanSupported()) {
-            EtherscanTools(interactionHandler).register(toolManager)
+            EtherscanTools(interactionHandler, contextManager).register(toolManager)
         }
         if (isBanklessSupported()) {
             BanklessTools(interactionHandler).register(toolManager)

@@ -14,18 +14,26 @@ interface Interactor {
         return interactionHandler().interact(AgentQuestion(question))
     }
 
-    suspend fun toolUsage(
+    suspend fun defaultToolUsage(
         toolName: String,
         status: ToolStatus,
-        message: String = "",
-        toolIndicator: @Composable () -> Unit = { ToolUsageIndicator(toolName, message, status) }
-    ): String {
-        return interactionHandler().interact(
+        message: String
+    ) {
+        interactionHandler().interact(
             ToolUsageMessage(
                 action = message,
-                status = status,
-                toolIndicator = toolIndicator
+                toolIndicator = { ToolUsageIndicator(toolName, message, status) }
             )
+        )
+    }
+
+    suspend fun customToolUsage(
+        status: ToolStatus,
+        message: String = "",
+        toolIndicator: @Composable () -> Unit
+    ): String {
+        return interactionHandler().interact(
+            ToolUsageMessage(toolIndicator = toolIndicator)
         )
     }
 

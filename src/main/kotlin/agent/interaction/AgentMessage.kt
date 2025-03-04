@@ -11,7 +11,6 @@ class AgentResponse(message: String, important: Boolean = false) : AgentMessage(
 class AgentAskConfirmation(message: String, important: Boolean = false) : AgentMessage(message, important)
 class ToolUsageMessage(
     action: String = "",
-    val status: ToolStatus = ToolStatus.RUNNING,
     val id: UUID = UUID.randomUUID(),
     val toolIndicator: @Composable () -> Unit
 ) : AgentMessage(action, important = false)
