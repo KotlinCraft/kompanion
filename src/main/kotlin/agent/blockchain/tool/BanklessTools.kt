@@ -2,6 +2,7 @@ package agent.blockchain.tool
 
 import agent.blockchain.bankless.BanklessClient
 import agent.blockchain.bankless.EvmReadContractStateRequest
+import agent.blockchain.bankless.model.token.FungibleTokenVO
 import agent.blockchain.tool.domain.GetProxyRequest
 import agent.blockchain.tool.domain.GetProxyResponse
 import agent.blockchain.tool.domain.ReadContractResponse
@@ -42,8 +43,6 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     fun get_claimables(address: String): List<ClaimableVO> {
         return runBlocking(Dispatchers.IO) {
             banklessClient.getClaimables(address).getOrElse { emptyList() }
-        }.also {
-            logger.info("Fetched it.size claimables for address address")
         }
     }
 
@@ -154,11 +153,32 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         }
     }
 
+    val fetch_token_information = Action(
+        "fetch_token_information",
+        "Fetch token information for a token deployed to a  chain and address.",
+        ActionMethod(
+            ReflectionUtils.findMethod(
+                this::class.java,
+                "fetchTokenInformation",
+                String::class.java,
+                String::class.java
+            ),
+            this
+        )
+    )
+
+    fun fetchTokenInformation(chain: String, address: String): FungibleTokenVO? {
+        return runBlocking(Dispatchers.IO) {
+            banklessClient.fetchTokenInformation(chain, address).getOrElse { null }
+        }
+    }
+
     override fun getTools(): List<Tool> {
         return listOf(
             Tool(get_claimables),
             Tool(read_contract),
-            Tool(get_proxy)
+            Tool(get_proxy),
+            Tool(fetch_token_information)
         )
     }
 

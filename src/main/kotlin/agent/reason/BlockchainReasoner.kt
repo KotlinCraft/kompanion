@@ -26,7 +26,7 @@ class BlockchainReasoner(
             Always fetch the abi if you need to read the contract state. Fetch the abi if the source code was too long.
             
             How to handle proxy contracts:
-            - If the contract is a proxy contract, you can fetch the implementation contract by calling the `implementation` method. Alternatively, if that fails, try the `_implementation` function. 
+            - If the contract is a proxy contract, you can fetch the implementation contract by calling your get_proxy tool, fallback: the `implementation` method on the proxy. Alternatively, if that fails, try the `_implementation` function. 
             - you can then call the `get_contract_source` action with the implementation contract address to fetch the source code.
             - you can then read the contract state calling functions from the implementation contract on the proxy contract. This is important. You need to call it on the proxy, not the implementation.
             
