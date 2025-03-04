@@ -90,12 +90,17 @@ class CodingMode(
 
         val result = codeGenerator.execute(plan)
 
-        logger.info("User confirmed changes. Returning successful response.")
         return result.explanation
     }
 
     private suspend fun sendGenerationPlanToUser(plan: GenerationPlan) {
-        sendMessage("Here's the detailed plan: \nSteps: ${plan.steps.joinToString { it.toString() }}\nExpected Outcome: ${plan.expectedOutcome}\nValidation Criteria: ${plan.validationCriteria.joinToString()}")
+        sendMessage(
+            """Here's the detailed plan: 
+            Steps: ${plan.steps.joinToString { "👉$it)\n" }}
+            
+            Expected Outcome: ${plan.expectedOutcome}
+            """
+        )
     }
 
     override suspend fun getLoadedActionNames(): List<String> {
