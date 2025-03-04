@@ -2,7 +2,8 @@ package blockchain.etherscan
 
 import arrow.core.Either
 import arrow.core.left
-import arrow.core.right
+import blockchain.etherscan.domain.ContractAbiResponse
+import blockchain.etherscan.domain.ContractSourceResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URI

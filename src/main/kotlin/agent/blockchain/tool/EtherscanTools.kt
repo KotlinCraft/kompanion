@@ -5,6 +5,7 @@ import agent.blockchain.tool.domain.GetContractAbiResponse
 import agent.blockchain.tool.domain.GetContractSourceRequest
 import agent.blockchain.tool.domain.GetContractSourceResponse
 import agent.interaction.InteractionHandler
+import agent.interaction.ToolStatus
 import agent.modes.Interactor
 import agent.tool.Tool
 import agent.tool.ToolsProvider
@@ -12,6 +13,8 @@ import ai.Action
 import ai.ActionMethod
 import arrow.core.getOrElse
 import blockchain.etherscan.EtherscanClientManager
+import blockchain.etherscan.ui.ContractAbiFetchIndicator
+import blockchain.etherscan.ui.ContractSourceFetchIndicator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.springframework.util.ReflectionUtils
@@ -45,7 +48,15 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
             }?.also {
                 it.onRight {
                     runBlocking(Dispatchers.IO) {
-                        sendMessage("📜Fetched contract source for address ${request.address} on network ${request.network}")
+                        toolUsage(
+                            toolName = "Contract",
+                            status = ToolStatus.COMPLETED,
+                            toolIndicator = {
+                                ContractSourceFetchIndicator(
+                                    request.address, request.network, ToolStatus.COMPLETED
+                                )
+                            }
+                        )
                     }
                 }
             }?.map {
@@ -68,7 +79,16 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
             }?.also {
                 it.onRight {
                     runBlocking(Dispatchers.IO) {
-                        sendMessage("📋Fetched contract ABI for address ${request.address} on network ${request.network}")
+                        toolUsage(
+                            toolName = "Contract",
+                            status = ToolStatus.COMPLETED,
+                            message = "Fetched contract ABI for address ${request.address} on network ${request.network}",
+                            toolIndicator = {
+                                ContractAbiFetchIndicator(
+                                    request.address, request.network, ToolStatus.COMPLETED
+                                )
+                            },
+                        )
                     }
                 }
             }?.getOrElse {

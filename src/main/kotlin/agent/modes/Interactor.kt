@@ -1,9 +1,8 @@
 package agent.modes
 
-import agent.interaction.AgentAskConfirmation
-import agent.interaction.AgentQuestion
-import agent.interaction.AgentResponse
-import agent.interaction.InteractionHandler
+import agent.interaction.*
+import androidx.compose.runtime.Composable
+import ui.chat.ToolUsageIndicator
 
 interface Interactor {
 
@@ -13,6 +12,21 @@ interface Interactor {
 
     suspend fun askUser(question: String): String {
         return interactionHandler().interact(AgentQuestion(question))
+    }
+
+    suspend fun toolUsage(
+        toolName: String,
+        status: ToolStatus,
+        message: String = "",
+        toolIndicator: @Composable () -> Unit = { ToolUsageIndicator(toolName, message, status) }
+    ): String {
+        return interactionHandler().interact(
+            ToolUsageMessage(
+                action = message,
+                status = status,
+                toolIndicator = toolIndicator
+            )
+        )
     }
 
     suspend fun confirmWithUser(message: String): Boolean {

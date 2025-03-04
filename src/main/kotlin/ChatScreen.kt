@@ -33,9 +33,7 @@ import org.slf4j.LoggerFactory
 import ui.FilePill
 import ui.SettingsDialog
 import ui.ToolCounter
-import ui.chat.ChatMessage
-import ui.chat.MessageBubble
-import ui.chat.WorkingDirectorySelector
+import ui.chat.*
 import ui.info.InfoManager
 import ui.info.InfoTooltip
 
@@ -76,7 +74,7 @@ fun ChatScreen() {
 
     var showSettings by remember { mutableStateOf(false) }
     var configState by remember { mutableStateOf(AppConfig.load()) }
-    
+
     // New state for confirmation dialog
     var showConfirmationDialog by remember { mutableStateOf(false) }
     var pendingConfirmation by remember { mutableStateOf<AgentAskConfirmation?>(null) }
@@ -109,6 +107,12 @@ fun ChatScreen() {
                     response
                 }
 
+                is ToolUsageMessage -> {
+                    messages =
+                        messages + ToolMessage(agentMessage.message, agentMessage.toolIndicator)
+                    ""
+                }
+
                 is AgentResponse -> {
                     messages = messages + ChatMessage(agentMessage.message, false)
                     ""
@@ -119,12 +123,12 @@ fun ChatScreen() {
                     pendingConfirmation = agentMessage
                     showConfirmationDialog = true
                     isProcessing = false
-                    
+
                     // Wait for user response
                     while (showConfirmationDialog) {
                         delay(100)
                     }
-                    
+
                     val result = if (userResponse == "yes") "yes" else "no"
                     userResponse = ""
                     pendingConfirmation = null
@@ -326,17 +330,17 @@ fun ChatScreen() {
                         tint = accentColor,
                         modifier = Modifier.size(48.dp)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text(
                         text = pendingConfirmation?.message ?: "Confirm action?",
                         style = MaterialTheme.typography.h6,
                         color = Color.White
                     )
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -356,7 +360,7 @@ fun ChatScreen() {
                         ) {
                             Text("No")
                         }
-                        
+
                         // Yes button
                         Button(
                             onClick = {
@@ -411,7 +415,7 @@ fun ChatScreen() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(messages) { message ->
-                MessageBubble(message)
+                message.constructChatBubble()
             }
         }
 
@@ -594,7 +598,7 @@ fun ChatScreen() {
                             .size(48.dp)
                             .clip(CircleShape)
                             .background(if (isProcessing) successColor else accentColor)
-                            .clickable { 
+                            .clickable {
                                 if (!isProcessing) {
                                     sendCurrentMessage()
                                 }

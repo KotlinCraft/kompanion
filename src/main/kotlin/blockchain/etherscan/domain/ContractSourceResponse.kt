@@ -1,4 +1,4 @@
-package blockchain.etherscan
+package blockchain.etherscan.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
