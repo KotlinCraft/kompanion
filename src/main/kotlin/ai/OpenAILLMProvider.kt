@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
@@ -58,7 +59,8 @@ class OpenAILLMProvider : LLMProvider() {
     }
 
     override suspend fun <T> prompt(
-        input: String,
+        system: String,
+        userMessage: String?,
         actions: List<Action>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
@@ -72,9 +74,16 @@ class OpenAILLMProvider : LLMProvider() {
             "{format}", mapOf("format" to converter.format)
         ).createMessage()
 
+
+        val messages = listOf(
+            SystemMessage(system),
+            userMessage?.let { UserMessage(it) },
+            outputMessage
+        ).filterNotNull()
+
         var prompt = client.prompt(
             Prompt(
-                UserMessage(input), outputMessage
+                messages
             )
         )
 
@@ -94,7 +103,7 @@ class OpenAILLMProvider : LLMProvider() {
                 logger.info("retrying, because we got the following error: $it")
                 var prompt = client.prompt(
                     Prompt(
-                        UserMessage(input),
+                        UserMessage(system),
                         UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
                         outputMessage
                     )

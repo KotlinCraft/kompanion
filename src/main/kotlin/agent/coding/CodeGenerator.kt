@@ -68,7 +68,8 @@ class CodeGenerator(
         """.trimIndent()
 
         return LLMProvider.prompt(
-            input = prompt,
+            system = prompt,
+            userMessage = null,
             actions = toolManager.tools.map { it.action },
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {},

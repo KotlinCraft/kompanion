@@ -32,8 +32,6 @@ class DefaultReasoner(
 
             Make sure you have access to every file mentioned in the request before continuing. Navigate the context and files to come up with the best possible answer.
             
-            User Request: $request
-            
             Provide a structured analysis including:
             1. The main objective
             2. Required features or changes
@@ -42,7 +40,8 @@ class DefaultReasoner(
 
         return Either.catch {
             LLMProvider.prompt(
-                input = prompt,
+                system = prompt,
+                userMessage = request,
                 actions = toolManager.tools.map { it.action },
                 temperature = 0.7,
                 parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {},
@@ -57,8 +56,6 @@ class DefaultReasoner(
     override suspend fun createPlan(understanding: Understanding): GenerationPlan {
         val prompt = """
             ${contextManager.currentContextPrompt(true)}
-            
-            ${getMessageHistoryPrompt()}
             
             Based on the following understanding of a code request, create a detailed generation plan.
             
@@ -92,7 +89,8 @@ class DefaultReasoner(
         """.trimIndent()
 
         return LLMProvider.prompt(
-            input = prompt,
+            system = prompt,
+            userMessage = null,
             actions = toolManager.tools.map { it.action },
             toolcallbacks = toolManager.toolCallbacks,
             temperature = 0.5,
@@ -110,7 +108,6 @@ class DefaultReasoner(
             
             ${getMessageHistoryPrompt()}
             
-            The user asked a question about blockchain related (onchain) events:
             $question
             
             Objective: ${understanding.objective}
@@ -123,18 +120,21 @@ class DefaultReasoner(
             If you need the context of any file, you can request it with "request_file_context".
             
             Return your answer as a simple string and include the confidence level (0-1) of your answer.
+            
+            The user will ask questions related to blockchain contracts.
         """.trimIndent()
 
         // Attempt to leverage the same LLM approach used in DefaultReasoner, if available
         return LLMProvider.prompt(
-            input = prompt,
+            system = prompt,
+            userMessage = question,
             actions = toolManager.tools.map { it.action },
             temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
             toolcallbacks = toolManager.toolCallbacks
         )
     }
-    
+
     /**
      * Get formatted message history for prompts
      */
@@ -142,7 +142,7 @@ class DefaultReasoner(
         // If we have an InMemoryContextManager, use its formatted history
         val formattedHistory = (contextManager as? InMemoryContextManager)?.getFormattedMessageHistory()
             ?: buildMessageHistoryFromContext()
-            
+
         return if (formattedHistory.isNotEmpty()) {
             """
             Previous conversation history (consider this as context for this continuation):
@@ -152,7 +152,7 @@ class DefaultReasoner(
             "" // Empty string if no history
         }
     }
-    
+
     /**
      * Build message history from context if not using InMemoryContextManager
      */

@@ -58,7 +58,8 @@ class AnthropicLLMProvider : LLMProvider() {
     }
 
     override suspend fun <T> prompt(
-        input: String,
+        system: String,
+        userMessage: String?,
         actions: List<Action>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
@@ -73,9 +74,15 @@ class AnthropicLLMProvider : LLMProvider() {
             "{format}", mapOf("format" to converter.format)
         ).createMessage()
 
+        val messages = listOf(
+            SystemMessage(system),
+            userMessage?.let { UserMessage(it) },
+            outputMessage
+        ).filterNotNull()
+
         var prompt = client.prompt(
             Prompt(
-                UserMessage(input), outputMessage
+                messages
             )
         )
 
@@ -97,7 +104,7 @@ class AnthropicLLMProvider : LLMProvider() {
                 logger.info("retrying, because we got the following error: $it")
                 var prompt = client.prompt(
                     Prompt(
-                        UserMessage(input),
+                        UserMessage(system),
                         if (it is InvalidStructuredResponse) UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again")
                         else SystemMessage(
                             ""

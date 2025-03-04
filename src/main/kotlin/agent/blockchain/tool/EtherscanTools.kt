@@ -48,6 +48,8 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
                         sendMessage("📜Fetched contract source for address ${request.address} on network ${request.network}")
                     }
                 }
+            }?.map {
+                cleanSolidityCode(it)
             }?.getOrElse {
                 "not a contract or no source found"
             }
@@ -85,5 +87,22 @@ class EtherscanTools(private val interactionHandler: InteractionHandler) : Tools
 
     override fun interactionHandler(): InteractionHandler {
         return interactionHandler
+    }
+
+    fun cleanSolidityCode(code: String): String {
+        // 1. Remove multi-line comments: /* ... */
+        val withoutMultilineComments = code.replace(Regex("""/\*[\s\S]*?\*/"""), "")
+
+        // 2. Remove single-line comments: // ...
+        val withoutSingleLineComments = withoutMultilineComments.replace(Regex("""//.*"""), "")
+
+        // 3. Split into lines, trim whitespace, and remove empty lines
+        val lines = withoutSingleLineComments
+            .lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        // 4. Join the lines with a single newline (or you could join with a space)
+        return lines.joinToString("\n")
     }
 }

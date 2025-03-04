@@ -53,7 +53,8 @@ abstract class LLMProvider {
     }
 
     abstract suspend fun <T> prompt(
-        input: String,
+        system: String,
+        userMessage: String?,
         actions: List<Action>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,

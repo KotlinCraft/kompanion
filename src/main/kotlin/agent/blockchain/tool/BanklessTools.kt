@@ -95,7 +95,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                 }
             )
         } catch (e: Exception) {
-            ReadContractResponse(null, "Error reading contract: e.message")
+            ReadContractResponse(null, "Error reading contract: ${e.message}")
         }
     }
 
@@ -117,7 +117,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                 { proxy -> GetProxyResponse(proxy.implementation, null) }
             )
         } catch (e: Exception) {
-            GetProxyResponse(null, "Error retrieving proxy: e.message")
+            GetProxyResponse(null, "Error retrieving proxy: ${e.message}")
         }
     }
 
