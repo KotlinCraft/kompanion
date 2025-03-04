@@ -3,6 +3,7 @@ package agent.blockchain.bankless
 import agent.blockchain.bankless.model.input.Input
 import agent.blockchain.bankless.model.output.Output
 import agent.blockchain.bankless.model.proxy.Proxy
+import agent.blockchain.bankless.model.token.FungibleTokenVO
 import arrow.core.Either
 import arrow.core.left
 import com.bankless.claimable.rest.vo.ClaimableVO
@@ -85,6 +86,32 @@ class BanklessClient {
         } catch (e: Exception) {
             logger.error("Error finding proxy: ${e.message}", e)
             "Failed to find proxy: ${e.message}".left()
+        }
+    }
+
+    /**
+     * Fetches the token information for a given address and chain.
+     *
+     * @param chain The blockchain network (e.g., "ethereum", "base")
+     * @param address The token address
+     * @return Either an error message or the token information
+     */
+    suspend fun fetchTokenInformation(chain: String, address: String): Either<String, FungibleTokenVO> {
+        val endpoint = "https://api.bankless.com/internal/token/$chain/$address/token"
+
+        return try {
+            val response = makeGetRequest(endpoint)
+
+            // Parse the JSON response
+            Either.catch {
+                objectMapper.readValue<FungibleTokenVO>(response)
+            }.mapLeft { error ->
+                logger.error("Error parsing token information response: ${error.message}", error)
+                "Failed to parse token information data: ${error.message}"
+            }
+        } catch (e: Exception) {
+            logger.error("Error fetching token information: ${e.message}", e)
+            "Failed to fetch token information: ${e.message}".left()
         }
     }
 

@@ -54,7 +54,6 @@ class EtherscanTools(
                 it.onRight {
                     runBlocking(Dispatchers.IO) {
                         customToolUsage(
-                            status = ToolStatus.COMPLETED,
                             toolIndicator = {
                                 ContractSourceFetchIndicator(
                                     request.address, request.network, ToolStatus.COMPLETED
@@ -92,7 +91,6 @@ class EtherscanTools(
                 it.onRight {
                     runBlocking(Dispatchers.IO) {
                         customToolUsage(
-                            status = ToolStatus.COMPLETED,
                             message = "Fetched contract ABI for address ${request.address} on network ${request.network}",
                             toolIndicator = {
                                 ContractAbiFetchIndicator(

@@ -94,23 +94,40 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                         )
                     }
 
-                    runBlocking(Dispatchers.IO) {
-                        customToolUsage(
-                            status = ToolStatus.COMPLETED,
-                            toolIndicator = {
-                                ContractReadIndicator(
-                                    request.address,
-                                    request.method,
-                                    request.network,
-                                    ToolStatus.COMPLETED,
-                                )
-                            }
-                        )
+
+                    if (results.isEmpty()) {
+                        runBlocking(Dispatchers.IO) {
+                            customToolUsage(
+                                toolIndicator = {
+                                    ContractReadIndicator(
+                                        request.address,
+                                        request.method,
+                                        request.network,
+                                        ToolStatus.FAILED,
+                                    )
+                                }
+                            )
+                        }
+                        ReadContractResponse(mappedResults, "no results")
+                    } else {
+                        runBlocking(Dispatchers.IO) {
+                            customToolUsage(
+                                toolIndicator = {
+                                    ContractReadIndicator(
+                                        request.address,
+                                        request.method,
+                                        request.network,
+                                        ToolStatus.COMPLETED,
+                                    )
+                                }
+                            )
+                        }
+                        ReadContractResponse(mappedResults, null)
                     }
-                    ReadContractResponse(mappedResults, null)
                 }
             )
         } catch (e: Exception) {
+
             ReadContractResponse(null, "Error reading contract: ${e.message}")
         }
     }

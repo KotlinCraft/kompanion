@@ -28,7 +28,6 @@ interface Interactor {
     }
 
     suspend fun customToolUsage(
-        status: ToolStatus,
         message: String = "",
         toolIndicator: @Composable () -> Unit
     ): String {
