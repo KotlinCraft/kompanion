@@ -21,6 +21,8 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.util.ReflectionUtils
 import ui.chat.ContractReadIndicator
+import ui.chat.GetProxyIndicator
+import ui.chat.TokenInformationIndicator
 
 class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsProvider, Interactor {
 
@@ -142,20 +144,78 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
 
     fun getProxy(request: GetProxyRequest): GetProxyResponse {
         return try {
+            // Show RUNNING indicator
+            runBlocking(Dispatchers.IO) {
+                customToolUsage(
+                    toolIndicator = {
+                        GetProxyIndicator(
+                            request.contract,
+                            request.network,
+                            ToolStatus.RUNNING,
+                        )
+                    }
+                )
+            }
+            
             val result = runBlocking(Dispatchers.IO) { banklessClient.getProxy(request.network, request.contract) }
 
             result.fold(
-                { error -> GetProxyResponse(null, error) },
-                { proxy -> GetProxyResponse(proxy.implementation, null) }
+                { error -> 
+                    // Show FAILED indicator
+                    runBlocking(Dispatchers.IO) {
+                        customToolUsage(
+                            toolIndicator = {
+                                GetProxyIndicator(
+                                    request.contract,
+                                    request.network,
+                                    ToolStatus.FAILED,
+                                    null,
+                                    error
+                                )
+                            }
+                        )
+                    }
+                    GetProxyResponse(null, error) 
+                },
+                { proxy -> 
+                    // Show COMPLETED indicator
+                    runBlocking(Dispatchers.IO) {
+                        customToolUsage(
+                            toolIndicator = {
+                                GetProxyIndicator(
+                                    request.contract,
+                                    request.network,
+                                    ToolStatus.COMPLETED,
+                                    proxy.implementation,
+                                )
+                            }
+                        )
+                    }
+                    GetProxyResponse(proxy.implementation, null) 
+                }
             )
         } catch (e: Exception) {
+            // Show FAILED indicator for exceptions
+            runBlocking(Dispatchers.IO) {
+                customToolUsage(
+                    toolIndicator = {
+                        GetProxyIndicator(
+                            request.contract,
+                            request.network,
+                            ToolStatus.FAILED,
+                            null,
+                            "Error retrieving proxy: ${e.message}"
+                        )
+                    }
+                )
+            }
             GetProxyResponse(null, "Error retrieving proxy: ${e.message}")
         }
     }
 
     val fetch_token_information = Action(
         "fetch_token_information",
-        "Fetch token information for a token deployed to a  chain and address.",
+        "Fetch token information for a token deployed to a chain and address.",
         ActionMethod(
             ReflectionUtils.findMethod(
                 this::class.java,
@@ -168,8 +228,52 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     )
 
     fun fetchTokenInformation(chain: String, address: String): FungibleTokenVO? {
+        // Show RUNNING indicator
+        runBlocking(Dispatchers.IO) {
+            customToolUsage(
+                toolIndicator = {
+                    TokenInformationIndicator(
+                        address,
+                        chain,
+                        ToolStatus.RUNNING,
+                    )
+                }
+            )
+        }
+        
         return runBlocking(Dispatchers.IO) {
-            banklessClient.fetchTokenInformation(chain, address).getOrElse { null }
+            banklessClient.fetchTokenInformation(chain, address)
+                .fold(
+                    { error ->
+                        // Show FAILED indicator
+                        customToolUsage(
+                            toolIndicator = {
+                                TokenInformationIndicator(
+                                    address,
+                                    chain,
+                                    ToolStatus.FAILED,
+                                    null,
+                                    "Error fetching token information: $error"
+                                )
+                            }
+                        )
+                        null
+                    },
+                    { token ->
+                        // Show COMPLETED indicator
+                        customToolUsage(
+                            toolIndicator = {
+                                TokenInformationIndicator(
+                                    address,
+                                    chain,
+                                    ToolStatus.COMPLETED,
+                                    token,
+                                )
+                            }
+                        )
+                        token
+                    }
+                )
         }
     }
 

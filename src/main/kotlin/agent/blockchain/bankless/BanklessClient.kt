@@ -7,6 +7,7 @@ import agent.blockchain.bankless.model.token.FungibleTokenVO
 import arrow.core.Either
 import arrow.core.left
 import com.bankless.claimable.rest.vo.ClaimableVO
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -27,7 +28,9 @@ import java.net.http.HttpResponse
 class BanklessClient {
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val httpClient = HttpClient.newBuilder().build()
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val objectMapper = ObjectMapper().registerKotlinModule().also {
+        it.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    }
 
     private val baseUrl = "https://api.bankless.com/internal/chains"
     private val claimablesBaseUrl = "https://api.bankless.com/claimables"
