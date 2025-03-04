@@ -3,6 +3,7 @@ package agent.modes
 import agent.interaction.*
 import androidx.compose.runtime.Composable
 import ui.chat.ToolUsageIndicator
+import java.util.UUID
 
 interface Interactor {
 
@@ -15,25 +16,33 @@ interface Interactor {
     }
 
     suspend fun defaultToolUsage(
+        id: UUID = UUID.randomUUID(),
         toolName: String,
         status: ToolStatus,
         message: String
-    ) {
+    ) : UUID {
         interactionHandler().interact(
             ToolUsageMessage(
+                id = id,
                 action = message,
                 toolIndicator = { ToolUsageIndicator(toolName, message, status) }
             )
         )
+        return id
     }
 
     suspend fun customToolUsage(
+        id: UUID = UUID.randomUUID(),
         message: String = "",
         toolIndicator: @Composable () -> Unit
-    ): String {
-        return interactionHandler().interact(
-            ToolUsageMessage(toolIndicator = toolIndicator)
+    ): UUID {
+        interactionHandler().interact(
+            ToolUsageMessage(
+                id = id,
+                toolIndicator = toolIndicator
+            )
         )
+        return id
     }
 
     suspend fun confirmWithUser(message: String): Boolean {

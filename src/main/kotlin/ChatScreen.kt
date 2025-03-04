@@ -36,6 +36,7 @@ import ui.ToolCounter
 import ui.chat.*
 import ui.info.InfoManager
 import ui.info.InfoTooltip
+import java.util.*
 
 private data class SlashCommand(
     val command: String,
@@ -93,7 +94,7 @@ fun ChatScreen() {
         override suspend fun interact(agentMessage: AgentMessage): String {
             return when (agentMessage) {
                 is AgentQuestion -> {
-                    messages = messages + ChatMessage(agentMessage.message, false)
+                    messages = messages + ChatMessage(agentMessage.id, agentMessage.message, false)
                     isWaitingForAnswer = true
                     pendingQuestion = agentMessage
                     isProcessing = false
@@ -109,17 +110,19 @@ fun ChatScreen() {
 
                 is ToolUsageMessage -> {
                     messages =
-                        messages + ToolMessage(agentMessage.message, agentMessage.toolIndicator)
+                        (messages).filter {
+                            it.id == agentMessage.id
+                        } + ToolMessage(agentMessage.id, agentMessage.message, agentMessage.toolIndicator)
                     ""
                 }
 
                 is AgentResponse -> {
-                    messages = messages + ChatMessage(agentMessage.message, false)
+                    messages = messages + ChatMessage(agentMessage.id, agentMessage.message, false)
                     ""
                 }
 
                 is AgentAskConfirmation -> {
-                    messages = messages + ChatMessage(agentMessage.message, false)
+                    messages = messages + ChatMessage(agentMessage.id, agentMessage.message, false)
                     pendingConfirmation = agentMessage
                     showConfirmationDialog = true
                     isProcessing = false
@@ -222,13 +225,14 @@ fun ChatScreen() {
     val slashCommands = listOf(
         SlashCommand("/clear-context", "Clear the file context") {
             agentState.analystKompanion.agent.fetchContextManager().clearContext()
-            messages = messages + ChatMessage("File context cleared.", false)
+            messages = messages + ChatMessage(UUID.randomUUID(), "File context cleared.", false)
         },
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
         SlashCommand("/blockchain", "Switch to blockchain mode") { mode = "blockchain" },
         SlashCommand("/help", "Show available commands") {
             messages = messages + ChatMessage(
+                UUID.randomUUID(),
                 """
                 Available commands:
                 /code - Switch to code mode
@@ -257,12 +261,12 @@ fun ChatScreen() {
                         "blockchain" -> agentState.blockchainKompanion.agent.perform(userMessage)
                         else -> "Invalid mode"
                     }
-                    messages = messages + ChatMessage(response, false)
+                    messages = messages + ChatMessage(UUID.randomUUID(), response, false)
                     currentJob = null
                     isProcessing = false
                 }
             } catch (e: Exception) {
-                messages = messages + ChatMessage("Error: ${e.message}", false)
+                messages = messages + ChatMessage(UUID.randomUUID(), "Error: ${e.message}", false)
                 isProcessing = false
                 currentJob = null
             }
@@ -277,7 +281,7 @@ fun ChatScreen() {
         currentJob?.cancel()
         currentJob = null
         isProcessing = false
-        messages = messages + ChatMessage("Operation cancelled by user", false)
+        messages = messages + ChatMessage(UUID.randomUUID(), "Operation cancelled by user", false)
     }
 
     // Local function to send the current message (and cancel if already processing)
@@ -294,7 +298,7 @@ fun ChatScreen() {
                 return
             }
 
-            messages = messages + ChatMessage(userMessage, true)
+            messages = messages + ChatMessage(UUID.randomUUID(), userMessage, true)
             if (isWaitingForAnswer && pendingQuestion != null) {
                 // Handle answer to pending question
                 isWaitingForAnswer = false
