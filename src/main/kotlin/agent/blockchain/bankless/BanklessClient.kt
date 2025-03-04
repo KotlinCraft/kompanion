@@ -56,13 +56,12 @@ class BanklessClient {
             Either.catch {
                 objectMapper.readValue<List<EthCallResultToTypeConverter.Result>>(response)
             }.mapLeft { error ->
-                logger.error("Error parsing contract state response: [35m{error.message}", error)
-                "Failed to parse contract state data: [35m{error.message}"
+                "Failed to parse contract state data: ${error.message}"
             }
         } catch (e: Exception) {
-            logger.error("Error reading contract state: [35m{e.message}", e)
-            logger.info("request was [35m{objectMapper.writeValueAsString(request)}")
-            "Failed to read contract state: [35m{e.message}".left()
+            logger.error("Error reading contract state: ${e.message}", e)
+            logger.info("request was ${objectMapper.writeValueAsString(request)}")
+            "Failed to read contract state: ${e.message}".left()
         }
     }
 
@@ -136,7 +135,7 @@ class BanklessClient {
             val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
 
             if (response.statusCode() != 200) {
-                throw RuntimeException("API request failed with status code: [35m{response.statusCode()}")
+                throw RuntimeException("API request failed with status code: ${response.statusCode()}")
             }
 
             response.body()
@@ -159,12 +158,12 @@ class BanklessClient {
             Either.catch {
                 objectMapper.readValue<List<ClaimableVO>>(response)
             }.mapLeft { error ->
-                logger.error("Error parsing claimables response: [35m{error.message}", error)
-                "Failed to parse claimables data: [35m{error.message}"
+                logger.error("Error parsing claimables response: ${error.message}", error)
+                "Failed to parse claimables data: ${error.message}"
             }
         } catch (e: Exception) {
-            logger.error("Error fetching claimables: [35m{e.message}", e)
-            "Failed to fetch claimables: [35m{e.message}".left()
+            logger.error("Error fetching claimables: ${e.message}", e)
+            "Failed to fetch claimables: ${e.message}".left()
         }
     }
 

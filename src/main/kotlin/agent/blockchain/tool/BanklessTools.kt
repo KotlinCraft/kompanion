@@ -145,7 +145,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     fun getProxy(request: GetProxyRequest): GetProxyResponse {
         return try {
             // Show RUNNING indicator
-            runBlocking(Dispatchers.IO) {
+            val toolId = runBlocking(Dispatchers.IO) {
                 customToolUsage(
                     toolIndicator = {
                         GetProxyIndicator(
@@ -156,14 +156,15 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                     }
                 )
             }
-            
+
             val result = runBlocking(Dispatchers.IO) { banklessClient.getProxy(request.network, request.contract) }
 
             result.fold(
-                { error -> 
+                { error ->
                     // Show FAILED indicator
                     runBlocking(Dispatchers.IO) {
                         customToolUsage(
+                            id = toolId,
                             toolIndicator = {
                                 GetProxyIndicator(
                                     request.contract,
@@ -175,12 +176,13 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                             }
                         )
                     }
-                    GetProxyResponse(null, error) 
+                    GetProxyResponse(null, error)
                 },
-                { proxy -> 
+                { proxy ->
                     // Show COMPLETED indicator
                     runBlocking(Dispatchers.IO) {
                         customToolUsage(
+                            id = toolId,
                             toolIndicator = {
                                 GetProxyIndicator(
                                     request.contract,
@@ -191,7 +193,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                             }
                         )
                     }
-                    GetProxyResponse(proxy.implementation, null) 
+                    GetProxyResponse(proxy.implementation, null)
                 }
             )
         } catch (e: Exception) {
@@ -240,7 +242,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                 }
             )
         }
-        
+
         return runBlocking(Dispatchers.IO) {
             banklessClient.fetchTokenInformation(chain, address)
                 .fold(
