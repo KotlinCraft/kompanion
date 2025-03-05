@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -35,10 +34,10 @@ fun TopBar(
     // Animate shimmer effect horizontally across the component
     val shimmerPosition = infiniteTransition.animateFloat(
         initialValue = -1f,
-        targetValue = 2f,
+        targetValue = 5f,
         animationSpec = infiniteRepeatable(
             animation = tween(1500, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
+            repeatMode = RepeatMode.Reverse
         )
     )
     

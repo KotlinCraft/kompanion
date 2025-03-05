@@ -83,10 +83,10 @@ class CodingMode(
     override suspend fun perform(request: String): String {
         val understanding = reasoner.analyzeRequest(request)
         sendMessage("I understand you want to: ${understanding.objective}")
-        sendGenerationPlanToUser(reasoner.createPlan(understanding))
 
         logger.debug("Understanding generated: {}", understanding)
         val plan = reasoner.createPlan(understanding)
+        sendGenerationPlanToUser(plan)
 
         logger.debug("Generation plan created: {}", plan)
 
@@ -98,7 +98,7 @@ class CodingMode(
     private suspend fun sendGenerationPlanToUser(plan: GenerationPlan) {
         sendMessage(
             """Here's the detailed plan: 
-            Steps: ${plan.steps.joinToString { "👉$it)\n" }}
+            Steps: ${plan.steps.joinToString { "👉${it.action})\n" }}
             
             Expected Outcome: ${plan.expectedOutcome}
             """

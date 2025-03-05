@@ -63,6 +63,7 @@ class CodeGenerator(
             Use the available tools to implement the requested changes to the codebase. 
             Not only provide reasoning, but also perform the changes.
             Function calling: Always execute the required function calls before you respond.
+            If function calls succeeded or its data is useful, add the data to the response.
             
             Afterwards, provide a detailed explanation of the changes you made and how they improve the codebase.
         """.trimIndent()
@@ -76,7 +77,7 @@ class CodeGenerator(
             toolcallbacks = toolManager.toolCallbacks
         )
     }
-    
+
     /**
      * Get formatted message history for prompts
      */
@@ -84,7 +85,7 @@ class CodeGenerator(
         // If we have an InMemoryContextManager, use its formatted history
         val formattedHistory = (contextManager as? InMemoryContextManager)?.getFormattedMessageHistory()
             ?: buildMessageHistoryFromContext()
-            
+
         return if (formattedHistory.isNotEmpty()) {
             """
             Previous conversation history (consider this as context for this continuation):
@@ -94,7 +95,7 @@ class CodeGenerator(
             "" // Empty string if no history
         }
     }
-    
+
     /**
      * Build message history from context if not using InMemoryContextManager
      */
