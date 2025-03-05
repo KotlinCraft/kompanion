@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="800dp"
+            android:height="200dp"
+            android:viewportWidth="800"
+            android:viewportHeight="200">
+
+            <!-- Background -->
+            <path
+                android:name="background"
+                android:fillColor="#0f0f14"
+                android:pathData="M0,0 L800,0 L800,200 L0,200 Z"/>
+
+            <!-- Main neural paths -->
+            <path
+                android:name="main_path"
+                android:pathData="M 50,100 Q 150,20 270,100 T 530,100 T 750,100"
+                android:strokeWidth="2"
+                android:strokeColor="#9333ea"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:fillColor="#00000000"/>
+
+            <!-- Branch paths -->
+            <path
+                android:name="branch_path_1"
+                android:pathData="M 150,100 Q 180,40 220,50"
+                android:strokeWidth="1.5"
+                android:strokeColor="#a855f7"
+                android:strokeAlpha="0.6"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:fillColor="#00000000"/>
+
+            <path
+                android:name="branch_path_2"
+                android:pathData="M 270,100 Q 300,160 340,150"
+                android:strokeWidth="1.5"
+                android:strokeColor="#a855f7"
+                android:strokeAlpha="0.7"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:fillColor="#00000000"/>
+
+            <path
+                android:name="branch_path_3"
+                android:pathData="M 400,100 Q 420,40 450,30"
+                android:strokeWidth="1.5"
+                android:strokeColor="#a855f7"
+                android:strokeAlpha="0.5"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:fillColor="#00000000"/>
+
+            <path
+                android:name="branch_path_4"
+                android:pathData="M 530,100 Q 560,150 600,160"
+                android:strokeWidth="1.5"
+                android:strokeColor="#a855f7"
+                android:strokeAlpha="0.6"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:fillColor="#00000000"/>
+
+            <!-- Cross connections -->
+            <path
+                android:name="cross_path_1"
+                android:pathData="M 220,50 Q 300,20 450,30"
+                android:strokeWidth="1"
+                android:strokeColor="#9333ea"
+                android:strokeAlpha="0.5"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:fillColor="#00000000"/>
+
+            <path
+                android:name="cross_path_2"
+                android:pathData="M 340,150 Q 450,170 600,160"
+                android:strokeWidth="1"
+                android:strokeColor="#9333ea"
+                android:strokeAlpha="0.4"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:fillColor="#00000000"/>
+
+            <!-- Main neurons -->
+            <group android:name="neurons_main">
+                <path
+                    android:name="neuron_1"
+                    android:pathData="M 50,100 m -6,0 a 6,6 0 1,0 12,0 a 6,6 0 1,0 -12,0"
+                    android:fillColor="#9333ea"/>
+
+                <path
+                    android:name="neuron_2"
+                    android:pathData="M 150,100 m -8,0 a 8,8 0 1,0 16,0 a 8,8 0 1,0 -16,0"
+                    android:fillColor="#a855f7"/>
+
+                <path
+                    android:name="neuron_3"
+                    android:pathData="M 270,100 m -7,0 a 7,7 0 1,0 14,0 a 7,7 0 1,0 -14,0"
+                    android:fillColor="#9333ea"/>
+
+                <path
+                    android:name="neuron_4"
+                    android:pathData="M 400,100 m -9,0 a 9,9 0 1,0 18,0 a 9,9 0 1,0 -18,0"
+                    android:fillColor="#a855f7"/>
+
+                <path
+                    android:name="neuron_5"
+                    android:pathData="M 530,100 m -8,0 a 8,8 0 1,0 16,0 a 8,8 0 1,0 -16,0"
+                    android:fillColor="#9333ea"/>
+
+                <path
+                    android:name="neuron_6"
+                    android:pathData="M 650,100 m -7,0 a 7,7 0 1,0 14,0 a 7,7 0 1,0 -14,0"
+                    android:fillColor="#a855f7"/>
+
+                <path
+                    android:name="neuron_7"
+                    android:pathData="M 750,100 m -6,0 a 6,6 0 1,0 12,0 a 6,6 0 1,0 -12,0"
+                    android:fillColor="#9333ea"/>
+            </group>
+
+            <!-- Branch neurons -->
+            <group android:name="neurons_branch">
+                <path
+                    android:name="branch_neuron_1"
+                    android:pathData="M 220,50 m -5,0 a 5,5 0 1,0 10,0 a 5,5 0 1,0 -10,0"
+                    android:fillColor="#c084fc"/>
+
+                <path
+                    android:name="branch_neuron_2"
+                    android:pathData="M 340,150 m -5,0 a 5,5 0 1,0 10,0 a 5,5 0 1,0 -10,0"
+                    android:fillColor="#c084fc"/>
+
+                <path
+                    android:name="branch_neuron_3"
+                    android:pathData="M 450,30 m -5,0 a 5,5 0 1,0 10,0 a 5,5 0 1,0 -10,0"
+                    android:fillColor="#c084fc"/>
+
+                <path
+                    android:name="branch_neuron_4"
+                    android:pathData="M 600,160 m -5,0 a 5,5 0 1,0 10,0 a 5,5 0 1,0 -10,0"
+                    android:fillColor="#c084fc"/>
+            </group>
+
+            <!-- Data pulse particles (separate elements for animation) -->
+            <path
+                android:name="data_pulse_1"
+                android:pathData="M 50,100 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+                android:fillColor="#f0abfc"/>
+
+            <path
+                android:name="data_pulse_2"
+                android:pathData="M 150,100 m -2.5,0 a 2.5,2.5 0 1,0 5,0 a 2.5,2.5 0 1,0 -5,0"
+                android:fillColor="#d8b4fe"/>
+
+            <path
+                android:name="data_pulse_3"
+                android:pathData="M 270,100 m -2,0 a 2,2 0 1,0 4,0 a 2,2 0 1,0 -4,0"
+                android:fillColor="#e9d5ff"/>
+
+            <!-- Loading indicator dots -->
+            <group android:name="loading_dots"
+                android:translateX="400"
+                android:translateY="180">
+                <path
+                    android:name="dot_1"
+                    android:pathData="M -20,0 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+                    android:fillColor="#d8b4fe"
+                    android:fillAlpha="0.2"/>
+
+                <path
+                    android:name="dot_2"
+                    android:pathData="M -10,0 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+                    android:fillColor="#d8b4fe"
+                    android:fillAlpha="0.2"/>
+
+                <path
+                    android:name="dot_3"
+                    android:pathData="M 0,0 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+                    android:fillColor="#d8b4fe"
+                    android:fillAlpha="0.2"/>
+
+                <path
+                    android:name="dot_4"
+                    android:pathData="M 10,0 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+                    android:fillColor="#d8b4fe"
+                    android:fillAlpha="0.2"/>
+
+                <path
+                    android:name="dot_5"
+                    android:pathData="M 20,0 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+                    android:fillColor="#d8b4fe"
+                    android:fillAlpha="0.2"/>
+            </group>
+        </vector>
+    </aapt:attr>
+
+    <!-- Animations -->
+    
+    <!-- Main path pulse animation -->
+    <target android:name="main_path">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:duration="2000"
+                    android:valueFrom="0.6"
+                    android:valueTo="1.0"
+                    android:valueType="floatType"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"/>
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Neuron pulse animations -->
+    <target android:name="neurons_main">
+        <aapt:attr name="android:animation">
+            <set android:ordering="together">
+                <objectAnimator
+                    android:propertyName="scaleX"
+                    android:duration="2500"
+                    android:valueFrom="1.0"
+                    android:valueTo="1.1"
+                    android:valueType="floatType"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"/>
+                    
+                <objectAnimator
+                    android:propertyName="scaleY"
+                    android:duration="2500"
+                    android:valueFrom="1.0"
+                    android:valueTo="1.1"
+                    android:valueType="floatType"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"/>
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- Branch neuron pulse animations -->
+    <target android:name="neurons_branch">
+        <aapt:attr name="android:animation">
+            <set android:ordering="together">
+                <objectAnimator
+                    android:propertyName="scaleX"
+                    android:duration="2000"
+                    android:valueFrom="1.0"
+                    android:valueTo="1.2"
+                    android:valueType="floatType"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"/>
+                    
+                <objectAnimator
+                    android:propertyName="scaleY"
+                    android:duration="2000"
+                    android:valueFrom="1.0"
+                    android:valueTo="1.2"
+                    android:valueType="floatType"
+                    android:repeatCount="infinite"
+                    android:repeatMode="reverse"/>
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Data pulse animation -->
+    <target android:name="data_pulse_1">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="3000"
+                    android:valueFrom="M 50,100 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+                    android:valueTo="M 750,100 m -3,0 a 3,3 0 1,0 6,0 a 3,3 0 1,0 -6,0"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear"
+                    android:repeatCount="infinite"/>
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="data_pulse_2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="3000"
+                    android:valueFrom="M 50,100 m -2.5,0 a 2.5,2.5 0 1,0 5,0 a 2.5,2.5 0 1,0 -5,0"
+                    android:valueTo="M 750,100 m -2.5,0 a 2.5,2.5 0 1,0 5,0 a 2.5,2.5 0 1,0 -5,0"
+                    android:valueType="pathType"
+                    android:startOffset="1000"
+                    android:interpolator="@android:interpolator/linear"
+                    android:repeatCount="infinite"/>
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="data_pulse_3">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="1500"
+                    android:valueFrom="M 150,100 m -2,0 a 2,2 0 1,0 4,0 a 2,2 0 1,0 -4,0"
+                    android:valueTo="M 220,50 m -2,0 a 2,2 0 1,0 4,0 a 2,2 0 1,0 -4,0"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear"
+                    android:repeatCount="infinite"/>
+            </set>
+        </aapt:attr>
+    </target>
+    
+    <!-- Loading dots animation -->
+    <target android:name="dot_1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:duration="1400"
+                android:valueFrom="0.2"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:repeatCount="infinite"
+                android:repeatMode="reverse"/>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="dot_2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:duration="1400"
+                android:valueFrom="0.2"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:startOffset="200"
+                android:repeatCount="infinite"
+                android:repeatMode="reverse"/>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="dot_3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:duration="1400"
+                android:valueFrom="0.2"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:startOffset="400"
+                android:repeatCount="infinite"
+                android:repeatMode="reverse"/>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="dot_4">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:duration="1400"
+                android:valueFrom="0.2"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:startOffset="600"
+                android:repeatCount="infinite"
+                android:repeatMode="reverse"/>
+        </aapt:attr>
+    </target>
+    
+    <target android:name="dot_5">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:duration="1400"
+                android:valueFrom="0.2"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:startOffset="800"
+                android:repeatCount="infinite"
+                android:repeatMode="reverse"/>
+        </aapt:attr>
+    </target>
+</animated-vector>
