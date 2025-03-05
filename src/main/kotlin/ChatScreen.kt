@@ -279,7 +279,7 @@ fun ChatScreen() {
                     isProcessing = false
                 }
             } catch (e: Exception) {
-                messages = messages + ChatMessage(UUID.randomUUID(), "Error: ${e.message}", false)
+                messages = messages + ChatMessage(UUID.randomUUID(), e.message ?: "unknown error occurred :(", false)
                 isProcessing = false
                 currentJob = null
             }
