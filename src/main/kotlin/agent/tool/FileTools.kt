@@ -10,6 +10,7 @@ import ai.ActionMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.ai.tool.annotation.ToolParam
 import org.springframework.util.ReflectionUtils
 import java.nio.file.Files
 import java.nio.file.Path
@@ -24,7 +25,19 @@ class FileTools(
 
     val logger = LoggerFactory.getLogger(this::class.java)
 
-    fun requestFileContext(file: String): RequestFileResponse {
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "request_file_context",
+        description = """Provide a file in context for the request. 
+            | Always use the full path (absolute) file.
+                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
+                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt"""
+    )
+    fun requestFileContext(
+        @ToolParam(
+            required = true,
+            description = "absolute file path to fetch"
+        ) file: String
+    ): RequestFileResponse {
 
         val filePath = Optional.of(Path.of(file)).filter(Path::exists).or {
             Optional.of(Path.of(contextManager.fetchWorkingDirectory() + "/" + file)).filter(Path::exists)
@@ -56,22 +69,5 @@ class FileTools(
         } else {
             RequestFileResponse(false, null, null, emptyList())
         }
-    }
-
-    val readFileAction = Action(
-        "request_file_context",
-        """Provide a file in context for the request. 
-            | Always use the full path (absolute) file.
-                        |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
-                        |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt""".trimMargin(),
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "requestFileContext", String::class.java), this
-        )
-    )
-
-    override fun getTools(): List<Tool> {
-        return emptyList()
-        return listOf(
-        )
     }
 }

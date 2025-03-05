@@ -52,10 +52,19 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         }
     }
 
-    val read_contract = Action(
-        "read_contract",
-        """ Call to the Bankless API to read a contract's state. The request and response must equally match the supported types. This tool requires ABI and source of the contract to succeed. Several types are supported, including:
-    {
+
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "read_contract",
+        description = """ Call to the Bankless API to read a contract's state. The request and response must equally match the supported types. This tool requires ABI and source of the contract to succeed. Several types are supported, including:
+     Don't call a function if you didn't get a source or ABI for the contract.
+     supported input types: address, bytes4, bytes32, input
+     supported output types: bool, bytes4, string, uint256
+        """
+    )
+    fun readContract(
+        @ToolParam(
+            required = true, description = """
+         {
       "contract": "address",
       "method": "implementation",
       "network": "base",
@@ -66,16 +75,9 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         }
       ]
     }
-     Don't call a function if you didn't get a source or ABI for the contract.
-     supported input types: address, bytes4, bytes32, input
-     supported output types: bool, bytes4, string, uint256
-        """.trimMargin(),
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "readContract", ReadContractRequest::class.java), this
-        )
-    )
-
-    fun readContract(request: ReadContractRequest): ReadContractResponse {
+    """
+        ) request: ReadContractRequest
+    ): ReadContractResponse {
         // Show RUNNING indicator
         val toolId = runBlocking(Dispatchers.IO) {
             customToolUsage(
@@ -153,16 +155,16 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         }
     }
 
-    val get_proxy = Action(
-        "get_proxy",
-        "Retrieve the proxy address for a given contract and network. The action takes network and contract as inputs.",
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "getProxy", GetProxyRequest::class.java), this
-        )
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "get_proxy",
+        description = "Retrieve the proxy address for a given contract and network. The action takes network and contract as inputs."
     )
-
-    fun getProxy(request: GetProxyRequest): GetProxyResponse {
-        // Show RUNNING indicator
+    fun getProxy(
+        @ToolParam(
+            required = true,
+            description = "which network and address do we fetch the proxy for"
+        ) request: GetProxyRequest
+    ): GetProxyResponse {
         val toolId = runBlocking(Dispatchers.IO) {
             customToolUsage(
                 toolIndicator = {
@@ -229,8 +231,14 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         )
     )
 
-    fun fetchTokenInformation(chain: String, address: String): FungibleTokenVO? {
-        // Show RUNNING indicator
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "fetch_token_information",
+        description = "Fetch token information for a token deployed to a chain and address.",
+    )
+    fun fetchTokenInformation(
+        @ToolParam(required = true, description = "chain of the network") chain: String,
+        @ToolParam(required = true, description = "address to check fetch information ") address: String
+    ): FungibleTokenVO? {
         runBlocking(Dispatchers.IO) {
             customToolUsage(
                 toolIndicator = {
@@ -265,13 +273,6 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                     })
                 token
             })
-        }
-    }
-
-    override fun getTools(): List<Tool> {
-        val callbacks = ToolCallbacks.from(this)
-        return callbacks.map {
-            Tool.from(it, ToolAllowedStatus.ALLOWED)
         }
     }
 
