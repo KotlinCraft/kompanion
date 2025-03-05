@@ -32,9 +32,9 @@ class CodingMode(
                 val result =
                     confirmWithUser(
                         """Hello! I'm Kompanion 👋, your coding assistant. 
-                    |Would you like to initialize this repository?
-                    |This is not required, but will make me smarter and more helpful! 🧠
-                    |""".trimMargin()
+Would you like to initialize this repository?
+This is not required, but will make me smarter and more helpful! 🧠
+""".trimMargin()
                     )
 
                 if (result) {
@@ -43,7 +43,7 @@ class CodingMode(
                         interactionHandler.interact(
                             AgentResponse(
                                 """Repository initialized ✅.
-                        |I'm ready to help you with your coding tasks! 🚀
+I'm ready to help you with your coding tasks! 🚀
                     """.trimMargin()
                             )
                         )
@@ -98,13 +98,13 @@ class CodingMode(
     private suspend fun sendGenerationPlanToUser(plan: GenerationPlan) {
         sendMessage(
             """
-            Here's the detailed plan: 
-            Steps: 
-            ${plan.steps.joinToString("\n") { "👉 ${it.action})" }}
+Here's the detailed plan: 
+Steps: 
+${plan.steps.joinToString("\n") { "👉 ${it.action})" }}
             
-            Expected Outcome: 
-            ${plan.expectedOutcome}
-            """.trimMargin().trimIndent()
+Expected Outcome: 
+${plan.expectedOutcome}
+""".trimMargin().trimIndent()
         )
     }
 
