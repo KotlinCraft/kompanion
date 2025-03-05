@@ -62,6 +62,10 @@ class InMemoryContextManager : ContextManager {
         _files.value = emptySet()
     }
 
+    override fun clearMessages() {
+        messageManager.clear()
+    }
+
     override fun fetchWorkingDirectory(): String = AppConfig.load().latestDirectory
 
     override fun getFullFileList(): String = buildString {

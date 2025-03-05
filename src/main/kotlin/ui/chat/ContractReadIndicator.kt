@@ -1,5 +1,6 @@
 package ui.chat
 
+import agent.blockchain.tool.domain.ReadContractResponse
 import agent.interaction.ToolStatus
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -36,6 +37,7 @@ fun ContractReadIndicator(
     status: ToolStatus, 
     result: String? = null,
     error: String? = null,
+    readContractResponse: ReadContractResponse? = null
 ) {
     val clipboardManager = LocalClipboardManager.current
     var isExpanded by remember { mutableStateOf(status == ToolStatus.RUNNING) }
@@ -153,6 +155,35 @@ fun ContractReadIndicator(
                 )
             }
             
+            // If not expanded but completed, show a summary of the results
+            if (!isExpanded && status == ToolStatus.COMPLETED && readContractResponse != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Results: ",
+                        color = Color(0xFF94A3B8),
+                        fontSize = 13.sp
+                    )
+                    
+                    readContractResponse.results?.let { results ->
+                        if (results.isNotEmpty()) {
+                            Text(
+                                text = results.joinToString(", ") { 
+                                    "${it["value"] ?: "null"} (${it["type"] ?: "unknown"})" 
+                                },
+                                color = Color(0xFFE2E8F0),
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+            
             // Content with animation for collapsing/expanding
             AnimatedVisibility(
                 visible = isExpanded,
@@ -241,8 +272,119 @@ fun ContractReadIndicator(
                         Spacer(modifier = Modifier.weight(1f))
                     }
                     
-                    // Show result or error if available
-                    if (status == ToolStatus.COMPLETED && result != null) {
+                    // Show result based on the ReadContractResponse
+                    if (status == ToolStatus.COMPLETED && readContractResponse != null) {
+                        readContractResponse.results?.let { results ->
+                            if (results.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(Color(0xFF0F172A).copy(alpha = 0.3f))
+                                        .padding(8.dp)
+                                ) {
+                                    results.forEachIndexed { index, resultMap ->
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Value with type info
+                                            Column(
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = "Result ${if (results.size > 1) "${index + 1}" else ""}:",
+                                                        color = Color(0xFF94A3B8),
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                    
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    
+                                                    Text(
+                                                        text = "${resultMap["value"] ?: "null"}",
+                                                        color = Color(0xFFE2E8F0),
+                                                        fontSize = 12.sp,
+                                                        fontFamily = FontFamily.Monospace
+                                                    )
+                                                    
+                                                    if (resultMap["type"] != null) {
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        
+                                                        Box(
+                                                            contentAlignment = Alignment.Center,
+                                                            modifier = Modifier
+                                                                .padding(start = 2.dp)
+                                                                .clip(RoundedCornerShape(4.dp))
+                                                                .background(Color(0xFF334155).copy(alpha = 0.5f))
+                                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = "${resultMap["type"]}",
+                                                                fontSize = 10.sp,
+                                                                color = Color(0xFF94A3B8)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Show error if present
+                                                if (resultMap["error"] != null && resultMap["error"] != "") {
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Filled.Warning,
+                                                            contentDescription = null,
+                                                            tint = Color(0xFFF59E0B),
+                                                            modifier = Modifier.size(10.dp)
+                                                        )
+                                                        
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        
+                                                        Text(
+                                                            text = "${resultMap["error"]}",
+                                                            color = Color(0xFFF59E0B),
+                                                            fontSize = 10.sp
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Add copy button for value
+                                            Icon(
+                                                imageVector = Icons.Filled.ContentCopy,
+                                                contentDescription = "Copy value",
+                                                tint = Color(0xFF64748B),
+                                                modifier = Modifier
+                                                    .size(14.dp)
+                                                    .clickable { 
+                                                        clipboardManager.setText(AnnotatedString("${resultMap["value"]}"))
+                                                    }
+                                            )
+                                        }
+                                        
+                                        if (index < results.size - 1) {
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(1.dp)
+                                                    .background(Color(0xFF334155).copy(alpha = 0.3f))
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (status == ToolStatus.COMPLETED && result != null) {
+                        // Fallback to display old result format for backward compatibility
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -259,30 +401,35 @@ fun ContractReadIndicator(
                                 fontFamily = FontFamily.Monospace
                             )
                         }
-                    } else if (status == ToolStatus.FAILED && error != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFF7F1D1D).copy(alpha = 0.15f))
-                                .padding(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Warning,
-                                contentDescription = null,
-                                tint = Color(0xFFEF4444),
-                                modifier = Modifier.size(12.dp)
-                            )
-                            
-                            Spacer(modifier = Modifier.width(8.dp))
-                            
-                            Text(
-                                text = error,
-                                color = Color(0xFFFCA5A5),
-                                fontSize = 12.sp
-                            )
+                    } else if (status == ToolStatus.FAILED) {
+                        // Display error message
+                        val errorMessage = readContractResponse?.error ?: error
+                        
+                        if (errorMessage != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFF7F1D1D).copy(alpha = 0.15f))
+                                    .padding(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Warning,
+                                    contentDescription = null,
+                                    tint = Color(0xFFEF4444),
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                
+                                Spacer(modifier = Modifier.width(8.dp))
+                                
+                                Text(
+                                    text = errorMessage,
+                                    color = Color(0xFFFCA5A5),
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }

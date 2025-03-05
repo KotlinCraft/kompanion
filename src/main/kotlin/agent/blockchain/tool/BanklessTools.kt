@@ -51,13 +51,12 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
 
     @org.springframework.ai.tool.annotation.Tool(
         name = "read_contract",
-        description = """ Call to the Bankless API to read a contract's state. The request and response must equally match the supported types. This tool requires ABI and source of the contract to succeed. Several types are supported, including:
-     Don't call a function if you didn't get a source or ABI for the contract."""
+        description = """ Call to the Bankless API to read a contract's state and interact with it. Use the Abi types and function to interact (read only) with a contract."""
     )
     fun readContract(
         @ToolParam(
             required = true,
-            description = """read a contract based on the address, method, network, inputs, and outputs"""
+            description = """read and interact with a contract based on the address, method, network, inputs, and outputs"""
         ) request: ReadContractRequest
     ): ReadContractResponse {
         // Show RUNNING indicator
@@ -82,6 +81,9 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                 runBlocking(Dispatchers.IO) { banklessClient.readContractState(request.network, banklessRequest) }
 
             result.fold({ error ->
+                // Create error response
+                val errorResponse = ReadContractResponse(null, error)
+
                 // Show FAILED indicator
                 runBlocking(Dispatchers.IO) {
                     customToolUsage(
@@ -91,16 +93,23 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                                 request.method,
                                 request.network,
                                 ToolStatus.FAILED,
+                                null,
+                                error,
+                                errorResponse
                             )
                         })
                 }
-                ReadContractResponse(null, error)
+
+                errorResponse
             }, { results ->
                 val mappedResults = results.map {
                     mapOf(
                         "value" to it.value, "type" to it.type, "error" to (it.error ?: "")
                     )
                 }
+
+                // Create successful response
+                val response = ReadContractResponse(mappedResults, null)
 
                 // Show COMPLETED indicator
                 runBlocking(Dispatchers.IO) {
@@ -111,13 +120,19 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                                 request.method,
                                 request.network,
                                 ToolStatus.COMPLETED,
+                                null,
+                                null,
+                                response
                             )
                         })
                 }
 
-                ReadContractResponse(mappedResults, null)
+                response
             })
         } catch (e: Exception) {
+            // Create error response
+            val errorResponse = ReadContractResponse(null, "Error reading contract: ${e.message}")
+
             // Show FAILED indicator for exceptions
             runBlocking(Dispatchers.IO) {
                 customToolUsage(
@@ -128,12 +143,13 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                             request.network,
                             ToolStatus.FAILED,
                             null,
-                            "Error reading contract: ${e.message}"
+                            "Error reading contract: ${e.message}",
+                            errorResponse
                         )
                     })
             }
 
-            ReadContractResponse(null, "Error reading contract: ${e.message}")
+            errorResponse
         }
     }
 
@@ -205,14 +221,6 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         }
     }
 
-    val fetch_token_information = Action(
-        "fetch_token_information", "Fetch token information for a token deployed to a chain and address.", ActionMethod(
-            ReflectionUtils.findMethod(
-                this::class.java, "fetchTokenInformation", String::class.java, String::class.java
-            ), this
-        )
-    )
-
     @org.springframework.ai.tool.annotation.Tool(
         name = "fetch_token_information",
         description = "Fetch token information for a token deployed to a chain and address.",
@@ -221,8 +229,8 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         @ToolParam(required = true, description = "chain of the network") chain: String,
         @ToolParam(required = true, description = "address to check fetch information ") address: String
     ): FungibleTokenVO? {
-        runBlocking(Dispatchers.IO) {
-            customToolUsage(
+        return runBlocking(Dispatchers.IO) {
+            val toolId = customToolUsage(
                 toolIndicator = {
                     TokenInformationIndicator(
                         address,
@@ -230,29 +238,24 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                         ToolStatus.RUNNING,
                     )
                 })
-        }
-
-        return runBlocking(Dispatchers.IO) {
             banklessClient.fetchTokenInformation(chain, address).fold({ error ->
                 // Show FAILED indicator
-                customToolUsage(
-                    toolIndicator = {
-                        TokenInformationIndicator(
-                            address, chain, ToolStatus.FAILED, null, "Error fetching token information: $error"
-                        )
-                    })
+                customToolUsage(toolId) {
+                    TokenInformationIndicator(
+                        address, chain, ToolStatus.FAILED, null, "Error fetching token information: $error"
+                    )
+                }
                 null
             }, { token ->
                 // Show COMPLETED indicator
-                customToolUsage(
-                    toolIndicator = {
-                        TokenInformationIndicator(
-                            address,
-                            chain,
-                            ToolStatus.COMPLETED,
-                            token,
-                        )
-                    })
+                customToolUsage(toolId) {
+                    TokenInformationIndicator(
+                        address,
+                        chain,
+                        ToolStatus.COMPLETED,
+                        token,
+                    )
+                }
                 token
             })
         }

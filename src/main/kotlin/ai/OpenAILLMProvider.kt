@@ -30,7 +30,6 @@ class OpenAILLMProvider : LLMProvider() {
         configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
     }
 
-    var temperature = 1.0
 
     val client by lazy {
         createClient()
@@ -45,11 +44,11 @@ class OpenAILLMProvider : LLMProvider() {
         return OpenAiChatModel.builder().openAiApi(OpenAiApi.builder().apiKey(key).build()).defaultOptions(
             OpenAiChatOptions.builder()
                 .model(model).apply {
-                    if (model == "o3-mini") {
-                        this.reasoningEffort("medium")
+                    if (model == "o3-mini" || model == "o1") {
+                        this.reasoningEffort("high")
                     }
                 }
-                .temperature(temperature).build()
+                .temperature(1.0).build()
         ).build()
     }
 
@@ -76,6 +75,7 @@ class OpenAILLMProvider : LLMProvider() {
 
 
         val messages = listOf(
+            SystemMessage("Be sure to use your tools to provide the best possible answer."),
             SystemMessage(system),
             userMessage?.let { UserMessage(it) },
             outputMessage
@@ -117,7 +117,8 @@ class OpenAILLMProvider : LLMProvider() {
         return listOf(
             "gpt-4o",
             "o3-mini",
-            "o1"
+            "o1",
+            "gpt-4.5-preview"
         )
     }
 }

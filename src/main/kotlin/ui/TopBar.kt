@@ -61,9 +61,27 @@ fun TopBar(
         )
     )
     
-    // Define glisten colors
-    val glistenColor1 = Color(0xFF94A6E6) // Light blue-purple for glow start
-    val glistenColor2 = Color(0xFF61DAFB) // Light cyan-blue for glow end
+    // Define glisten colors based on mode
+    val glistenColor1: Color
+    val glistenColor2: Color
+    
+    when (mode) {
+        "blockchain" -> {
+            // More purple shimmer for blockchain mode
+            glistenColor1 = Color(0xFFA374D5) // Deeper purple
+            glistenColor2 = Color(0xFF8A4FD0) // Rich purple
+        }
+        "code" -> {
+            // Green shimmer for code mode
+            glistenColor1 = Color(0xFF4CAF50) // Medium green
+            glistenColor2 = Color(0xFF2E7D32) // Darker green
+        }
+        else -> {
+            // Default shimmer colors (fallback)
+            glistenColor1 = Color(0xFF94A6E6) // Light blue-purple
+            glistenColor2 = Color(0xFF61DAFB) // Light cyan-blue
+        }
+    }
     
     Box(
         modifier = Modifier

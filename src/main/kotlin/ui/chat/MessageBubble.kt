@@ -2,6 +2,7 @@ package ui.chat
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -48,12 +49,15 @@ fun MessageBubble(message: ChatMessage) {
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 
-                Text(
-                    text = message.content,
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp
-                )
+                // Wrap message content in SelectionContainer to make it selectable
+                SelectionContainer {
+                    Text(
+                        text = message.content,
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp
+                    )
+                }
             }
         }
     }

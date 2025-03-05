@@ -26,6 +26,8 @@ interface ContextManager {
      */
     fun clearContext()
 
+    fun clearMessages()
+
     /**
      * Fetches the current working directory path as a string.
      * @return The path of the current working directory.

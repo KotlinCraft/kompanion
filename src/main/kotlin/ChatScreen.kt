@@ -249,6 +249,7 @@ fun ChatScreen() {
             )
         },
         SlashCommand("/clear", "Clear chat history") {
+            agentState.codingKompanion.agent.fetchContextManager().clearMessages()
             messages = emptyList()
         }
     )
