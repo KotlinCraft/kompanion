@@ -48,7 +48,7 @@ class BlockchainReasoner(
             system = prompt,
             userMessage = question,
             actions = toolManager.tools.map { it.action },
-            temperature = 0.3,
+            temperature = 0.7,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
             toolcallbacks = mutableListOf()
         )

@@ -83,7 +83,7 @@ class OpenAILLMProvider : LLMProvider() {
 
         var prompt = client.prompt(
             Prompt(
-                messages
+                messages,
             )
         )
 

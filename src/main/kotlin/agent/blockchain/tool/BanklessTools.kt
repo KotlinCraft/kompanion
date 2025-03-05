@@ -15,11 +15,11 @@ import agent.tool.ToolAllowedStatus
 import agent.tool.ToolsProvider
 import ai.Action
 import ai.ActionMethod
-import arrow.core.getOrElse
 import com.bankless.claimable.rest.vo.ClaimableVO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.ai.tool.ToolCallbacks
 import org.springframework.util.ReflectionUtils
 import ui.chat.ContractReadIndicator
 import ui.chat.GetProxyIndicator
@@ -30,6 +30,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     val banklessClient = BanklessClient()
+
 
     val get_claimables = Action(
         "get_claimables",
