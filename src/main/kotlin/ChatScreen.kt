@@ -3,7 +3,9 @@ import agent.InMemoryContextManager
 import agent.interaction.*
 import agent.modes.Mode
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,9 +22,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -44,7 +54,7 @@ private data class SlashCommand(
     val run: () -> Unit = {}
 )
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalTextApi::class)
 @Composable
 fun ChatScreen() {
 
@@ -55,6 +65,8 @@ fun ChatScreen() {
     val darkSecondary = Color(0xFF2D2D3F) // Slightly lighter for components
     val accentColor = Color(0xFF7289DA) // Discord-like accent color
     val successColor = Color(0xFF43B581) // Green for success indicators
+    val glistenColor1 = Color(0xFF94A6E6) // Light blue-purple for glow start
+    val glistenColor2 = Color(0xFF61DAFB) // Light cyan-blue for glow end
 
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
@@ -540,6 +552,39 @@ fun ChatScreen() {
                     }
                 }
 
+                // Create animation for glisten effect
+                val infiniteTransition = rememberInfiniteTransition()
+                
+                // Animate the color gradient positions for border
+                val gradientPosition = infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1500, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse
+                    )
+                )
+
+                // Animate shadow elevation for a pulsing effect
+                val shadowElevation = infiniteTransition.animateFloat(
+                    initialValue = 2f,
+                    targetValue = 8f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    )
+                )
+                
+                // Text shimmer animation with smooth bi-directional movement
+                val shimmerOffsetX = infiniteTransition.animateFloat(
+                    initialValue = -300f,  // Start from left outside of view
+                    targetValue = 300f,   // End at right outside of view
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(3000, easing = EaseInOutQuad),
+                        repeatMode = RepeatMode.Reverse  // Reverse direction instead of restarting
+                    )
+                )
+
                 // Input textfield and send button
                 Row(
                     modifier = Modifier
@@ -547,58 +592,119 @@ fun ChatScreen() {
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Input field
-                    OutlinedTextField(
-                        value = inputText,
-                        onValueChange = {
-                            if (!isProcessing) {
-                                inputText = it
-                                showSuggestions = it.startsWith("/")
-                            }
-                        },
-                        enabled = !isProcessing || isWaitingForAnswer,
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            textColor = Color.White,
-                            cursorColor = accentColor,
-                            focusedBorderColor = accentColor,
-                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                            backgroundColor = darkSecondary
-                        ),
-                        placeholder = {
-                            Text(
-                                when {
-                                    isProcessing && !isWaitingForAnswer -> "Thinking..."
-                                    isWaitingForAnswer -> "Please answer the question..."
-                                    else -> when (mode) {
-                                        "code" -> "Ask me to code something..."
-                                        "ask" -> "Ask me about your code..."
-                                        "blockchain" -> "Ask me about blockchain data..."
-                                        else -> "Type your message..."
-                                    }
-                                },
-                                color = Color.Gray
-                            )
-                        },
-                        shape = RoundedCornerShape(24.dp),
+                    // Determine if we should show the glisten effect
+                    val showGlisten = !isProcessing && inputText.isEmpty()
+                    
+                    // Get placeholder text based on current state and mode
+                    val placeholderText = when {
+                        isProcessing && !isWaitingForAnswer -> "Thinking..."
+                        isWaitingForAnswer -> "Please answer the question..."
+                        else -> when (mode) {
+                            "code" -> "Ask me to code something..."
+                            "ask" -> "Ask me about your code..."
+                            "blockchain" -> "Ask me about blockchain data..."
+                            else -> "Type your message..."
+                        }
+                    }
+                    
+                    // Box wrapper to apply the glisten effect
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .onKeyEvent { event ->
-                                if (event.key == Key.Enter && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
-                                    sendCurrentMessage()
-                                    true
-                                } else if (event.key == Key.R && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
-                                    performSlashCommand(slashCommands.first { it.command == "/clear" })
-                                    true
-                                } else if (event.key == Key.Tab && showSuggestions) {
-                                    val firstCommand = slashCommands
-                                        .sortedBy { it.command }.firstOrNull { it.command.startsWith(inputText.trim()) }
-                                    if (firstCommand != null) {
-                                        inputText = firstCommand.command
+                    ) {
+                        // Input field
+                        OutlinedTextField(
+                            value = inputText,
+                            onValueChange = {
+                                if (!isProcessing) {
+                                    inputText = it
+                                    showSuggestions = it.startsWith("/")
+                                }
+                            },
+                            enabled = !isProcessing || isWaitingForAnswer,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                textColor = Color.White,
+                                cursorColor = accentColor,
+                                focusedBorderColor = if (showGlisten) Color.Transparent else accentColor,
+                                unfocusedBorderColor = if (showGlisten) Color.Transparent else Color.Gray.copy(alpha = 0.5f),
+                                backgroundColor = darkSecondary
+                            ),
+                            placeholder = {
+                                if (showGlisten) {
+                                    // Animated gradient text for placeholder with smooth bi-directional flow
+                                    Text(
+                                        text = placeholderText,
+                                        style = TextStyle(
+                                            brush = Brush.linearGradient(
+                                                colors = listOf(
+                                                    Color.Gray.copy(alpha = 0.3f),
+                                                    Color.Gray.copy(alpha = 0.5f),
+                                                    glistenColor1.copy(alpha = 0.7f),
+                                                    glistenColor2,
+                                                    glistenColor1.copy(alpha = 0.7f),
+                                                    Color.Gray.copy(alpha = 0.5f),
+                                                    Color.Gray.copy(alpha = 0.3f)
+                                                ),
+                                                // Center the animation on the text area with the shimmerOffsetX 
+                                                // determining the movement direction
+                                                start = Offset(shimmerOffsetX.value - 150f, 0f),
+                                                end = Offset(shimmerOffsetX.value + 150f, 0f)
+                                            )
+                                        ),
+                                        fontSize = 16.sp
+                                    )
+                                } else {
+                                    // Regular placeholder text
+                                    Text(
+                                        text = placeholderText,
+                                        color = Color.Gray,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            },
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    if (showGlisten) {
+                                        Modifier
+                                            .shadow(
+                                                elevation = shadowElevation.value.dp,
+                                                shape = RoundedCornerShape(24.dp),
+                                                ambientColor = glistenColor1,
+                                                spotColor = glistenColor2
+                                            )
+                                            .border(
+                                                width = 2.dp,
+                                                brush = Brush.linearGradient(
+                                                    colors = listOf(glistenColor1, glistenColor2, glistenColor1),
+                                                    start = Offset(gradientPosition.value * 200, 0f),
+                                                    end = Offset(gradientPosition.value * 200 + 100, 100f)
+                                                ),
+                                                shape = RoundedCornerShape(24.dp)
+                                            )
+                                    } else {
+                                        Modifier
                                     }
-                                    true
-                                } else false
-                            }
-                    )
+                                )
+                                .onKeyEvent { event ->
+                                    if (event.key == Key.Enter && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
+                                        sendCurrentMessage()
+                                        true
+                                    } else if (event.key == Key.R && event.isMetaPressed && event.type == KeyEventType.KeyUp) {
+                                        performSlashCommand(slashCommands.first { it.command == "/clear" })
+                                        true
+                                    } else if (event.key == Key.Tab && showSuggestions) {
+                                        val firstCommand = slashCommands
+                                            .sortedBy { it.command }.firstOrNull { it.command.startsWith(inputText.trim()) }
+                                        if (firstCommand != null) {
+                                            inputText = firstCommand.command
+                                        }
+                                        true
+                                    } else false
+                                }
+                        )
+                    }
 
                     Spacer(Modifier.width(12.dp))
 
