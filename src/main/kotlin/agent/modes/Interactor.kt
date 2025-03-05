@@ -31,6 +31,10 @@ interface Interactor {
         return id
     }
 
+    suspend fun removeToolUsage(id: UUID) {
+        interactionHandler().removeChat(id)
+    }
+
     suspend fun customToolUsage(
         id: UUID = UUID.randomUUID(),
         message: String = "",

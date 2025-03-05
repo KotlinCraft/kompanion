@@ -140,6 +140,12 @@ fun ChatScreen() {
                 }
             }
         }
+
+        override fun removeChat(id: UUID) {
+            messages = messages.filter {
+                it.id == id
+            }
+        }
     }
 
     val inMemoryContextManager = remember {

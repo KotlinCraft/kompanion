@@ -44,7 +44,14 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
 
     fun get_claimables(address: String): List<ClaimableVO> {
         return runBlocking(Dispatchers.IO) {
-            banklessClient.getClaimables(address).getOrElse { emptyList() }
+            banklessClient.getClaimables(address).fold(
+                { error ->
+                    emptyList()
+                },
+                { claimables ->
+                    claimables
+                }
+            )
         }
     }
 
@@ -73,6 +80,20 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     )
 
     fun readContract(request: ReadContractRequest): ReadContractResponse {
+        // Show RUNNING indicator
+        val toolId = runBlocking(Dispatchers.IO) {
+            customToolUsage(
+                toolIndicator = {
+                    ContractReadIndicator(
+                        request.address,
+                        request.method,
+                        request.network,
+                        ToolStatus.RUNNING,
+                    )
+                }
+            )
+        }
+
         return try {
             val banklessRequest = EvmReadContractStateRequest(
                 contract = request.address,
@@ -85,7 +106,23 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                 runBlocking(Dispatchers.IO) { banklessClient.readContractState(request.network, banklessRequest) }
 
             result.fold(
-                { error -> ReadContractResponse(null, error) },
+                { error -> 
+                    // Show FAILED indicator
+                    runBlocking(Dispatchers.IO) {
+                        customToolUsage(
+                            id = toolId,
+                            toolIndicator = {
+                                ContractReadIndicator(
+                                    request.address,
+                                    request.method,
+                                    request.network,
+                                    ToolStatus.FAILED,
+                                )
+                            }
+                        )
+                    }
+                    ReadContractResponse(null, error)
+                },
                 { results ->
                     val mappedResults = results.map {
                         mapOf(
@@ -95,39 +132,41 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                         )
                     }
 
-
-                    if (results.isEmpty()) {
-                        runBlocking(Dispatchers.IO) {
-                            customToolUsage(
-                                toolIndicator = {
-                                    ContractReadIndicator(
-                                        request.address,
-                                        request.method,
-                                        request.network,
-                                        ToolStatus.FAILED,
-                                    )
-                                }
-                            )
-                        }
-                        ReadContractResponse(mappedResults, "no results")
-                    } else {
-                        runBlocking(Dispatchers.IO) {
-                            customToolUsage(
-                                toolIndicator = {
-                                    ContractReadIndicator(
-                                        request.address,
-                                        request.method,
-                                        request.network,
-                                        ToolStatus.COMPLETED,
-                                    )
-                                }
-                            )
-                        }
-                        ReadContractResponse(mappedResults, null)
+                    // Show COMPLETED indicator
+                    runBlocking(Dispatchers.IO) {
+                        customToolUsage(
+                            id = toolId,
+                            toolIndicator = {
+                                ContractReadIndicator(
+                                    request.address,
+                                    request.method,
+                                    request.network,
+                                    ToolStatus.COMPLETED,
+                                )
+                            }
+                        )
                     }
+
+                    ReadContractResponse(mappedResults, null)
                 }
             )
         } catch (e: Exception) {
+            // Show FAILED indicator for exceptions
+            runBlocking(Dispatchers.IO) {
+                customToolUsage(
+                    id = toolId,
+                    toolIndicator = {
+                        ContractReadIndicator(
+                            request.address,
+                            request.method,
+                            request.network,
+                            ToolStatus.FAILED,
+                            null,
+                            "Error reading contract: ${e.message}"
+                        )
+                    }
+                )
+            }
 
             ReadContractResponse(null, "Error reading contract: ${e.message}")
         }
@@ -143,20 +182,20 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     )
 
     fun getProxy(request: GetProxyRequest): GetProxyResponse {
-        return try {
-            // Show RUNNING indicator
-            val toolId = runBlocking(Dispatchers.IO) {
-                customToolUsage(
-                    toolIndicator = {
-                        GetProxyIndicator(
-                            request.contract,
-                            request.network,
-                            ToolStatus.RUNNING,
-                        )
-                    }
-                )
-            }
+        // Show RUNNING indicator
+        val toolId = runBlocking(Dispatchers.IO) {
+            customToolUsage(
+                toolIndicator = {
+                    GetProxyIndicator(
+                        request.contract,
+                        request.network,
+                        ToolStatus.RUNNING,
+                    )
+                }
+            )
+        }
 
+        return try {
             val result = runBlocking(Dispatchers.IO) { banklessClient.getProxy(request.network, request.contract) }
 
             result.fold(
@@ -200,6 +239,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
             // Show FAILED indicator for exceptions
             runBlocking(Dispatchers.IO) {
                 customToolUsage(
+                    id = toolId,
                     toolIndicator = {
                         GetProxyIndicator(
                             request.contract,
