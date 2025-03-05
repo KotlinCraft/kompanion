@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import utils.walkDirectory
 import java.io.File
-import java.nio.file.Path
+import java.util.*
 
 class InMemoryContextManager : ContextManager {
 
@@ -56,6 +56,10 @@ class InMemoryContextManager : ContextManager {
 
     override fun updateFiles(files: List<ContextFile>) {
         _files.value = (_files.value + files).distinctBy { it.name }.toSet()
+    }
+
+    override fun removeFile(id: UUID) {
+        this._files.value = (_files.value.filter { it.id != id }).toSet()
     }
 
     override fun clearContext() {

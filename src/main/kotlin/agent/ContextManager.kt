@@ -3,6 +3,7 @@ package agent
 import agent.domain.context.ContextFile
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
+import java.util.UUID
 
 interface ContextManager {
     /**
@@ -20,6 +21,8 @@ interface ContextManager {
      * @param files A list of CodeFiles to be updated in the context.
      */
     fun updateFiles(files: List<ContextFile>)
+
+    fun removeFile(id: UUID)
 
     /**
      * Clears all CodeFiles from the current context.

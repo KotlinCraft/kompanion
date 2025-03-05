@@ -26,16 +26,14 @@ class FileTools(
     val logger = LoggerFactory.getLogger(this::class.java)
 
     @org.springframework.ai.tool.annotation.Tool(
-        name = "request_file_context",
-        description = """Provide a file in context for the request. 
+        name = "request_file_context", description = """Provide a file in context for the request. 
             | Always use the full path (absolute) file.
                         |If the file does not exist yet, the response will contain an exists: false, else, the file will be provided.
                         |Only request an exact filename. Example: UserManager.kt, main.py or instruction.txt"""
     )
     fun requestFileContext(
         @ToolParam(
-            required = true,
-            description = "absolute file path to fetch"
+            required = true, description = "absolute file path to fetch"
         ) file: String
     ): RequestFileResponse {
 
@@ -54,6 +52,7 @@ class FileTools(
             contextManager.updateFiles(
                 listOf(
                     ContextFile(
+                        id = UUID.randomUUID(),
                         name = path.absolutePathString(),
                         content = content
                     )
@@ -61,9 +60,10 @@ class FileTools(
             )
 
             RequestFileResponse(
-                true, path.absolutePathString(), content,
-                contextManager.findRelatedFiles(path.fileName.toString()).map { it.name }
-            ).also {
+                true,
+                path.absolutePathString(),
+                content,
+                contextManager.findRelatedFiles(path.fileName.toString()).map { it.name }).also {
                 logger.info("File $file found and added to context")
             }
         } else {

@@ -58,7 +58,7 @@ class EtherscanTools(
                 if (it.isNotBlank()) {
                     contextManager.updateFiles(
                         listOf(
-                            ContextFile(request.address + "_" + request.network + "_source.sol", it)
+                            ContextFile(UUID.randomUUID(), request.address + "_" + request.network + "_source.sol", it)
                         )
                     )
                 }
@@ -115,7 +115,11 @@ class EtherscanTools(
                     if (it.isNotBlank()) {
                         contextManager.updateFiles(
                             listOf(
-                                ContextFile(request.address + "_" + request.network + "_abi.json", it)
+                                ContextFile(
+                                    UUID.randomUUID(),
+                                    request.address + "_" + request.network + "_abi.json",
+                                    it
+                                )
                             )
                         )
                     }

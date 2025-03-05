@@ -225,6 +225,15 @@ fun ChatScreen() {
         }
     }
 
+    // Get the current context manager based on active mode
+    val activeContextManager = remember(mode) {
+        when (mode) {
+            "code" -> agentState.codingKompanion.agent.fetchContextManager()
+            "blockchain" -> agentState.blockchainKompanion.agent.fetchContextManager()
+            else -> agentState.blockchainKompanion.agent.fetchContextManager()
+        }
+    }
+
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
         SlashCommand("/clear-context", "Clear the file context") {
@@ -489,7 +498,13 @@ fun ChatScreen() {
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         openFiles.forEach { file ->
-                            FilePill(fileName = file.name)
+                            FilePill(
+                                fileName = file.name,
+                                fileId = file.id,
+                                onRemove = { fileId ->
+                                    activeContextManager.removeFile(fileId)
+                                }
+                            )
                         }
                     }
                 }
