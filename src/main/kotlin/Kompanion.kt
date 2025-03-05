@@ -19,6 +19,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
+import java.util.*
 
 class Kompanion(
     val agent: Agent
@@ -149,6 +150,10 @@ class KompanionBuilder {
                         ?: finalContextManager.storeMessage("Kompanion: ${agentMessage.message}")
                 }
                 return interactionHandler!!.interact(agentMessage)
+            }
+
+            override fun removeChat(id: UUID) {
+                interactionHandler!!.removeChat(id)
             }
         }
 

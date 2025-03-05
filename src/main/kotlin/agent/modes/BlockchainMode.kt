@@ -2,8 +2,6 @@ package agent.modes
 
 import agent.ContextManager
 import agent.ToolManager
-import agent.blockchain.bankless.model.input.Input
-import agent.blockchain.bankless.model.output.Output
 import agent.blockchain.tool.BanklessTools
 import agent.blockchain.tool.EtherscanTools
 import agent.tool.GeneralTools
@@ -12,6 +10,7 @@ import agent.reason.BlockchainReasoner
 import ai.Action
 import config.AppConfig
 import org.slf4j.LoggerFactory
+import ui.chat.NeuralNetworkLoadingIndicator
 
 /**
  * Mode for blockchain-related operations.
@@ -39,6 +38,7 @@ class BlockchainMode(
     val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun perform(request: String): String {
+        customToolUsage { NeuralNetworkLoadingIndicator() }
         return reasoner.askQuestion(request).reply
     }
 
@@ -49,14 +49,6 @@ class BlockchainMode(
             it.toolDefinition.name()
         }
     }
-
-    data class ReadContractRequest(
-        val network: String,
-        val address: String,
-        val method: String,
-        val inputs: List<Input> = emptyList(),
-        val outputs: List<Output> = emptyList()
-    )
 
     fun isBanklessSupported(): Boolean {
         return AppConfig.load().banklessToken.trim().isNotBlank()

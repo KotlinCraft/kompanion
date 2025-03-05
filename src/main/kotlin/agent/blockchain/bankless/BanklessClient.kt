@@ -1,7 +1,7 @@
 package agent.blockchain.bankless
 
-import agent.blockchain.bankless.model.input.Input
-import agent.blockchain.bankless.model.output.Output
+import agent.blockchain.bankless.model.contract.Input
+import agent.blockchain.bankless.model.contract.Output
 import agent.blockchain.bankless.model.proxy.Proxy
 import agent.blockchain.bankless.model.token.FungibleTokenVO
 import arrow.core.Either

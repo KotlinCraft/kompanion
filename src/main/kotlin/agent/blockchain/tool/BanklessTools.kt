@@ -2,13 +2,13 @@ package agent.blockchain.tool
 
 import agent.blockchain.bankless.BanklessClient
 import agent.blockchain.bankless.EvmReadContractStateRequest
+import agent.blockchain.bankless.model.contract.ReadContractRequest
 import agent.blockchain.bankless.model.token.FungibleTokenVO
 import agent.blockchain.tool.domain.GetProxyRequest
 import agent.blockchain.tool.domain.GetProxyResponse
 import agent.blockchain.tool.domain.ReadContractResponse
 import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
-import agent.modes.BlockchainMode.ReadContractRequest
 import agent.modes.Interactor
 import agent.tool.Tool
 import agent.tool.ToolsProvider
@@ -106,7 +106,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                 runBlocking(Dispatchers.IO) { banklessClient.readContractState(request.network, banklessRequest) }
 
             result.fold(
-                { error -> 
+                { error ->
                     // Show FAILED indicator
                     runBlocking(Dispatchers.IO) {
                         customToolUsage(

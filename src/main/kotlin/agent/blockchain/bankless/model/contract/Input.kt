@@ -1,4 +1,4 @@
-package agent.blockchain.bankless.model.input
+package agent.blockchain.bankless.model.contract
 
 data class Input(
     val type: String,

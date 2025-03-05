@@ -111,7 +111,7 @@ fun ChatScreen() {
                 is ToolUsageMessage -> {
                     messages =
                         (messages).filter {
-                            it.id == agentMessage.id
+                            it.id != agentMessage.id
                         } + ToolMessage(agentMessage.id, agentMessage.message, agentMessage.toolIndicator)
                     ""
                 }
