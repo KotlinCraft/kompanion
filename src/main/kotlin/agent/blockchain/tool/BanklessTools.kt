@@ -15,6 +15,7 @@ import agent.tool.ToolAllowedStatus
 import agent.tool.ToolsProvider
 import ai.Action
 import ai.ActionMethod
+import arrow.core.getOrElse
 import com.bankless.claimable.rest.vo.ClaimableVO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -44,38 +45,19 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         ) address: String
     ): List<ClaimableVO> {
         return runBlocking(Dispatchers.IO) {
-            banklessClient.getClaimables(address).fold({ error ->
-                emptyList()
-            }, { claimables ->
-                claimables
-            })
+            banklessClient.getClaimables(address).getOrElse { emptyList() }
         }
     }
-
 
     @org.springframework.ai.tool.annotation.Tool(
         name = "read_contract",
         description = """ Call to the Bankless API to read a contract's state. The request and response must equally match the supported types. This tool requires ABI and source of the contract to succeed. Several types are supported, including:
-     Don't call a function if you didn't get a source or ABI for the contract.
-     supported input types: address, bytes4, bytes32, input
-     supported output types: bool, bytes4, string, uint256
-        """
+     Don't call a function if you didn't get a source or ABI for the contract."""
     )
     fun readContract(
         @ToolParam(
-            required = true, description = """
-         {
-      "contract": "address",
-      "method": "implementation",
-      "network": "base",
-      "inputs": [],
-      "outputs": [
-        {
-          "type": "address"
-        }
-      ]
-    }
-    """
+            required = true,
+            description = """read a contract based on the address, method, network, inputs, and outputs"""
         ) request: ReadContractRequest
     ): ReadContractResponse {
         // Show RUNNING indicator

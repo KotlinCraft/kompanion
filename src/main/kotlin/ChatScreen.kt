@@ -73,8 +73,8 @@ fun ChatScreen() {
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
 
-    // Mode state variable: "code", "ask", or "blockchain"
-    var mode by remember { mutableStateOf("code") }
+    // Mode state variable: "code", or "blockchain"
+    var mode by remember { mutableStateOf("blockchain") }
 
     var showSuggestions by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(AppConfig.load().latestDirectory) }
@@ -178,17 +178,6 @@ fun ChatScreen() {
             .build()
     }
 
-    // Function to create an analyst Kompanion
-    fun createAnalystKompanion(handler: InteractionHandler, contextManager: InMemoryContextManager): Kompanion {
-        logger.info("creating analyst")
-        return Kompanion.builder()
-            .withMode(ASK)
-            .withInteractionHandler(handler)
-            .withContextManager(contextManager)
-            .withAppConfig(configState)
-            .build()
-    }
-
     // Function to create a blockchain Kompanion
     fun createBlockchainKompanion(
         handler: InteractionHandler,
@@ -208,7 +197,6 @@ fun ChatScreen() {
     // Agent state to hold the three Kompanion agents
     class AgentState {
         var codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
-        var analystKompanion = createAnalystKompanion(interactionHandler, inMemoryContextManager)
         var blockchainKompanion =
             createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
     }
@@ -221,28 +209,26 @@ fun ChatScreen() {
     fun recreateAgents() {
         logger.info("Recreating agents with new configuration")
         agentState.codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
-        agentState.analystKompanion = createAnalystKompanion(interactionHandler, inMemoryContextManager)
         agentState.blockchainKompanion =
             createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
     }
 
-    val openFiles by agentState.analystKompanion.agent.fetchContextManager().getContext().collectAsState()
+    val openFiles by agentState.blockchainKompanion.agent.fetchContextManager().getContext().collectAsState()
 
     // Get the current active mode based on the mode state
     val activeMode: Mode = remember(mode) {
 
         when (mode) {
             "code" -> agentState.codingKompanion.agent.mode
-            "ask" -> agentState.analystKompanion.agent.mode
             "blockchain" -> agentState.blockchainKompanion.agent.mode
-            else -> agentState.analystKompanion.agent.mode // Default to ask mode
+            else -> agentState.blockchainKompanion.agent.mode
         }
     }
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
         SlashCommand("/clear-context", "Clear the file context") {
-            agentState.analystKompanion.agent.fetchContextManager().clearContext()
+            agentState.blockchainKompanion.agent.fetchContextManager().clearContext()
             messages = messages + ChatMessage(UUID.randomUUID(), "File context cleared.", false)
         },
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
@@ -275,7 +261,6 @@ fun ChatScreen() {
                 withContext(Dispatchers.IO) {
                     val response = when (mode) {
                         "code" -> agentState.codingKompanion.agent.perform(userMessage)
-                        "ask" -> agentState.analystKompanion.agent.perform(userMessage)
                         "blockchain" -> agentState.blockchainKompanion.agent.perform(userMessage)
                         else -> "Invalid mode"
                     }
@@ -555,7 +540,7 @@ fun ChatScreen() {
 
                 // Create animation for glisten effect
                 val infiniteTransition = rememberInfiniteTransition()
-                
+
                 // Animate the color gradient positions for border
                 val gradientPosition = infiniteTransition.animateFloat(
                     initialValue = 0f,
@@ -575,7 +560,7 @@ fun ChatScreen() {
                         repeatMode = RepeatMode.Reverse
                     )
                 )
-                
+
                 // Text shimmer animation with smooth bi-directional movement
                 val shimmerOffsetX = infiniteTransition.animateFloat(
                     initialValue = -300f,  // Start from left outside of view
@@ -595,19 +580,18 @@ fun ChatScreen() {
                 ) {
                     // Determine if we should show the glisten effect
                     val showGlisten = !isProcessing && inputText.isEmpty()
-                    
+
                     // Get placeholder text based on current state and mode
                     val placeholderText = when {
                         isProcessing && !isWaitingForAnswer -> "Thinking..."
                         isWaitingForAnswer -> "Please answer the question..."
                         else -> when (mode) {
                             "code" -> "Ask me to code something..."
-                            "ask" -> "Ask me about your code..."
                             "blockchain" -> "Ask me about blockchain data..."
                             else -> "Type your message..."
                         }
                     }
-                    
+
                     // Box wrapper to apply the glisten effect
                     Box(
                         modifier = Modifier
@@ -697,7 +681,8 @@ fun ChatScreen() {
                                         true
                                     } else if (event.key == Key.Tab && showSuggestions) {
                                         val firstCommand = slashCommands
-                                            .sortedBy { it.command }.firstOrNull { it.command.startsWith(inputText.trim()) }
+                                            .sortedBy { it.command }
+                                            .firstOrNull { it.command.startsWith(inputText.trim()) }
                                         if (firstCommand != null) {
                                             inputText = firstCommand.command
                                         }

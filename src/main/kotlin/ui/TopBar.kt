@@ -143,60 +143,8 @@ fun TopBar(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            // Code mode button
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .clickable { onModeChange("code") }
-                                    .background(if (mode == "code") Color(0xFF2E6F40) else Color.Transparent)
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.Code,
-                                        contentDescription = "Code mode",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        "Code",
-                                        color = Color.White,
-                                        fontWeight = if (mode == "code") FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            }
 
-                            Spacer(modifier = Modifier.width(8.dp))
 
-                            // Ask mode button
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .clickable { onModeChange("ask") }
-                                    .background(if (mode == "ask") Color(0xFF4A6FD0) else Color.Transparent)
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.QuestionAnswer,
-                                        contentDescription = "Ask mode",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        "Ask",
-                                        color = Color.White,
-                                        fontWeight = if (mode == "ask") FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.width(8.dp))
-                            
                             // Blockchain mode button
                             Box(
                                 modifier = Modifier
@@ -218,6 +166,33 @@ fun TopBar(
                                         "Blockchain",
                                         color = Color.White,
                                         fontWeight = if (mode == "blockchain") FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // Code mode button
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable { onModeChange("code") }
+                                    .background(if (mode == "code") Color(0xFF2E6F40) else Color.Transparent)
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.Code,
+                                        contentDescription = "Code mode",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        "Code",
+                                        color = Color.White,
+                                        fontWeight = if (mode == "code") FontWeight.Bold else FontWeight.Normal
                                     )
                                 }
                             }

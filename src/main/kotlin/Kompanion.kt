@@ -6,7 +6,6 @@ import agent.fileops.KompanionFileHandler
 import agent.fileops.KompanionFileHandler.Companion.kompanionFolderExists
 import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler
-import agent.modes.AnalystMode
 import agent.modes.BlockchainMode
 import agent.modes.CodingMode
 import agent.modes.Mode
@@ -42,7 +41,7 @@ class Kompanion(
 class KompanionBuilder {
 
     enum class AgentMode {
-        ASK, CODE, BLOCKCHAIN
+        CODE, BLOCKCHAIN
     }
 
     private var reasoner: Reasoner? = null
@@ -53,7 +52,7 @@ class KompanionBuilder {
     private var bigLlmProvider: LLMProvider? = null
     private var interactionHandler: InteractionHandler? = null
     private var etherscanClientManager: EtherscanClientManager? = null
-    private var mode: AgentMode = AgentMode.ASK
+    private var mode: AgentMode = AgentMode.BLOCKCHAIN
     private var appConfig: AppConfig? = null
 
 
@@ -114,14 +113,6 @@ class KompanionBuilder {
         }
 
         val selectedMode: Mode = when (mode) {
-            AgentMode.ASK -> AnalystMode(
-                finalReasoner ?: DefaultReasoner(
-                    smallProvider,
-                    finalContextManager,
-                    toolManager
-                ), interactionHandler!!, finalContextManager, toolManager
-            )
-
             AgentMode.CODE -> CodingMode(
                 finalReasoner ?: DefaultReasoner(smallProvider, finalContextManager, toolManager),
                 finalGenerator,
