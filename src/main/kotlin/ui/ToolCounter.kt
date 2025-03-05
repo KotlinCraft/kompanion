@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import agent.modes.Mode
+import agent.tool.ToolAllowedStatus
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -121,13 +122,44 @@ fun ToolCounter(
                                     modifier = Modifier.padding(vertical = 2.dp)
                                 )
                             } else {
-                                toolNames.forEach { toolName ->
-                                    Text(
-                                        text = "• ${toolName.name}",
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        modifier = Modifier.padding(vertical = 2.dp)
-                                    )
+                                toolNames.forEach { tool ->
+                                    // Status color based on the tool's allowed status
+                                    val statusColor = when (tool.allowedStatus) {
+                                        ToolAllowedStatus.ALLOWED -> Color.Green
+                                        ToolAllowedStatus.NOT_ALLOWED -> Color.Red
+                                        null -> Color.Gray
+                                    }
+                                    
+                                    // Status text based on the tool's allowed status
+                                    val statusText = when (tool.allowedStatus) {
+                                        ToolAllowedStatus.ALLOWED -> "Allowed"
+                                        ToolAllowedStatus.NOT_ALLOWED -> "Not Allowed"
+                                        null -> "Undefined"
+                                    }
+                                    
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(vertical = 4.dp)
+                                    ) {
+                                        // Status indicator dot
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .background(statusColor, RoundedCornerShape(4.dp))
+                                        )
+                                        
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        
+                                        // Tool name and status
+                                        Column {
+                                            Text(
+                                                text = tool.name,
+                                                color = Color.White,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

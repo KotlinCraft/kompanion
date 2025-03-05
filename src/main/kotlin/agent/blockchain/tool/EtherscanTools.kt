@@ -10,6 +10,7 @@ import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.Interactor
 import agent.tool.Tool
+import agent.tool.ToolAllowedStatus
 import agent.tool.ToolsProvider
 import ai.Action
 import ai.ActionMethod
@@ -127,8 +128,8 @@ class EtherscanTools(
 
     override fun getTools(): List<Tool> {
         return listOf(
-            Tool.from(get_contract_source),
-            Tool.from(get_contract_abi)
+            Tool.from(get_contract_source, ToolAllowedStatus.ALLOWED),
+            Tool.from(get_contract_abi, ToolAllowedStatus.ALLOWED)
         )
     }
 

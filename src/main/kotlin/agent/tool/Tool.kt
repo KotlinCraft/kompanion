@@ -8,8 +8,8 @@ class Tool(
     var allowedStatus: ToolAllowedStatus? = null
 ) {
     companion object {
-        fun from(action: Action): Tool {
-            return Tool(action.name, action)
+        fun from(action: Action, allowedStatus: ToolAllowedStatus? = null): Tool {
+            return Tool(action.name, action, allowedStatus)
         }
     }
 }

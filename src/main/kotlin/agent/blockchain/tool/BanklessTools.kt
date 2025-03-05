@@ -11,6 +11,7 @@ import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.Interactor
 import agent.tool.Tool
+import agent.tool.ToolAllowedStatus
 import agent.tool.ToolsProvider
 import ai.Action
 import ai.ActionMethod
@@ -266,10 +267,10 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
 
     override fun getTools(): List<Tool> {
         return listOf(
-            Tool.from(get_claimables),
-            Tool.from(read_contract),
-            Tool.from(get_proxy),
-            Tool.from(fetch_token_information)
+            Tool.from(get_claimables, ToolAllowedStatus.ALLOWED),
+            Tool.from(read_contract, ToolAllowedStatus.ALLOWED),
+            Tool.from(get_proxy, ToolAllowedStatus.ALLOWED),
+            Tool.from(fetch_token_information, ToolAllowedStatus.ALLOWED)
         )
     }
 
