@@ -29,9 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun ContractSourceFetchIndicator(address: String, network: String, status: ToolStatus, expanded: Boolean = true) {
+fun ContractSourceFetchIndicator(address: String, network: String, status: ToolStatus) {
     val clipboardManager = LocalClipboardManager.current
-    var isExpanded by remember { mutableStateOf(expanded) }
+    var isExpanded by remember { mutableStateOf(status == ToolStatus.RUNNING) }
 
     Box(
         modifier = Modifier

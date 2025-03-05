@@ -38,7 +38,7 @@ fun TokenInformationIndicator(
     error: String? = null,
 ) {
     val clipboardManager = LocalClipboardManager.current
-    var isExpanded by remember { mutableStateOf(true) }
+    var isExpanded by remember { mutableStateOf(status == ToolStatus.RUNNING) }
     
     Box(
         modifier = Modifier
