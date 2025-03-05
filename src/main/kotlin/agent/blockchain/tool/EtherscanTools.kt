@@ -64,7 +64,7 @@ class EtherscanTools(
                         runBlocking(Dispatchers.IO) {
                             customToolUsage(toolId) {
                                 ContractSourceFetchIndicator(
-                                    request.address, request.network, ToolStatus.COMPLETED, false
+                                    request.address, request.network, ToolStatus.COMPLETED
                                 )
                             }
                         }
@@ -79,7 +79,7 @@ class EtherscanTools(
                 runBlocking(Dispatchers.IO) {
                     customToolUsage(toolId) {
                         ContractSourceFetchIndicator(
-                            request.address, request.network, ToolStatus.FAILED, false
+                            request.address, request.network, ToolStatus.FAILED
                         )
                     }
                 }
