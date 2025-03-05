@@ -10,6 +10,8 @@ import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import agent.tool.FileTools
+import agent.tool.LoadedTool
+import agent.tool.ToolAllowedStatus
 import ai.Action
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -103,12 +105,30 @@ class CodingMode(
         )
     }
 
-    override suspend fun getLoadedActionNames(): List<String> {
-        return toolManager.tools.map { it.action }.filter(Action::showUpInTools).map {
-            it.name
+    override suspend fun getLoadedTools(): List<LoadedTool> {
+        return toolManager.tools.filter {
+            it.action.showUpInTools
+        }.map {
+            LoadedTool(
+                id = it.id,
+                name = it.action.name,
+                allowedStatus = it.allowedStatus
+            )
         } + toolManager.toolCallbacks.map {
-            it.toolDefinition.name()
+            LoadedTool(
+                it.toolDefinition.name(),
+                it.toolDefinition.name(),
+                ToolAllowedStatus.ALLOWED
+            )
         }
+    }
+
+    override suspend fun disableAction(id: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun enableAction(id: String) {
+        TODO("Not yet implemented")
     }
 
     override fun interactionHandler(): InteractionHandler {

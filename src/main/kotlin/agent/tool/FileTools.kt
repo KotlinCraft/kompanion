@@ -71,7 +71,7 @@ class FileTools(
 
     override fun getTools(): List<Tool> {
         return listOf(
-            Tool(readFileAction)
+            Tool.from(readFileAction)
         )
     }
 }

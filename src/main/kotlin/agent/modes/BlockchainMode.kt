@@ -7,7 +7,8 @@ import agent.blockchain.tool.EtherscanTools
 import agent.tool.GeneralTools
 import agent.interaction.InteractionHandler
 import agent.reason.BlockchainReasoner
-import ai.Action
+import agent.tool.LoadedTool
+import agent.tool.ToolAllowedStatus
 import config.AppConfig
 import org.slf4j.LoggerFactory
 
@@ -40,12 +41,30 @@ class BlockchainMode(
         return reasoner.askQuestion(request).reply
     }
 
-    override suspend fun getLoadedActionNames(): List<String> {
-        return toolManager.tools.map { it.action }.filter(Action::showUpInTools).map {
-            it.name
+    override suspend fun getLoadedTools(): List<LoadedTool> {
+        return toolManager.tools.filter {
+            it.action.showUpInTools
+        }.map {
+            LoadedTool(
+                id = it.id,
+                name = it.action.name,
+                allowedStatus = it.allowedStatus
+            )
         } + toolManager.toolCallbacks.map {
-            it.toolDefinition.name()
+            LoadedTool(
+                it.toolDefinition.name(),
+                it.toolDefinition.name(),
+                ToolAllowedStatus.ALLOWED
+            )
         }
+    }
+
+    override suspend fun disableAction(id: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun enableAction(id: String) {
+        TODO("Not yet implemented")
     }
 
     fun isBanklessSupported(): Boolean {

@@ -3,7 +3,6 @@ package ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
@@ -36,17 +35,17 @@ fun ToolCounter(
     // Get tool names from the active mode
     val toolNames = remember(activeMode) {
         if (activeMode != null) {
-            runBlocking { activeMode.getLoadedActionNames() }
+            runBlocking { activeMode.getLoadedTools() }
         } else {
             emptyList()
         }
     }
-    
+
     // Tool count is the size of the tool names list
     val toolCount = toolNames.size
-    
+
     var showTooltip by remember { mutableStateOf(false) }
-    
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(horizontal = 8.dp)
@@ -77,7 +76,7 @@ fun ToolCounter(
                     fontWeight = FontWeight.Medium
                 )
             }
-            
+
             // Tooltip popup with tools list
             if (showTooltip) {
                 Popup(
@@ -113,7 +112,7 @@ fun ToolCounter(
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
-                            
+
                             if (toolNames.isEmpty()) {
                                 Text(
                                     text = "No tools available for the current mode",
@@ -124,7 +123,7 @@ fun ToolCounter(
                             } else {
                                 toolNames.forEach { toolName ->
                                     Text(
-                                        text = "• $toolName",
+                                        text = "• ${toolName.name}",
                                         color = Color.White,
                                         fontSize = 12.sp,
                                         modifier = Modifier.padding(vertical = 2.dp)

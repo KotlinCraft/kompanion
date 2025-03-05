@@ -1,11 +1,11 @@
 package agent.modes
 
 import agent.ContextManager
-import agent.InMemoryContextManager
 import agent.ToolManager
 import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import agent.tool.FileTools
+import agent.tool.LoadedTool
 
 class AnalystMode(
     private val reasoner: Reasoner,
@@ -23,7 +23,15 @@ class AnalystMode(
         return reasoner.askQuestion(request, understanding).reply
     }
 
-    override suspend fun getLoadedActionNames(): List<String> {
+    override suspend fun getLoadedTools(): List<LoadedTool> {
         return emptyList()
+    }
+
+    override suspend fun disableAction(id: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun enableAction(id: String) {
+        TODO("Not yet implemented")
     }
 }

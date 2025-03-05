@@ -127,8 +127,8 @@ class EtherscanTools(
 
     override fun getTools(): List<Tool> {
         return listOf(
-            Tool(get_contract_source),
-            Tool(get_contract_abi)
+            Tool.from(get_contract_source),
+            Tool.from(get_contract_abi)
         )
     }
 

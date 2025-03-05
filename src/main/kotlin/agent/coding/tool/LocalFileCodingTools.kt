@@ -25,7 +25,7 @@ class LocalFileCodingTools(
     private val contextManager: ContextManager
 ) : ToolsProvider, Interactor {
 
-    val modifyFileAction = Tool(
+    val modifyFileAction = Tool.from(
         Action(
             "modify_file_contents",
             """Modify a file, replacing its entire content with new content. 
@@ -37,7 +37,7 @@ class LocalFileCodingTools(
         )
     )
 
-    val createFileAction = Tool(
+    val createFileAction = Tool.from(
         Action(
             "create_file",
             """
