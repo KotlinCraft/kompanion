@@ -1,12 +1,12 @@
 package ai
 
+import agent.model.LLMException
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import config.AppConfig
-import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import org.springframework.ai.anthropic.AnthropicChatModel
 import org.springframework.ai.anthropic.AnthropicChatOptions
@@ -92,8 +92,7 @@ class AnthropicLLMProvider : LLMProvider() {
         }.fold({
             if (retry) {
                 if (it.message?.contains("429") == true) {
-                    logger.info("delaying 20 seconds because we got a 429 error")
-                    delay(10000)
+                    throw LLMException("Rate limit exceeded. Make sure you're on a higher tier than Tier 1 when using anthropic.")
                 }
                 logger.info("retrying, because we got the following error: $it")
                 var prompt = client.prompt(
