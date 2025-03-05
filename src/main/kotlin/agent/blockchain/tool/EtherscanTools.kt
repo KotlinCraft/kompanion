@@ -45,26 +45,29 @@ class EtherscanTools(
     )
 
     fun getContractSource(request: GetContractSourceRequest): GetContractSourceResponse {
+
+
         val source = runBlocking(Dispatchers.IO) {
+            val toolId = customToolUsage {
+                ContractSourceFetchIndicator(
+                    request.address, request.network, ToolStatus.RUNNING
+                )
+            }
+
             etherscanClientManager.getClient(request.network)?.getContractSource(request.address)?.map {
                 it.result.joinToString {
                     it.sourceCode
                 }
-            }?.also {
-                it.onRight {
-                    runBlocking(Dispatchers.IO) {
-                        customToolUsage(
-                            toolIndicator = {
-                                ContractSourceFetchIndicator(
-                                    request.address, request.network, ToolStatus.COMPLETED
-                                )
-                            }
-                        )
-                    }
-                }
             }?.map {
                 cleanSolidityCode(it).also {
                     if (it.isNotBlank()) {
+                        runBlocking(Dispatchers.IO) {
+                            customToolUsage(toolId) {
+                                ContractSourceFetchIndicator(
+                                    request.address, request.network, ToolStatus.COMPLETED, false
+                                )
+                            }
+                        }
                         contextManager.updateFiles(
                             listOf(
                                 ContextFile(request.address + "_" + request.network + "_source.sol", it)
@@ -73,6 +76,13 @@ class EtherscanTools(
                     }
                 }
             }?.getOrElse {
+                runBlocking(Dispatchers.IO) {
+                    customToolUsage(toolId) {
+                        ContractSourceFetchIndicator(
+                            request.address, request.network, ToolStatus.FAILED, false
+                        )
+                    }
+                }
                 "not a contract or no source found"
             }
         }
