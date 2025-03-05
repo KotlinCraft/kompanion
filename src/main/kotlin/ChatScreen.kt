@@ -413,7 +413,8 @@ fun ChatScreen() {
             darkBackground = darkBackground,
             mode = mode,
             onSettingsClick = { showSettings = true },
-            onModeChange = { newMode -> mode = newMode }
+            onModeChange = { newMode -> mode = newMode },
+            isProcessing = isProcessing // Pass the isProcessing state to the TopBar
         )
 
         if (showSettings) {
