@@ -109,11 +109,11 @@ ${plan.expectedOutcome}
 
     override suspend fun getLoadedTools(): List<LoadedTool> {
         return toolManager.tools.filter {
-            it.action.showUpInTools
+            it.showUpInTools
         }.map {
             LoadedTool(
                 id = it.id,
-                name = it.action.name,
+                name = it.toolCallback.toolDefinition.name(),
                 allowedStatus = it.allowedStatus
             )
         } + toolManager.toolCallbacks.map {

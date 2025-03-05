@@ -25,6 +25,7 @@ class LocalFileCodingTools(
     private val contextManager: ContextManager
 ) : ToolsProvider, Interactor {
 
+    /*
     val modifyFileAction = Tool.from(
         Action(
             "modify_file_contents",
@@ -113,8 +114,10 @@ class LocalFileCodingTools(
         )
     }
 
+     */
+
     override fun getTools(): List<Tool> {
-        return listOf(modifyFileAction, createFileAction)
+        return emptyList()
     }
 
     override fun interactionHandler(): InteractionHandler {

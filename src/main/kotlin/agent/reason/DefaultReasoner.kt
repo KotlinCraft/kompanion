@@ -42,7 +42,7 @@ class DefaultReasoner(
             LLMProvider.prompt(
                 system = prompt,
                 userMessage = request,
-                actions = toolManager.tools.map { it.action },
+                actions = toolManager.tools.map { it.toolCallback },
                 temperature = 0.7,
                 parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {},
                 toolcallbacks = toolManager.toolCallbacks
@@ -91,7 +91,7 @@ class DefaultReasoner(
         return LLMProvider.prompt(
             system = prompt,
             userMessage = null,
-            actions = toolManager.tools.map { it.action },
+            actions = toolManager.tools.map { it.toolCallback },
             toolcallbacks = toolManager.toolCallbacks,
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})
@@ -128,7 +128,7 @@ class DefaultReasoner(
         return LLMProvider.prompt(
             system = prompt,
             userMessage = question,
-            actions = toolManager.tools.map { it.action },
+            actions = toolManager.tools.map { it.toolCallback },
             temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
             toolcallbacks = toolManager.toolCallbacks

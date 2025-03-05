@@ -72,7 +72,7 @@ class CodeGenerator(
         return LLMProvider.prompt(
             system = prompt,
             userMessage = null,
-            actions = toolManager.tools.map { it.action },
+            actions = toolManager.tools.map { it.toolCallback },
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {},
             toolcallbacks = toolManager.toolCallbacks

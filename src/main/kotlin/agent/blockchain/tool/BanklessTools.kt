@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.ai.tool.ToolCallbacks
+import org.springframework.ai.tool.annotation.ToolParam
 import org.springframework.util.ReflectionUtils
 import ui.chat.ContractReadIndicator
 import ui.chat.GetProxyIndicator
@@ -31,16 +32,17 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
 
     val banklessClient = BanklessClient()
 
-
-    val get_claimables = Action(
-        "get_claimables",
-        "Fetch the claimables for an address. " + "Claimables are opportunities a user has to claim tokens. It's something they can do onchain." + "This action will return a list of claimables for the given address. " + "Claimed tokens are included, but only for historical reasons.",
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "get_claimables", String::class.java), this
-        )
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "get_claimables",
+        description =
+            """Fetch the claimables for an address. Claimables are opportunities a user has to claim tokens. It's something they can do onchain.This action will return a list of claimables for the given address. Claimed tokens are included, but only for historical reasons.""",
     )
-
-    fun get_claimables(address: String): List<ClaimableVO> {
+    fun get_claimables(
+        @ToolParam(
+            required = true,
+            description = "address to fetch claimables for"
+        ) address: String
+    ): List<ClaimableVO> {
         return runBlocking(Dispatchers.IO) {
             banklessClient.getClaimables(address).fold({ error ->
                 emptyList()
@@ -242,37 +244,35 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
 
         return runBlocking(Dispatchers.IO) {
             banklessClient.fetchTokenInformation(chain, address).fold({ error ->
-                    // Show FAILED indicator
-                    customToolUsage(
-                        toolIndicator = {
-                            TokenInformationIndicator(
-                                address, chain, ToolStatus.FAILED, null, "Error fetching token information: $error"
-                            )
-                        })
-                    null
-                }, { token ->
-                    // Show COMPLETED indicator
-                    customToolUsage(
-                        toolIndicator = {
-                            TokenInformationIndicator(
-                                address,
-                                chain,
-                                ToolStatus.COMPLETED,
-                                token,
-                            )
-                        })
-                    token
-                })
+                // Show FAILED indicator
+                customToolUsage(
+                    toolIndicator = {
+                        TokenInformationIndicator(
+                            address, chain, ToolStatus.FAILED, null, "Error fetching token information: $error"
+                        )
+                    })
+                null
+            }, { token ->
+                // Show COMPLETED indicator
+                customToolUsage(
+                    toolIndicator = {
+                        TokenInformationIndicator(
+                            address,
+                            chain,
+                            ToolStatus.COMPLETED,
+                            token,
+                        )
+                    })
+                token
+            })
         }
     }
 
     override fun getTools(): List<Tool> {
-        return listOf(
-            Tool.from(get_claimables, ToolAllowedStatus.ALLOWED),
-            Tool.from(read_contract, ToolAllowedStatus.ALLOWED),
-            Tool.from(get_proxy, ToolAllowedStatus.ALLOWED),
-            Tool.from(fetch_token_information, ToolAllowedStatus.ALLOWED)
-        )
+        val callbacks = ToolCallbacks.from(this)
+        return callbacks.map {
+            Tool.from(it, ToolAllowedStatus.ALLOWED)
+        }
     }
 
     override fun interactionHandler(): InteractionHandler {

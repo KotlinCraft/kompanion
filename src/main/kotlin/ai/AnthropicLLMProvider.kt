@@ -60,7 +60,7 @@ class AnthropicLLMProvider : LLMProvider() {
     override suspend fun <T> prompt(
         system: String,
         userMessage: String?,
-        actions: List<Action>,
+        actions: List<ToolCallback>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
         retry: Boolean,
@@ -84,13 +84,7 @@ class AnthropicLLMProvider : LLMProvider() {
             Prompt(
                 messages
             )
-        )
-
-        actions.forEach { action ->
-            prompt = action.enrichPrompt(prompt)
-        }
-
-        prompt.tools(toolcallbacks)
+        ).tools(actions + toolcallbacks)
 
         return Either.catch {
             val content = prompt.call().content() ?: ""
@@ -111,11 +105,7 @@ class AnthropicLLMProvider : LLMProvider() {
                         ),
                         outputMessage
                     )
-                )
-
-                actions.forEach { action ->
-                    prompt = action.enrichPrompt(prompt)
-                }
+                ).tools(actions + toolcallbacks)
 
                 val content = prompt.call().content() ?: ""
                 converter.convert(content)

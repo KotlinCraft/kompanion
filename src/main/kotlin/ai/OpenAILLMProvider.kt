@@ -61,7 +61,7 @@ class OpenAILLMProvider : LLMProvider() {
     override suspend fun <T> prompt(
         system: String,
         userMessage: String?,
-        actions: List<Action>,
+        actions: List<ToolCallback>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
         retry: Boolean,
@@ -85,13 +85,7 @@ class OpenAILLMProvider : LLMProvider() {
             Prompt(
                 messages,
             )
-        )
-
-        actions.forEach { action ->
-            prompt = action.enrichPrompt(prompt)
-        }
-
-        prompt = prompt.tools(toolcallbacks)
+        ).tools(actions + toolcallbacks)
 
         val content = withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
 
@@ -107,11 +101,7 @@ class OpenAILLMProvider : LLMProvider() {
                         UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
                         outputMessage
                     )
-                )
-
-                actions.forEach { action ->
-                    prompt = action.enrichPrompt(prompt)
-                }
+                ).tools(actions + toolcallbacks)
 
                 val content = prompt.call().content() ?: ""
                 converter.convert(content)

@@ -1,6 +1,7 @@
 package agent.tool
 
 import agent.ToolManager
+import org.springframework.ai.tool.ToolCallbacks
 
 interface ToolsProvider {
 
@@ -8,6 +9,7 @@ interface ToolsProvider {
         getTools().forEach(toolManager::registerTool)
     }
 
-    fun getTools(): List<Tool>
-
+    fun getTools(): List<Tool> {
+        return ToolCallbacks.from(this).map { Tool.from(it) }
+    }
 }

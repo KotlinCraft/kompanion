@@ -47,7 +47,7 @@ class BlockchainReasoner(
         return LLMProvider.prompt(
             system = prompt,
             userMessage = question,
-            actions = toolManager.tools.map { it.action },
+            actions = toolManager.tools.map { it.toolCallback },
             temperature = 0.7,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
             toolcallbacks = mutableListOf()

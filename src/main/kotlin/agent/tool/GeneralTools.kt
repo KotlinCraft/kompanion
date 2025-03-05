@@ -31,8 +31,6 @@ class GeneralTools(private val interactionHandler: InteractionHandler) : ToolsPr
     }
 
     override fun getTools(): List<Tool> {
-        return listOf(
-            Tool.from(ask_question, ToolAllowedStatus.ALLOWED)
-        )
+        return emptyList()
     }
 }

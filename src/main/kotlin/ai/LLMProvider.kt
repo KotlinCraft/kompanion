@@ -55,7 +55,7 @@ abstract class LLMProvider {
     abstract suspend fun <T> prompt(
         system: String,
         userMessage: String?,
-        actions: List<Action>,
+        actions: List<ToolCallback>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
         retry: Boolean = true,

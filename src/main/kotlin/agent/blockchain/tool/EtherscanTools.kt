@@ -20,7 +20,10 @@ import blockchain.etherscan.ui.ContractAbiFetchIndicator
 import blockchain.etherscan.ui.ContractSourceFetchIndicator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.springframework.ai.tool.ToolCallbacks
+import org.springframework.ai.tool.annotation.ToolParam
 import org.springframework.util.ReflectionUtils
+import java.util.*
 
 class EtherscanTools(
     private val interactionHandler: InteractionHandler,
@@ -29,71 +32,69 @@ class EtherscanTools(
 
     val etherscanClientManager = EtherscanClientManager()
 
-    val get_contract_source = Action(
-        "get_contract_source", """Get the contract source for an address.""".trimMargin(), ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "getContractSource", GetContractSourceRequest::class.java),
-            this
-        )
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "get_contract_source",
+        description = "Get the contract source for an address."
     )
+    fun getContractSource(
+        @ToolParam(
+            required = true,
+            description = "address and network to fetch contract source for"
+        ) request: GetContractSourceRequest
+    ): GetContractSourceResponse = runBlocking(Dispatchers.IO) {
 
-    val get_contract_abi = Action(
-        "get_contract_abi",
-        """Get the contract ABI for an address. Use this if the source was not available""".trimMargin(),
-        ActionMethod(
-            ReflectionUtils.findMethod(this::class.java, "getContractAbi", GetContractAbiRequest::class.java),
-            this
-        )
-    )
+        val toolId = customToolUsage {
+            ContractSourceFetchIndicator(
+                request.address, request.network, ToolStatus.RUNNING
+            )
+        }
 
-    fun getContractSource(request: GetContractSourceRequest): GetContractSourceResponse {
-
-
-        val source = runBlocking(Dispatchers.IO) {
-            val toolId = customToolUsage {
-                ContractSourceFetchIndicator(
-                    request.address, request.network, ToolStatus.RUNNING
-                )
+        val source = etherscanClientManager.getClient(request.network)?.getContractSource(request.address)?.map {
+            it.result.joinToString {
+                it.sourceCode
             }
-
-            etherscanClientManager.getClient(request.network)?.getContractSource(request.address)?.map {
-                it.result.joinToString {
-                    it.sourceCode
-                }
-            }?.map {
-                cleanSolidityCode(it).also {
-                    if (it.isNotBlank()) {
-                        runBlocking(Dispatchers.IO) {
-                            customToolUsage(toolId) {
-                                ContractSourceFetchIndicator(
-                                    request.address, request.network, ToolStatus.COMPLETED
-                                )
-                            }
-                        }
-                        contextManager.updateFiles(
-                            listOf(
-                                ContextFile(request.address + "_" + request.network + "_source.sol", it)
-                            )
+        }?.map {
+            cleanSolidityCode(it).also {
+                if (it.isNotBlank()) {
+                    contextManager.updateFiles(
+                        listOf(
+                            ContextFile(request.address + "_" + request.network + "_source.sol", it)
                         )
-                    }
+                    )
                 }
-            }?.getOrElse {
-                runBlocking(Dispatchers.IO) {
-                    customToolUsage(toolId) {
-                        ContractSourceFetchIndicator(
-                            request.address, request.network, ToolStatus.FAILED
-                        )
-                    }
-                }
-                "not a contract or no source found"
             }
+        }?.getOrElse {
+            failedContractSource(toolId, request)
+            "not a contract or no source found"
         }
 
         if ((source ?: "").split(" ").size > 10000) {
-            return GetContractSourceResponse("source code too long, use get_contract_abi instead")
+            failedContractSource(toolId, request)
+            GetContractSourceResponse("source code too long, use get_contract_abi instead")
         }
-        return GetContractSourceResponse(source ?: "not a contract or no source found")
+
+        customToolUsage(toolId) {
+            ContractSourceFetchIndicator(
+                request.address, request.network, ToolStatus.COMPLETED
+            )
+        }
+        GetContractSourceResponse(source ?: "not a contract or no source found")
     }
 
+    private fun failedContractSource(toolId: UUID, request: GetContractSourceRequest) {
+        runBlocking(Dispatchers.IO) {
+            customToolUsage(toolId) {
+                ContractSourceFetchIndicator(
+                    request.address, request.network, ToolStatus.FAILED
+                )
+            }
+        }
+    }
+
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "get_contract_abi",
+        description = "Get the contract ABI for an address. Use this if the source was not available"
+    )
     fun getContractAbi(request: GetContractAbiRequest): GetContractAbiResponse {
         val abi = runBlocking(Dispatchers.IO) {
             etherscanClientManager.getClient(request.network)?.getContractAbi(request.address)?.map {
@@ -124,13 +125,6 @@ class EtherscanTools(
             }
         }
         return GetContractAbiResponse(abi ?: "not a contract or no ABI found")
-    }
-
-    override fun getTools(): List<Tool> {
-        return listOf(
-            Tool.from(get_contract_source, ToolAllowedStatus.ALLOWED),
-            Tool.from(get_contract_abi, ToolAllowedStatus.ALLOWED)
-        )
     }
 
     override fun interactionHandler(): InteractionHandler {
