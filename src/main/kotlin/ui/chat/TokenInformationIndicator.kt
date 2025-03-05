@@ -112,6 +112,36 @@ fun TokenInformationIndicator(
                 
                 Spacer(modifier = Modifier.weight(1f))
                 
+                // Status indicator moved to be immediately left of the collapse indicator
+                when (status) {
+                    ToolStatus.RUNNING -> {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .width(24.dp)
+                                .height(2.dp),
+                            color = Color(0xFFF59E0B)
+                        )
+                    }
+                    ToolStatus.COMPLETED -> {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    ToolStatus.FAILED -> {
+                        Icon(
+                            imageVector = Icons.Filled.Error,
+                            contentDescription = null,
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
                 // Collapse/Expand toggle button
                 Icon(
                     imageVector = if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
@@ -209,34 +239,6 @@ fun TokenInformationIndicator(
                         }
                         
                         Spacer(modifier = Modifier.weight(1f))
-                        
-                        // Status indicator moved to bottom right of first row
-                        when (status) {
-                            ToolStatus.RUNNING -> {
-                                LinearProgressIndicator(
-                                    modifier = Modifier
-                                        .width(24.dp)
-                                        .height(2.dp),
-                                    color = Color(0xFFF59E0B)
-                                )
-                            }
-                            ToolStatus.COMPLETED -> {
-                                Icon(
-                                    imageVector = Icons.Filled.CheckCircle,
-                                    contentDescription = null,
-                                    tint = Color(0xFF10B981),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            ToolStatus.FAILED -> {
-                                Icon(
-                                    imageVector = Icons.Filled.Error,
-                                    contentDescription = null,
-                                    tint = Color(0xFFEF4444),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
                     }
                     
                     // Show token info or error if available
