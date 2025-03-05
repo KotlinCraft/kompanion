@@ -12,7 +12,7 @@ enum class Provider(val small: String, val big: String) {
     ),
     OPENAI(
         "gpt-4o",
-        "gpt-4o"
+        "o1"
     )
 }
 

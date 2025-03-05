@@ -65,7 +65,8 @@ class CodeGenerator(
             Function calling: Always execute the required function calls before you respond.
             If function calls succeeded or its data is useful, add the data to the response.
             
-            Afterwards, provide a detailed explanation of the changes you made and how they improve the codebase.
+            Afterwards, provide a detailed explanation of the changes you made and how they improve the codebase. 
+            Only provide the necessary information to the user and only provide the information when you actually changed code with your tools and they succeeded.
         """.trimIndent()
 
         return LLMProvider.prompt(
