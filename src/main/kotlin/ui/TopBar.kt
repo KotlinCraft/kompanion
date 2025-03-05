@@ -32,12 +32,22 @@ fun TopBar(
     // Set up animation parameters for glisten effect
     val infiniteTransition = rememberInfiniteTransition()
     
-    // Animate gradient movement
-    val gradientPosition = infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
+    // Animate shimmer effect horizontally across the component
+    val shimmerPosition = infiniteTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 2f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+    
+    // Animate glow intensity
+    val glowIntensity = infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         )
     )
@@ -47,7 +57,7 @@ fun TopBar(
         initialValue = 2f,
         targetValue = 8f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = FastOutSlowInEasing),
+            animation = tween(1000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         )
     )
@@ -95,39 +105,39 @@ fun TopBar(
                     )
             ) {
                 Card(
-                    backgroundColor = if (isProcessing) {
-                        // Apply gradient background when processing
-                        Color.Transparent 
-                    } else {
-                        Color(0xFF2D2D3F)
-                    },
+                    backgroundColor = Color(0xFF2D2D3F),  // Always use solid background to avoid transparency issues
                     shape = RoundedCornerShape(24.dp),
-                    elevation = if (isProcessing) 0.dp else 2.dp,
+                    elevation = if (isProcessing) 4.dp else 2.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Gradient background container when processing
+                    // This Box handles the glow effect background
                     Box(
-                        modifier = if (isProcessing) {
-                            Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(
-                                            Color(0xFF2D2D3F),
-                                            Color(0xFF2D2D3F).copy(alpha = 0.8f),
-                                            glistenColor1.copy(alpha = 0.2f),
-                                            glistenColor2.copy(alpha = 0.3f),
-                                            glistenColor1.copy(alpha = 0.2f),
-                                            Color(0xFF2D2D3F).copy(alpha = 0.8f),
-                                            Color(0xFF2D2D3F)
-                                        ),
-                                        start = Offset(gradientPosition.value * 500 - 250, 0f),
-                                        end = Offset(gradientPosition.value * 500 + 250, 50f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (isProcessing) {
+                                    // Only apply the glow effect background when processing
+                                    Modifier.background(
+                                        Brush.horizontalGradient(
+                                            colors = listOf(
+                                                Color(0xFF2D2D3F),
+                                                Color(0xFF2D2D3F),
+                                                glistenColor1.copy(alpha = glowIntensity.value * 0.5f),
+                                                glistenColor2.copy(alpha = glowIntensity.value * 0.6f),
+                                                glistenColor1.copy(alpha = glowIntensity.value * 0.5f),
+                                                Color(0xFF2D2D3F),
+                                                Color(0xFF2D2D3F)
+                                            ),
+                                            // Position the gradient based on the animation value
+                                            startX = shimmerPosition.value * 500 - 250,
+                                            endX = shimmerPosition.value * 500 + 250
+                                        )
                                     )
-                                )
-                        } else {
-                            Modifier.fillMaxWidth()
-                        }
+                                } else {
+                                    Modifier
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Row(
                             modifier = Modifier.padding(4.dp),

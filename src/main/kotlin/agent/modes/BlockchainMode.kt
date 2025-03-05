@@ -10,7 +10,6 @@ import agent.reason.BlockchainReasoner
 import ai.Action
 import config.AppConfig
 import org.slf4j.LoggerFactory
-import ui.chat.NeuralNetworkLoadingIndicator
 
 /**
  * Mode for blockchain-related operations.
@@ -38,7 +37,6 @@ class BlockchainMode(
     val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun perform(request: String): String {
-        customToolUsage { NeuralNetworkLoadingIndicator() }
         return reasoner.askQuestion(request).reply
     }
 
