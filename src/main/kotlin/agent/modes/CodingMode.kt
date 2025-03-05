@@ -97,11 +97,14 @@ class CodingMode(
 
     private suspend fun sendGenerationPlanToUser(plan: GenerationPlan) {
         sendMessage(
-            """Here's the detailed plan: 
-            Steps: ${plan.steps.joinToString { "👉${it.action})\n" }}
-            
-            Expected Outcome: ${plan.expectedOutcome}
             """
+            Here's the detailed plan: 
+            Steps: 
+            ${plan.steps.joinToString("\n") { "👉 ${it.action})" }}
+            
+            Expected Outcome: 
+            ${plan.expectedOutcome}
+            """.trimMargin().trimIndent()
         )
     }
 
