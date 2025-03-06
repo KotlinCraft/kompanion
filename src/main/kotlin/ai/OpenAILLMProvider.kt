@@ -45,7 +45,7 @@ class OpenAILLMProvider : LLMProvider() {
             OpenAiChatOptions.builder()
                 .model(model).apply {
                     if (model == "o3-mini" || model == "o1") {
-                        this.reasoningEffort("high")
+                        this.reasoningEffort("medium")
                     }
                 }
                 .temperature(1.0).build()
