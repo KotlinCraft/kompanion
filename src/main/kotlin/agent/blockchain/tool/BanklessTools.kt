@@ -3,6 +3,9 @@ package agent.blockchain.tool
 import agent.blockchain.bankless.BanklessClient
 import agent.blockchain.bankless.EvmReadContractStateRequest
 import agent.blockchain.bankless.model.contract.ReadContractRequest
+import agent.blockchain.bankless.model.event.EthLog
+import agent.blockchain.bankless.model.event.GetEventLogsRequest
+import agent.blockchain.bankless.model.event.LogResult
 import agent.blockchain.bankless.model.token.FungibleTokenVO
 import agent.blockchain.tool.domain.GetProxyRequest
 import agent.blockchain.tool.domain.GetProxyResponse
@@ -35,13 +38,11 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
 
     @org.springframework.ai.tool.annotation.Tool(
         name = "get_claimables",
-        description =
-            """Fetch the claimables for an address. Claimables are opportunities a user has to claim tokens. It's something they can do onchain.This action will return a list of claimables for the given address. Claimed tokens are included, but only for historical reasons.""",
+        description = """Fetch the claimables for an address. Claimables are opportunities a user has to claim tokens. It's something they can do onchain.This action will return a list of claimables for the given address. Claimed tokens are included, but only for historical reasons.""",
     )
     fun get_claimables(
         @ToolParam(
-            required = true,
-            description = "address to fetch claimables for"
+            required = true, description = "address to fetch claimables for"
         ) address: String
     ): List<ClaimableVO> {
         return runBlocking(Dispatchers.IO) {
@@ -159,8 +160,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     )
     fun getProxy(
         @ToolParam(
-            required = true,
-            description = "which network and address do we fetch the proxy for"
+            required = true, description = "which network and address do we fetch the proxy for"
         ) request: GetProxyRequest
     ): GetProxyResponse {
         val toolId = runBlocking(Dispatchers.IO) {
@@ -220,6 +220,39 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
             GetProxyResponse(null, "Error retrieving proxy: ${e.message}")
         }
     }
+
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "get_event_logs", description = "Fetch event logs for a given address and topic. Requires the source to navigate and understand the logs."
+    )
+    fun getEventLogs(
+        @ToolParam(
+            required = true, description = "network to fetch logs for"
+        ) network: String, @ToolParam(
+            required = true, description = "addresses to fetch logs for"
+        ) addresses: List<String>, @ToolParam(
+            required = true, description = "topic to fetch logs for"
+        ) topic: String, @ToolParam(
+            required = false, description = "optional topics to fetch logs for"
+        ) optionalTopics: List<String?>? = emptyList()
+    ): GetEventLogsResponse {
+        return runBlocking(Dispatchers.IO) {
+            banklessClient.getEvents(
+                network, GetEventLogsRequest(
+                    addresses, topic, optionalTopics
+                )
+            ).fold({
+                GetEventLogsResponse(error = it)
+            }, {
+                GetEventLogsResponse(
+                    ethLog = it
+                )
+            })
+        }
+    }
+
+    data class GetEventLogsResponse(
+        val error: String? = null, val ethLog: EthLog? = null
+    )
 
     @org.springframework.ai.tool.annotation.Tool(
         name = "fetch_token_information",

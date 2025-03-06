@@ -2,6 +2,8 @@ package agent.blockchain.bankless
 
 import agent.blockchain.bankless.model.contract.Input
 import agent.blockchain.bankless.model.contract.Output
+import agent.blockchain.bankless.model.event.EthLog
+import agent.blockchain.bankless.model.event.GetEventLogsRequest
 import agent.blockchain.bankless.model.proxy.Proxy
 import agent.blockchain.bankless.model.token.FungibleTokenVO
 import arrow.core.Either
@@ -118,6 +120,32 @@ class BanklessClient {
     }
 
     /**
+     * Fetches event logs for a given network and filter criteria.
+     *
+     * @param network The blockchain network (e.g., "ethereum", "base")
+     * @param request The request containing addresses and topics to filter event logs
+     * @return Either an error message or the event logs response
+     */
+    suspend fun getEvents(network: String, request: GetEventLogsRequest): Either<String, EthLog> {
+        val endpoint = "$baseUrl/$network/events/logs"
+
+        return try {
+            val response = makePostRequest(endpoint, request)
+
+            // Parse the JSON response
+            Either.catch {
+                objectMapper.readValue<EthLog>(response)
+            }.mapLeft { error ->
+                logger.error("Error parsing event logs response: ${error.message}", error)
+                "Failed to parse event logs data: ${error.message}"
+            }
+        } catch (e: Exception) {
+            logger.error("Error fetching event logs: ${e.message}", e)
+            "Failed to fetch event logs: ${e.message}".left()
+        }
+    }
+
+    /**
      * Makes an HTTP GET request to the specified endpoint.
      *
      * @param endpoint The complete URL to request
@@ -177,7 +205,7 @@ class BanklessClient {
     private suspend fun makePostRequest(endpoint: String, requestBody: Any): String {
         return withContext(Dispatchers.IO) {
             val jsonBody = objectMapper.writeValueAsString(requestBody)
-
+            println(jsonBody)
             val request = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .header("Content-Type", "application/json")
