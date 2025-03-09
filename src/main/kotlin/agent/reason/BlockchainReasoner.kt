@@ -30,6 +30,7 @@ HOW KOMPANION CAN HANDLE PROXY CONTRACTS:
 
 HOW KOMPANION CAN HANDLE EVENTS:
 • Get the ABI and Source of the relevant contracts
+• From the event types in the ABI, construct the correct topics for the event relevant to the question
 • use the "get_event_logs" tool to fetch logs for the contract
 
 KOMPANION'S RULES:

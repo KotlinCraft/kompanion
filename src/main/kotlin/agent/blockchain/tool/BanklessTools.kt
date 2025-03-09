@@ -2,30 +2,22 @@ package agent.blockchain.tool
 
 import agent.blockchain.bankless.BanklessClient
 import agent.blockchain.bankless.EvmReadContractStateRequest
+import agent.blockchain.bankless.model.contract.Output
 import agent.blockchain.bankless.model.contract.ReadContractRequest
 import agent.blockchain.bankless.model.event.EthLog
 import agent.blockchain.bankless.model.event.GetEventLogsRequest
-import agent.blockchain.bankless.model.event.LogResult
 import agent.blockchain.bankless.model.token.FungibleTokenVO
-import agent.blockchain.tool.domain.GetProxyRequest
-import agent.blockchain.tool.domain.GetProxyResponse
-import agent.blockchain.tool.domain.ReadContractResponse
+import agent.blockchain.tool.domain.*
 import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.Interactor
-import agent.tool.Tool
-import agent.tool.ToolAllowedStatus
 import agent.tool.ToolsProvider
-import ai.Action
-import ai.ActionMethod
 import arrow.core.getOrElse
 import com.bankless.claimable.rest.vo.ClaimableVO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
-import org.springframework.ai.tool.ToolCallbacks
 import org.springframework.ai.tool.annotation.ToolParam
-import org.springframework.util.ReflectionUtils
 import ui.chat.ContractReadIndicator
 import ui.chat.GetProxyIndicator
 import ui.chat.TokenInformationIndicator
@@ -222,7 +214,8 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     }
 
     @org.springframework.ai.tool.annotation.Tool(
-        name = "get_event_logs", description = "Fetch event logs for a given address and topic. Requires the source to navigate and understand the logs."
+        name = "get_event_logs",
+        description = """Fetch event logs for a given address and topic. Requires the source to navigate and understand the logs."""
     )
     fun getEventLogs(
         @ToolParam(
@@ -230,7 +223,7 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
         ) network: String, @ToolParam(
             required = true, description = "addresses to fetch logs for"
         ) addresses: List<String>, @ToolParam(
-            required = true, description = "topic to fetch logs for"
+            required = true, description = "topic to fetch logs for. Use tool to create topic from abi event"
         ) topic: String, @ToolParam(
             required = false, description = "optional topics to fetch logs for"
         ) optionalTopics: List<String?>? = emptyList()
@@ -247,6 +240,45 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
                     ethLog = it
                 )
             })
+        }
+    }
+
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "build_event_topic",
+        description = """Build an event topic signature based on event name and arguments.  
+            | Keep the order of the types and indexed properties in the arguments list.
+            |Used to calculate the topic signature for blockchain event lookp."""
+    )
+    fun buildEventTopic(
+        @ToolParam(
+            required = true, description = "blockchain network (e.g., ethereum, base)"
+        ) chain: String,
+        @ToolParam(
+            required = true, description = "name of the event"
+        ) eventName: String,
+        @ToolParam(
+            required = true, description = """object contains a list of output parameters with type and indexed properties. 
+                |Example: {"type": "uint256", "indexed": false}
+            """
+        ) methodArguments: MethodArguments
+    ): BuildEventTopicResponse {
+        return try {
+            val result = runBlocking(Dispatchers.IO) {
+                banklessClient.buildEventTopic(chain, eventName, methodArguments.outputs.map {
+                    Output(it.type, it.indexed ?: false)
+                })
+            }
+
+            result.fold({ error ->
+                logger.info(error)
+                BuildEventTopicResponse(null, error)
+            }, { topic ->
+                logger.info("found topic: $topic for event $eventName and arguments ${methodArguments.outputs.map { "type: ${it.type}, indexed: ${it.indexed}" }}")
+                BuildEventTopicResponse(topic, null)
+            })
+        } catch (e: Exception) {
+            logger.info("Error building event topic: ${e.message}")
+            BuildEventTopicResponse(null, "Error building event topic: ${e.message}")
         }
     }
 

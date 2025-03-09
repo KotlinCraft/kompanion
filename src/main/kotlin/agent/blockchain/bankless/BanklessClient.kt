@@ -2,6 +2,7 @@ package agent.blockchain.bankless
 
 import agent.blockchain.bankless.model.contract.Input
 import agent.blockchain.bankless.model.contract.Output
+import agent.blockchain.bankless.model.event.BuildEventTopicRequest
 import agent.blockchain.bankless.model.event.EthLog
 import agent.blockchain.bankless.model.event.GetEventLogsRequest
 import agent.blockchain.bankless.model.proxy.Proxy
@@ -130,7 +131,8 @@ class BanklessClient {
         val endpoint = "$baseUrl/$network/events/logs"
 
         return try {
-            val response = makePostRequest(endpoint, request)
+            val response =
+                makePostRequest(endpoint, request.copy(optionalTopics = request.optionalTopics ?: emptyList()))
 
             // Parse the JSON response
             Either.catch {
@@ -142,6 +144,37 @@ class BanklessClient {
         } catch (e: Exception) {
             logger.error("Error fetching event logs: ${e.message}", e)
             "Failed to fetch event logs: ${e.message}".left()
+        }
+    }
+
+    /**
+     * Builds an event topic signature based on event name and arguments.
+     *
+     * @param chain The blockchain network (e.g., "ethereum", "base")
+     * @param request The request containing event name and arguments
+     * @return Either an error message or the event topic signature as a string
+     */
+    suspend fun buildEventTopic(
+        chain: String,
+        name: String,
+        arguments: List<Output>
+    ): Either<String, String> {
+        val endpoint = "$baseUrl/$chain/contract/build-event-topic"
+
+        return try {
+            val response = makePostRequest(endpoint, BuildEventTopicRequest(name, arguments))
+
+            // The response is a raw string (the topic)
+            Either.catch {
+                logger.info("topic response was $response")
+                response
+            }.mapLeft { error ->
+                logger.error("Error parsing event topic response: ${error.message}", error)
+                "Failed to parse event topic data: ${error.message}"
+            }
+        } catch (e: Exception) {
+            logger.error("Error building event topic: ${e.message}", e)
+            "Failed to build event topic: ${e.message}".left()
         }
     }
 
@@ -233,6 +266,7 @@ data class EvmReadContractStateRequest(
     val inputs: List<Input>,
     val outputs: List<Output>
 )
+
 
 /**
  * Converter for Ethereum call results.
