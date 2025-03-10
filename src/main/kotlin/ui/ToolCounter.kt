@@ -128,43 +128,33 @@ fun ToolCounter(
                                     modifier = Modifier.padding(vertical = 2.dp)
                                 )
                             } else {
-                                toolNames.forEach { tool ->
-                                    // Status color based on the tool's allowed status
-                                    val statusColor = when (tool.tool.allowedStatus) {
-                                        ToolAllowedStatus.ALLOWED -> Color.Green
-                                        ToolAllowedStatus.NOT_ALLOWED -> Color.Red
-                                        null -> Color.Gray
-                                    }
-
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .padding(vertical = 4.dp)
-                                            .clickable {
-                                                // Call the toggleStatus function when a tool is clicked
-                                                tool.toggleStatus()
-                                                // Increment the update counter to force recomposition
-                                                updateCounter++
-                                                // Keep the tooltip open for better UX
-                                            }
+                                // Calculate how to divide tools into two columns
+                                val firstColumnSize = (toolNames.size + 1) / 2 // Ceiling division
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    // First column
+                                    Column(
+                                        modifier = Modifier.weight(1f)
                                     ) {
-                                        // Status indicator dot
-                                        Box(
-                                            modifier = Modifier
-                                                .size(8.dp)
-                                                .background(statusColor, RoundedCornerShape(4.dp))
-                                        )
-
-                                        Spacer(modifier = Modifier.width(6.dp))
-
-                                        // Tool name and status
-                                        Column {
-                                            Text(
-                                                text = tool.name,
-                                                color = Color.White,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Medium
-                                            )
+                                        toolNames.take(firstColumnSize).forEach { tool ->
+                                            ToolItem(tool, accentColor) {
+                                                tool.toggleStatus()
+                                                updateCounter++
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Second column
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        toolNames.drop(firstColumnSize).forEach { tool ->
+                                            ToolItem(tool, accentColor) {
+                                                tool.toggleStatus()
+                                                updateCounter++
+                                            }
                                         }
                                     }
                                 }
@@ -174,5 +164,47 @@ fun ToolCounter(
                 }
             }
         }
+    }
+}
+
+/**
+ * A composable function that displays a single tool item
+ */
+@Composable
+private fun ToolItem(
+    tool: LoadedTool,
+    accentColor: Color,
+    onClick: () -> Unit
+) {
+    // Status color based on the tool's allowed status
+    val statusColor = when (tool.tool.allowedStatus) {
+        ToolAllowedStatus.ALLOWED -> Color.Green
+        ToolAllowedStatus.NOT_ALLOWED -> Color.Red
+        null -> Color.Gray
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .padding(vertical = 4.dp, horizontal = 2.dp)
+            .clickable(onClick = onClick)
+    ) {
+        // Status indicator dot
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(statusColor, RoundedCornerShape(4.dp))
+        )
+
+        Spacer(modifier = Modifier.width(6.dp))
+
+        // Tool name
+        Text(
+            text = tool.name,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1
+        )
     }
 }
