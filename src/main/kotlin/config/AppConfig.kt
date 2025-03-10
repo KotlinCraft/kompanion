@@ -45,12 +45,13 @@ data class AppConfig(
             }
         }
 
-        fun save(config: AppConfig) {
+        fun save(config: AppConfig): AppConfig {
             try {
                 mapper.writeValue(configPath.toFile(), config)
             } catch (e: Exception) {
                 println("Failed to save config: ${e.message}")
             }
+            return config
         }
     }
 }

@@ -39,11 +39,12 @@ fun SettingsDialog(
     initialConfig: AppConfig,
     onClose: (AppConfig) -> Unit
 ) {
-    var openAiKey by remember { mutableStateOf(initialConfig.openAiKey) }
-    var anthropicKey by remember { mutableStateOf(initialConfig.anthropicKey) }
-    var etherscanBaseApiKey by remember { mutableStateOf(initialConfig.etherscan.baseApiKey) }
-    var etherscanEthereumApiKey by remember { mutableStateOf(initialConfig.etherscan.ethereumApiKey) }
-    var currentProvider by remember { mutableStateOf(initialConfig.currentProvider) }
+    val appConfig by remember { mutableStateOf(initialConfig) }
+    var openAiKey by remember { mutableStateOf(appConfig.openAiKey) }
+    var anthropicKey by remember { mutableStateOf(appConfig.anthropicKey) }
+    var etherscanBaseApiKey by remember { mutableStateOf(appConfig.etherscan.baseApiKey) }
+    var etherscanEthereumApiKey by remember { mutableStateOf(appConfig.etherscan.ethereumApiKey) }
+    var currentProvider by remember { mutableStateOf(appConfig.currentProvider) }
 
     var showValidationErrors by remember { mutableStateOf(false) }
     var validationErrors by remember { mutableStateOf(listOf<ValidationError>()) }
@@ -67,11 +68,11 @@ fun SettingsDialog(
     fun saveSettings() {
         val errors = validateSettings()
         if (errors.isEmpty()) {
-            onClose(
-                initialConfig.copy(
+            AppConfig.save(
+                appConfig.copy(
                     openAiKey = openAiKey,
                     anthropicKey = anthropicKey,
-                    etherscan = initialConfig.etherscan.copy(
+                    etherscan = appConfig.etherscan.copy(
                         baseApiKey = etherscanBaseApiKey,
                         ethereumApiKey = etherscanEthereumApiKey
                     ),
@@ -91,7 +92,7 @@ fun SettingsDialog(
         )
     }
 
-    Dialog(onDismissRequest = { onClose(initialConfig) }) {
+    Dialog(onDismissRequest = { onClose(appConfig) }) {
         Surface(
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colors.surface,

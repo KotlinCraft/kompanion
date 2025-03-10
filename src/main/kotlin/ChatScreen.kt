@@ -72,7 +72,7 @@ fun ChatScreen() {
 
     // Mode state variable: "code", or "blockchain"
     var mode by remember { mutableStateOf("blockchain") }
-    
+
     // Current AI provider state
     var currentProvider by remember { mutableStateOf(AppConfig.load().currentProvider) }
 
@@ -406,6 +406,11 @@ fun ChatScreen() {
             .fillMaxSize()
             .background(darkBackground)
     ) {
+
+        val loadSettings = {
+            AppConfig.load()
+        }
+
         TopBar(
             darkBackground = darkBackground,
             mode = mode,
@@ -417,7 +422,6 @@ fun ChatScreen() {
         if (showSettings) {
             SettingsDialog(initialConfig = configState, onClose = { newConfig ->
                 configState = newConfig
-                AppConfig.save(newConfig)
                 // Recreate agents with the new configuration
                 recreateAgents()
                 InfoManager.checkConfigurationIssues()
@@ -452,7 +456,7 @@ fun ChatScreen() {
             isProcessing = false
             isWaitingForAnswer = false
         }
-        
+
         // Recreate agents when the provider changes
         LaunchedEffect(key1 = currentProvider) {
             recreateAgents()
@@ -480,7 +484,7 @@ fun ChatScreen() {
                         workingDirectory = workingDirectory,
                         onWorkingDirectoryChange = { newDir ->
                             workingDirectory = newDir
-                            AppConfig.save(
+                            configState = AppConfig.save(
                                 AppConfig.load().copy(latestDirectory = newDir)
                             )
                         },
@@ -605,11 +609,12 @@ fun ChatScreen() {
                     ProviderSelector(
                         currentProvider = currentProvider,
                         onProviderSelected = { provider ->
+                            configState = AppConfig.save(AppConfig.load().copy(currentProvider = provider))
                             currentProvider = provider
                         },
                         modifier = Modifier.padding(end = 12.dp)
                     )
-                    
+
                     // Determine if we should show the glisten effect
                     val showGlisten = !isProcessing && inputText.isEmpty()
 
