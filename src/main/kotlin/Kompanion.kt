@@ -1,9 +1,6 @@
 import agent.*
 import agent.coding.CodeGenerator
 import agent.domain.CodeApplier
-import agent.fileops.KompanionFile
-import agent.fileops.KompanionFileHandler
-import agent.fileops.KompanionFileHandler.Companion.kompanionFolderExists
 import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler
 import agent.modes.BlockchainMode
@@ -18,6 +15,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
+import config.Provider
 import java.util.*
 
 class Kompanion(
@@ -54,6 +52,7 @@ class KompanionBuilder {
     private var etherscanClientManager: EtherscanClientManager? = null
     private var mode: AgentMode = AgentMode.BLOCKCHAIN
     private var appConfig: AppConfig? = null
+    private var provider: Provider? = null
 
 
     fun withMode(mode: AgentMode) = apply {
@@ -92,16 +91,25 @@ class KompanionBuilder {
         appConfig = config
     }
 
+    fun withProvider(provider: Provider) = apply {
+        this.provider = provider
+    }
+
     fun build(): Kompanion {
         val toolManager = ToolManager()
         val finalAppConfig = appConfig ?: AppConfig.load()
         val finalContextManager = contextManager ?: InMemoryContextManager()
+
+        // Determine which provider to use
+        val selectedProvider = this.provider ?: Provider.OPENAI
+
+
         val smallProvider = Either.catch {
-            getFinalLLMProvider(finalAppConfig.currentProvider.small)
+            getFinalLLMProvider(selectedProvider.small)
         }.getOrElse { getFinalLLMProvider("gpt-4o-mini") }
 
         val bigProvider = Either.catch {
-            getFinalLLMProvider(finalAppConfig.currentProvider.big)
+            getFinalLLMProvider(selectedProvider.big)
         }.getOrElse { getFinalLLMProvider("gpt-4o") }
 
         val finalReasoner = reasoner

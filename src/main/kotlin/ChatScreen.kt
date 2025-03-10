@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
@@ -26,17 +25,15 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import blockchain.etherscan.EtherscanClientManager
+import com.yourdomain.kompanion.ui.components.ProviderSelector
 import config.AppConfig
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -75,6 +72,9 @@ fun ChatScreen() {
 
     // Mode state variable: "code", or "blockchain"
     var mode by remember { mutableStateOf("blockchain") }
+    
+    // Current AI provider state
+    var currentProvider by remember { mutableStateOf(AppConfig.load().currentProvider) }
 
     var showSuggestions by remember { mutableStateOf(false) }
     var workingDirectory by remember { mutableStateOf(AppConfig.load().latestDirectory) }
@@ -175,6 +175,7 @@ fun ChatScreen() {
             .withInteractionHandler(handler)
             .withContextManager(contextManager)
             .withAppConfig(configState)
+            .withProvider(currentProvider) // Use current provider
             .build()
     }
 
@@ -191,6 +192,7 @@ fun ChatScreen() {
             .withContextManager(contextManager)
             .withEtherscanClientManager(etherscanManager)
             .withAppConfig(configState)
+            .withProvider(currentProvider) // Use current provider
             .build()
     }
 
@@ -450,6 +452,11 @@ fun ChatScreen() {
             isProcessing = false
             isWaitingForAnswer = false
         }
+        
+        // Recreate agents when the provider changes
+        LaunchedEffect(key1 = currentProvider) {
+            recreateAgents()
+        }
 
         // Bottom area: Working Directory + Open Files
         Surface(
@@ -594,6 +601,15 @@ fun ChatScreen() {
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // AI Provider selector
+                    ProviderSelector(
+                        currentProvider = currentProvider,
+                        onProviderSelected = { provider ->
+                            currentProvider = provider
+                        },
+                        modifier = Modifier.padding(end = 12.dp)
+                    )
+                    
                     // Determine if we should show the glisten effect
                     val showGlisten = !isProcessing && inputText.isEmpty()
 

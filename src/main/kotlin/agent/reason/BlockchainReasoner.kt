@@ -56,7 +56,7 @@ CONTEXT:
 FINAL INSTRUCTION:
 • Provide the best possible, concise answer to the user’s request. If it's not an immediate question but an instruction, follow it directly.
 • Use your tools to gather any necessary clarifications or data.  
-• Offer a clear, direct response or summary of what you did at the end.
+• Offer a clear, direct response and add a summary of what you did (how you navigated the contracts) at the end.
         """.trimIndent()
 
         // Attempt to leverage the same LLM approach used in DefaultReasoner, if available
@@ -66,7 +66,6 @@ FINAL INSTRUCTION:
             actions = toolManager.tools.map { it.toolCallback },
             temperature = 0.7,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
-            toolcallbacks = mutableListOf()
         )
     }
 

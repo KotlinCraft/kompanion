@@ -114,23 +114,9 @@ ${plan.expectedOutcome}
             LoadedTool(
                 id = it.id,
                 name = it.toolCallback.toolDefinition.name(),
-                allowedStatus = it.allowedStatus
-            )
-        } + toolManager.toolCallbacks.map {
-            LoadedTool(
-                it.toolDefinition.name(),
-                it.toolDefinition.name(),
-                ToolAllowedStatus.ALLOWED
+                tool = it
             )
         }
-    }
-
-    override suspend fun disableAction(id: String) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun enableAction(id: String) {
-        TODO("Not yet implemented")
     }
 
     override fun interactionHandler(): InteractionHandler {

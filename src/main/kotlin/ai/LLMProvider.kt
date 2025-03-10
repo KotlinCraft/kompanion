@@ -59,7 +59,6 @@ abstract class LLMProvider {
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
         retry: Boolean = true,
-        toolcallbacks: MutableList<ToolCallback>
     ): T
 
     abstract fun getSupportedModels(): List<String>

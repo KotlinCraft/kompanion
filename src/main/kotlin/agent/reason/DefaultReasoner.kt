@@ -45,7 +45,6 @@ class DefaultReasoner(
                 actions = toolManager.tools.map { it.toolCallback },
                 temperature = 0.7,
                 parameterizedTypeReference = object : ParameterizedTypeReference<Understanding>() {},
-                toolcallbacks = toolManager.toolCallbacks
             )
         }.getOrElse {
             it.printStackTrace()
@@ -92,7 +91,6 @@ class DefaultReasoner(
             system = prompt,
             userMessage = null,
             actions = toolManager.tools.map { it.toolCallback },
-            toolcallbacks = toolManager.toolCallbacks,
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})
     }
@@ -131,7 +129,6 @@ class DefaultReasoner(
             actions = toolManager.tools.map { it.toolCallback },
             temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
-            toolcallbacks = toolManager.toolCallbacks
         )
     }
 

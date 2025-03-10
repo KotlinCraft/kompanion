@@ -21,7 +21,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import agent.modes.Mode
+import agent.tool.LoadedTool
 import agent.tool.ToolAllowedStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -31,16 +34,19 @@ import kotlinx.coroutines.runBlocking
 fun ToolCounter(
     accentColor: Color,
     backgroundColor: Color,
-    activeMode: Mode? = null
+    activeMode: Mode? = null,
 ) {
-    // Get tool names from the active mode
-    val toolNames = remember(activeMode) {
-        if (activeMode != null) {
-            runBlocking { activeMode.getLoadedTools() }
-        } else {
-            emptyList()
-        }
+    // State to hold the current tool names and statuses
+
+    // Force recomposition counter
+    var updateCounter by remember(activeMode) { mutableStateOf(0) }
+
+    val toolNames by remember(activeMode, updateCounter) {
+        mutableStateOf(runBlocking {
+            activeMode?.getLoadedTools() ?: emptyList()
+        })
     }
+
 
     // Tool count is the size of the tool names list
     val toolCount = toolNames.size
@@ -124,22 +130,23 @@ fun ToolCounter(
                             } else {
                                 toolNames.forEach { tool ->
                                     // Status color based on the tool's allowed status
-                                    val statusColor = when (tool.allowedStatus) {
+                                    val statusColor = when (tool.tool.allowedStatus) {
                                         ToolAllowedStatus.ALLOWED -> Color.Green
                                         ToolAllowedStatus.NOT_ALLOWED -> Color.Red
                                         null -> Color.Gray
                                     }
-                                    
-                                    // Status text based on the tool's allowed status
-                                    val statusText = when (tool.allowedStatus) {
-                                        ToolAllowedStatus.ALLOWED -> "Allowed"
-                                        ToolAllowedStatus.NOT_ALLOWED -> "Not Allowed"
-                                        null -> "Undefined"
-                                    }
-                                    
+
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(vertical = 4.dp)
+                                        modifier = Modifier
+                                            .padding(vertical = 4.dp)
+                                            .clickable {
+                                                // Call the toggleStatus function when a tool is clicked
+                                                tool.toggleStatus()
+                                                // Increment the update counter to force recomposition
+                                                updateCounter++
+                                                // Keep the tooltip open for better UX
+                                            }
                                     ) {
                                         // Status indicator dot
                                         Box(
@@ -147,9 +154,9 @@ fun ToolCounter(
                                                 .size(8.dp)
                                                 .background(statusColor, RoundedCornerShape(4.dp))
                                         )
-                                        
+
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        
+
                                         // Tool name and status
                                         Column {
                                             Text(

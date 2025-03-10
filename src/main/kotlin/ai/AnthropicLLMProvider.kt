@@ -64,7 +64,6 @@ class AnthropicLLMProvider : LLMProvider() {
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
         retry: Boolean,
-        toolcallbacks: MutableList<ToolCallback>
     ): T {
         this.temperature = temperature
 
@@ -84,7 +83,7 @@ class AnthropicLLMProvider : LLMProvider() {
             Prompt(
                 messages
             )
-        ).tools(actions + toolcallbacks)
+        ).tools(actions)
 
         return Either.catch {
             val content = prompt.call().content() ?: ""
@@ -104,7 +103,7 @@ class AnthropicLLMProvider : LLMProvider() {
                         ),
                         outputMessage
                     )
-                ).tools(actions + toolcallbacks)
+                ).tools(actions)
 
                 val content = prompt.call().content() ?: ""
                 converter.convert(content)

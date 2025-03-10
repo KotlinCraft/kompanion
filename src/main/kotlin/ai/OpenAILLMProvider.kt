@@ -63,8 +63,7 @@ class OpenAILLMProvider : LLMProvider() {
         actions: List<ToolCallback>,
         temperature: Double,
         parameterizedTypeReference: ParameterizedTypeReference<T>,
-        retry: Boolean,
-        toolcallbacks: MutableList<ToolCallback>
+        retry: Boolean
     ): T {
 
         val converter = BeanOutputConverter(parameterizedTypeReference, objectmapper)
@@ -85,7 +84,7 @@ class OpenAILLMProvider : LLMProvider() {
             Prompt(
                 messages,
             )
-        ).tools(actions + toolcallbacks)
+        ).tools(actions)
 
         val content = withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
 
@@ -101,7 +100,7 @@ class OpenAILLMProvider : LLMProvider() {
                         UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
                         outputMessage
                     )
-                ).tools(actions + toolcallbacks)
+                ).tools(actions)
 
                 val content = prompt.call().content() ?: ""
                 converter.convert(content)
@@ -116,6 +115,7 @@ class OpenAILLMProvider : LLMProvider() {
     override fun getSupportedModels(): List<String> {
         return listOf(
             "gpt-4o",
+            "gpt-4o-mini",
             "o3-mini",
             "o1",
             "gpt-4.5-preview"
