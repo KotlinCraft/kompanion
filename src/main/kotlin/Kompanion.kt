@@ -64,14 +64,6 @@ class KompanionBuilder {
         contextManager = customContextManager
     }
 
-    fun withSmallLLMProvider(provider: LLMProvider) = apply {
-        smallLlmProvider = provider
-    }
-
-    fun withBigLLMProvider(provider: LLMProvider) = apply {
-        bigLlmProvider = provider
-    }
-
     fun withCustomReasoner(customReasoner: Reasoner) = apply {
         reasoner = customReasoner
     }
@@ -127,6 +119,7 @@ class KompanionBuilder {
                 finalGenerator,
                 interactionHandler!!,
                 toolManager,
+                McpManager(),
                 finalContextManager,
             )
 

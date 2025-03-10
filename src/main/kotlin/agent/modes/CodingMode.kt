@@ -11,16 +11,24 @@ import agent.interaction.InteractionHandler
 import agent.reason.Reasoner
 import agent.tool.FileTools
 import agent.tool.LoadedTool
+import agent.tool.Tool
 import agent.tool.ToolAllowedStatus
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.nel
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mcp.McpManager
 import org.slf4j.LoggerFactory
+import org.springframework.ai.mcp.SyncMcpToolCallbackProvider
+import java.util.*
 
 class CodingMode(
     private val reasoner: Reasoner,
     private val codeGenerator: CodeGenerator,
     private val interactionHandler: InteractionHandler,
     private val toolManager: ToolManager,
+    private val mcpManager: McpManager,
     contextManager: ContextManager,
 ) : Mode, Interactor {
 
@@ -57,20 +65,23 @@ I'm ready to help you with your coding tasks! 🚀
     init {
 
         try {
-            /*  var params: ServerParameters = ServerParameters.builder("npx")
-                  .args("-y", "@jetbrains/mcp-proxy")
-                  .build()
-              var transport = StdioClientTransport(params)
+            val toolbacks = mcpManager.getMcpServers().flatMap {
+                Either.catch {
+                    SyncMcpToolCallbackProvider.syncToolCallbacks(it.nel())
+                }.mapLeft {
+                    logger.error("unable to initialize mcp server: {}", it.message)
+                }.getOrElse { emptyList() }
+            }.distinctBy { it.toolDefinition.name() }
 
-              var client: McpSyncClient = McpClient.sync(transport)
-                  .requestTimeout(Duration.ofSeconds(5))
-                  .capabilities(
-                      McpSchema.ClientCapabilities.builder()
-                          .build()
-                  ).build()
-
-              val callbacks = McpToolUtils.getToolCallbacksFromSyncClients(client)
-              toolManager.registerCallbacks(callbacks) */
+            toolbacks.forEach {
+                toolManager.registerTool(
+                    Tool(
+                        id = UUID.randomUUID().toString(),
+                        toolCallback = it,
+                        showUpInTools = true
+                    )
+                )
+            }
             throw UnsupportedOperationException("MCP server is not supported yet")
         } catch (ex: Exception) {
             logger.error("Failed to connect to MCP server, no intellij support")
