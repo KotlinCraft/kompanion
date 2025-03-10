@@ -4,13 +4,21 @@ import agent.ContextManager
 import agent.ToolManager
 import agent.blockchain.tool.BanklessTools
 import agent.blockchain.tool.EtherscanTools
-import agent.tool.GeneralTools
 import agent.interaction.InteractionHandler
 import agent.reason.BlockchainReasoner
+import agent.tool.GeneralTools
 import agent.tool.LoadedTool
-import agent.tool.ToolAllowedStatus
+import agent.tool.Tool
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.nel
 import config.AppConfig
+import mcp.McpManager
 import org.slf4j.LoggerFactory
+import org.springframework.ai.mcp.SyncMcpToolCallbackProvider
+import java.util.*
+
+val logger = LoggerFactory.getLogger(BlockchainMode::class.java)
 
 /**
  * Mode for blockchain-related operations.
@@ -19,6 +27,7 @@ import org.slf4j.LoggerFactory
 class BlockchainMode(
     private val reasoner: BlockchainReasoner,
     private val toolManager: ToolManager,
+    private val mcpManager: McpManager,
     contextManager: ContextManager,
     private val interactionHandler: InteractionHandler,
 ) : Mode, Interactor {
@@ -33,9 +42,26 @@ class BlockchainMode(
         if (isBanklessSupported()) {
             BanklessTools(interactionHandler).register(toolManager)
         }
+
+        val toolbacks = mcpManager.getMcpServers().flatMap {
+            Either.catch {
+                SyncMcpToolCallbackProvider.syncToolCallbacks(it.nel())
+            }.mapLeft {
+                logger.error("unable to initialize mcp server: {}", it.message)
+            }.getOrElse { emptyList() }
+        }.distinctBy { it.toolDefinition.name() }
+
+        toolbacks.forEach {
+            toolManager.registerTool(
+                Tool(
+                    id = UUID.randomUUID().toString(),
+                    toolCallback = it,
+                    showUpInTools = true
+                )
+            )
+        }
     }
 
-    val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun perform(request: String): String {
         return reasoner.askQuestion(request).reply

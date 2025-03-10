@@ -23,6 +23,7 @@ import androidx.compose.ui.window.PopupProperties
 import agent.modes.Mode
 import agent.tool.LoadedTool
 import agent.tool.ToolAllowedStatus
+import androidx.compose.material.Colors
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.runBlocking
@@ -178,7 +179,7 @@ private fun ToolItem(
 ) {
     // Status color based on the tool's allowed status
     val statusColor = when (tool.tool.allowedStatus) {
-        ToolAllowedStatus.ALLOWED -> Color.Green
+        ToolAllowedStatus.ALLOWED -> Color(0xFF43B581)
         ToolAllowedStatus.NOT_ALLOWED -> Color.Red
         null -> Color.Gray
     }

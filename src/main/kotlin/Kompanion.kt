@@ -16,6 +16,7 @@ import arrow.core.getOrElse
 import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
 import config.Provider
+import mcp.McpManager
 import java.util.*
 
 class Kompanion(
@@ -136,6 +137,7 @@ class KompanionBuilder {
                     finalContextManager
                 ),
                 toolManager,
+                McpManager(),
                 finalContextManager,
                 interactionHandler!!
             )
