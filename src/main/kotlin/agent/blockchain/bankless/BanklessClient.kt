@@ -204,31 +204,6 @@ class BanklessClient {
     }
 
     /**
-     * Fetches all claimables for a given wallet address.
-     *
-     * @param address The wallet address to fetch claimables for
-     * @return Either an error message or a list of ClaimableVO objects
-     */
-    suspend fun getClaimables(address: String): Either<String, List<ClaimableVO>> {
-        val endpoint = "$claimablesBaseUrl/$address"
-
-        return try {
-            val response = makeGetRequest(endpoint)
-
-            // Parse the JSON response
-            Either.catch {
-                objectMapper.readValue<List<ClaimableVO>>(response)
-            }.mapLeft { error ->
-                logger.error("Error parsing claimables response: ${error.message}", error)
-                "Failed to parse claimables data: ${error.message}"
-            }
-        } catch (e: Exception) {
-            logger.error("Error fetching claimables: ${e.message}", e)
-            "Failed to fetch claimables: ${e.message}".left()
-        }
-    }
-
-    /**
      * Makes an HTTP POST request to the specified endpoint.
      *
      * @param endpoint The complete URL to request

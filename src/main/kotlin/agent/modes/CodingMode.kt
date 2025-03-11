@@ -82,11 +82,10 @@ I'm ready to help you with your coding tasks! 🚀
                     )
                 )
             }
-            throw UnsupportedOperationException("MCP server is not supported yet")
-        } catch (ex: Exception) {
-            logger.error("Failed to connect to MCP server, no intellij support")
             LocalFileCodingTools(interactionHandler, contextManager).register(toolManager)
             FileTools(contextManager).register(toolManager)
+        } catch (ex: Exception) {
+            logger.error("Failed to connect to MCP server, no intellij support")
         }
     }
 

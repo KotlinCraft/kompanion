@@ -42,6 +42,24 @@ class BlockchainMode(
         if (isBanklessSupported()) {
             BanklessTools(interactionHandler).register(toolManager)
         }
+
+        val toolbacks = mcpManager.getMcpServers().flatMap {
+            Either.catch {
+                SyncMcpToolCallbackProvider.syncToolCallbacks(it.nel())
+            }.mapLeft {
+                logger.error("unable to initialize mcp server: {}", it.message)
+            }.getOrElse { emptyList() }
+        }.distinctBy { it.toolDefinition.name() }
+
+        toolbacks.forEach {
+            toolManager.registerTool(
+                Tool(
+                    id = UUID.randomUUID().toString(),
+                    toolCallback = it,
+                    showUpInTools = true
+                )
+            )
+        }
     }
 
 

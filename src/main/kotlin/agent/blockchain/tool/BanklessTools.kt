@@ -29,20 +29,6 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
     val banklessClient = BanklessClient()
 
     @org.springframework.ai.tool.annotation.Tool(
-        name = "get_claimables",
-        description = """Fetch the claimables for an address. Claimables are opportunities a user has to claim tokens. It's something they can do onchain.This action will return a list of claimables for the given address. Claimed tokens are included, but only for historical reasons.""",
-    )
-    fun get_claimables(
-        @ToolParam(
-            required = true, description = "address to fetch claimables for"
-        ) address: String
-    ): List<ClaimableVO> {
-        return runBlocking(Dispatchers.IO) {
-            banklessClient.getClaimables(address).getOrElse { emptyList() }
-        }
-    }
-
-    @org.springframework.ai.tool.annotation.Tool(
         name = "read_contract",
         description = """ Call to the Bankless API to read a contract's state and interact with it. Use the Abi types and function to interact (read only) with a contract."""
     )

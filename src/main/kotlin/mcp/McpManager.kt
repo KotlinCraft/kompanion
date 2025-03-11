@@ -23,6 +23,9 @@ class McpManager {
                     McpSchema.ClientCapabilities.builder()
                         .build()
                 ).build()
+        }.map {
+            it.initialize()
+            it
         }
     }
 }
