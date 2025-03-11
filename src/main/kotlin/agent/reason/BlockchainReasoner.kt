@@ -51,7 +51,6 @@ HOW KOMPANION CAN USE TOOLS:
 
 CONTEXT:
 • Your context already includes: ${contextManager.currentContextPrompt(false)}  
-• Your message history includes: ${getMessageHistoryPrompt()}  
 
 FINAL INSTRUCTION:
 • Provide the best possible, concise answer to the user’s request. If it's not an immediate question but an instruction, follow it directly.
@@ -67,36 +66,5 @@ FINAL INSTRUCTION:
             temperature = 0.7,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
         )
-    }
-
-    /**
-     * Get formatted message history for prompts
-     */
-    private fun getMessageHistoryPrompt(): String {
-        // If we have an InMemoryContextManager, use its formatted history
-        val formattedHistory = (contextManager as? InMemoryContextManager)?.getFormattedMessageHistory()
-            ?: buildMessageHistoryFromContext()
-
-        return if (formattedHistory.isNotEmpty()) {
-            """
-            Previous conversation history (consider this as context for this continuation):
-            $formattedHistory
-            """
-        } else {
-            "" // Empty string if no history
-        }
-    }
-
-
-    /**
-     * Build message history from context if not using InMemoryContextManager
-     */
-    private fun buildMessageHistoryFromContext(): String {
-        val messages = contextManager.fetchMessages()
-        return if (messages.isNotEmpty()) {
-            messages.joinToString("\n")
-        } else {
-            ""
-        }
     }
 }

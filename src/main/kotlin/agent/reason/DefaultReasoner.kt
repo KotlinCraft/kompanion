@@ -21,8 +21,6 @@ class DefaultReasoner(
         val prompt = """
             ${contextManager.currentContextPrompt(true)}
             
-            ${getMessageHistoryPrompt()}
-            
             Analyze the following code-related request and extract key information.
             The content for various files (but not all) might be provided for context. 
             If you think a file already exists but its contents was not provided yet, request it using "request_file_context". 
@@ -104,9 +102,6 @@ class DefaultReasoner(
         val prompt = """
             ${contextManager.currentContextPrompt(true)}
             
-            ${getMessageHistoryPrompt()}
-            
-            $question
             
             Objective: ${understanding.objective}
             Required Features: 
@@ -130,35 +125,5 @@ class DefaultReasoner(
             temperature = 0.3,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodebaseQuestionResponse>() {},
         )
-    }
-
-    /**
-     * Get formatted message history for prompts
-     */
-    private fun getMessageHistoryPrompt(): String {
-        // If we have an InMemoryContextManager, use its formatted history
-        val formattedHistory = (contextManager as? InMemoryContextManager)?.getFormattedMessageHistory()
-            ?: buildMessageHistoryFromContext()
-
-        return if (formattedHistory.isNotEmpty()) {
-            """
-            Previous conversation history (consider this as context for this continuation):
-            $formattedHistory
-            """
-        } else {
-            "" // Empty string if no history
-        }
-    }
-
-    /**
-     * Build message history from context if not using InMemoryContextManager
-     */
-    private fun buildMessageHistoryFromContext(): String {
-        val messages = contextManager.fetchMessages()
-        return if (messages.isNotEmpty()) {
-            messages.joinToString("\n")
-        } else {
-            ""
-        }
     }
 }

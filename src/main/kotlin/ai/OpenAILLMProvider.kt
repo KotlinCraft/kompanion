@@ -1,6 +1,7 @@
 package ai
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -9,6 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
+import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor
+import org.springframework.ai.chat.memory.ChatMemory
+import org.springframework.ai.chat.memory.InMemoryChatMemory
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.chat.prompt.Prompt
@@ -48,13 +53,16 @@ class OpenAILLMProvider : LLMProvider() {
                         this.reasoningEffort("medium")
                     }
                 }
-                .temperature(1.0).build()
+                .temperature(1.0)
+                .build()
         ).build()
     }
 
 
     fun createClient(): ChatClient {
-        return ChatClient.create(createModel())
+        return ChatClient.builder(createModel())
+            .defaultAdvisors(PromptChatMemoryAdvisor(InMemoryChatMemory()))
+            .build()
     }
 
     override suspend fun <T> prompt(
@@ -68,16 +76,17 @@ class OpenAILLMProvider : LLMProvider() {
 
         val converter = BeanOutputConverter(parameterizedTypeReference, objectmapper)
 
-        val outputMessage = PromptTemplate(
-            "{format}", mapOf("format" to converter.format)
-        ).createMessage()
+        val outputMessage =
+            PromptTemplate(
+                "{format}", mapOf("format" to converter.format)
+            ).createMessage().text
 
 
         val messages = listOf(
             SystemMessage("Be sure to use your tools to provide the best possible answer."),
             SystemMessage(system),
+            SystemMessage(outputMessage),
             userMessage?.let { UserMessage(it) },
-            outputMessage
         ).filterNotNull()
 
         var prompt = client.prompt(
@@ -86,7 +95,9 @@ class OpenAILLMProvider : LLMProvider() {
             )
         ).tools(actions)
 
-        val content = withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
+        val content = Either.catch {
+            withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
+        }.mapLeft { logger.error("problem trying to call LLM", it) }.getOrElse { "" }
 
         return Either.catch {
             converter.convert(content)
@@ -94,11 +105,11 @@ class OpenAILLMProvider : LLMProvider() {
             if (retry) {
                 logger.info("response was: $content")
                 logger.info("retrying, because we got the following error: $it")
-                var prompt = client.prompt(
+                val prompt = client.prompt(
                     Prompt(
                         UserMessage(system),
                         UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
-                        outputMessage
+                        SystemMessage(outputMessage)
                     )
                 ).tools(actions)
 

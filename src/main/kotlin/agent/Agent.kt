@@ -15,18 +15,7 @@ class Agent internal constructor(
     }
 
     suspend fun perform(request: String): String {
-        // Store user message in context manager first
-        (contextManager as? InMemoryContextManager)?.addUserMessage(request) 
-            ?: contextManager.storeMessage("User: $request")
-        
-        // Perform the action
-        val response = mode.perform(request)
-        
-        // Store agent response in context manager
-        (contextManager as? InMemoryContextManager)?.addAgentMessage(response)
-            ?: contextManager.storeMessage("Kompanion: $response")
-        
-        return response
+        return mode.perform(request)
     }
 
     override fun interactionHandler(): InteractionHandler {

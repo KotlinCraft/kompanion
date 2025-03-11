@@ -23,6 +23,7 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.ai.tool.annotation.ToolParam
 import ui.chat.ContractReadIndicator
+import ui.chat.GetEventLogsIndicator
 import ui.chat.GetProxyIndicator
 import ui.chat.TokenInformationIndicator
 import java.util.*
@@ -209,7 +210,10 @@ class BanklessTools(
 
     @org.springframework.ai.tool.annotation.Tool(
         name = "get_event_logs",
-        description = """Fetch event logs for a given address and topic. Requires the source to navigate and understand the logs."""
+        description = """Fetch event logs for a given address and topic. 
+            | Requires the source to navigate and understand the logs. Don't "assume" certain events are supported, but verify. 
+            | When fetching events on proxy contracts, use the proxy, not the implementation
+        """
     )
     fun getEventLogs(
         @ToolParam(
@@ -217,23 +221,82 @@ class BanklessTools(
         ) network: String, @ToolParam(
             required = true, description = "addresses to fetch logs for"
         ) addresses: List<String>, @ToolParam(
-            required = true, description = "topic to fetch logs for. Use tool to create topic from abi event"
+            required = true, description = "topic to fetch logs for. Use tool to create topic from abi event. Don't assume topics, but build them using build_event_topic"
         ) topic: String, @ToolParam(
             required = false, description = "optional topics to fetch logs for"
         ) optionalTopics: List<String?>? = emptyList()
     ): GetEventLogsResponse {
-        return runBlocking(Dispatchers.IO) {
-            banklessClient.getEvents(
-                network, GetEventLogsRequest(
-                    addresses, topic, optionalTopics
+        // Show RUNNING indicator
+        val toolId = runBlocking(Dispatchers.IO) {
+            customToolUsage(
+                toolIndicator = {
+                    GetEventLogsIndicator(
+                        addresses,
+                        topic,
+                        network,
+                        ToolStatus.RUNNING
+                    )
+                })
+        }
+
+        return try {
+            val result = runBlocking(Dispatchers.IO) {
+                banklessClient.getEvents(
+                    network, GetEventLogsRequest(
+                        addresses, topic, optionalTopics
+                    )
                 )
-            ).fold({
-                GetEventLogsResponse(error = it)
-            }, {
-                GetEventLogsResponse(
-                    ethLog = it
-                )
+            }
+
+            result.fold({ error ->
+                // Show FAILED indicator
+                runBlocking(Dispatchers.IO) {
+                    customToolUsage(
+                        id = toolId, toolIndicator = {
+                            GetEventLogsIndicator(
+                                addresses,
+                                topic,
+                                network,
+                                ToolStatus.FAILED,
+                                null,
+                                error
+                            )
+                        })
+                }
+                GetEventLogsResponse(error = error)
+            }, { logs ->
+                // Show COMPLETED indicator
+                runBlocking(Dispatchers.IO) {
+                    customToolUsage(
+                        id = toolId, toolIndicator = {
+                            GetEventLogsIndicator(
+                                addresses,
+                                topic,
+                                network,
+                                ToolStatus.COMPLETED,
+                                logs,
+                                null
+                            )
+                        })
+                }
+                GetEventLogsResponse(ethLog = logs)
             })
+        } catch (e: Exception) {
+            // Show FAILED indicator for exceptions
+            runBlocking(Dispatchers.IO) {
+                customToolUsage(
+                    id = toolId, toolIndicator = {
+                        GetEventLogsIndicator(
+                            addresses,
+                            topic,
+                            network,
+                            ToolStatus.FAILED,
+                            null,
+                            "Error retrieving event logs: ${e.message}"
+                        )
+                    })
+            }
+            GetEventLogsResponse(error = "Error retrieving event logs: ${e.message}")
         }
     }
 
@@ -241,7 +304,7 @@ class BanklessTools(
         name = "build_event_topic",
         description = """Build an event topic signature based on event name and arguments.  
             | Keep the order of the types and indexed properties in the arguments list.
-            |Used to calculate the topic signature for blockchain event lookp."""
+            |Used to calculate the topic signature for blockchain event lookup."""
     )
     fun buildEventTopic(
         @ToolParam(

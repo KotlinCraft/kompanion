@@ -132,11 +132,6 @@ class KompanionBuilder {
 
         val interactionSavingWrapper = object : InteractionHandler {
             override suspend fun interact(agentMessage: AgentMessage): String {
-                // Store important agent messages in the context manager instead of writing directly to file
-                if (agentMessage.important) {
-                    (finalContextManager as? InMemoryContextManager)?.addAgentMessage(agentMessage.message)
-                        ?: finalContextManager.storeMessage("Kompanion: ${agentMessage.message}")
-                }
                 return interactionHandler!!.interact(agentMessage)
             }
 

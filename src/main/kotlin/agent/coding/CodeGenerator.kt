@@ -20,8 +20,6 @@ class CodeGenerator(
         val prompt = """
             ${contextManager.currentContextPrompt(true)}
             
-            ${getMessageHistoryPrompt()}
-            
             You're an amazing developer, with many years of experience and a deep understanding of the clean code and architecture.
             Based on the following generation plan you have generated the necessary code changes. 
             Use files in your current context to understand your changes. 
@@ -76,35 +74,5 @@ class CodeGenerator(
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {},
         )
-    }
-
-    /**
-     * Get formatted message history for prompts
-     */
-    private fun getMessageHistoryPrompt(): String {
-        // If we have an InMemoryContextManager, use its formatted history
-        val formattedHistory = (contextManager as? InMemoryContextManager)?.getFormattedMessageHistory()
-            ?: buildMessageHistoryFromContext()
-
-        return if (formattedHistory.isNotEmpty()) {
-            """
-            Previous conversation history (consider this as context for this continuation):
-            $formattedHistory
-            """
-        } else {
-            "" // Empty string if no history
-        }
-    }
-
-    /**
-     * Build message history from context if not using InMemoryContextManager
-     */
-    private fun buildMessageHistoryFromContext(): String {
-        val messages = contextManager.fetchMessages()
-        return if (messages.isNotEmpty()) {
-            messages.joinToString("\n")
-        } else {
-            ""
-        }
     }
 }

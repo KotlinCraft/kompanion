@@ -18,41 +18,8 @@ class InMemoryContextManager : ContextManager {
 
     val graph = KotlinCodeGraphBuilder().buildFromDirectory(AppConfig.load().latestDirectory)
 
-    // Replace direct messages list with MessageManager
-    private val messageManager = MessageManager()
-
     override fun getContext(): StateFlow<Set<ContextFile>> = files
 
-    override fun fetchMessages(): List<String> = 
-        messageManager.getMessages().map {
-            when (it.type) {
-                MessageType.USER -> "User: ${it.content}"
-                MessageType.AGENT -> "Kompanion: ${it.content}"
-            }
-        }
-    
-
-    override fun storeMessage(message: String) {
-        when {
-            message.startsWith("User: ") -> {
-                messageManager.addUserMessage(message.removePrefix("User: "))
-            }
-            message.startsWith("Kompanion: ") -> {
-                messageManager.addAgentMessage(message.removePrefix("Kompanion: "))
-            }
-            else -> {
-                messageManager.addUserMessage(message)
-            }
-        }
-    }
-
-    // Add convenience methods for adding user and agent messages directly
-    fun addUserMessage(content: String) = messageManager.addUserMessage(content)
-
-    fun addAgentMessage(content: String) = messageManager.addAgentMessage(content)
-
-    // Get formatted history for prompts
-    fun getFormattedMessageHistory(): String = messageManager.getFormattedHistory()
 
     override fun updateFiles(files: List<ContextFile>) {
         _files.value = (_files.value + files).distinctBy { it.name }.toSet()
@@ -64,10 +31,6 @@ class InMemoryContextManager : ContextManager {
 
     override fun clearContext() {
         _files.value = emptySet()
-    }
-
-    override fun clearMessages() {
-        messageManager.clear()
     }
 
     override fun fetchWorkingDirectory(): String = AppConfig.load().latestDirectory
