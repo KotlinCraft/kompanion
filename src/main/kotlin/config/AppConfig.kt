@@ -1,5 +1,6 @@
 package config
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -25,7 +26,9 @@ data class AppConfig(
 ) {
     companion object {
         private val configPath = Paths.get(System.getProperty("user.home"), ".kompanion", "config.yml")
-        private val mapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
+        private val mapper = ObjectMapper(YAMLFactory())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .registerKotlinModule()
 
         fun load(): AppConfig {
             val configFile = configPath.toFile()
