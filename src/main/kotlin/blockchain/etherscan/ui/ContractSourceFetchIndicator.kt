@@ -78,21 +78,37 @@ fun ContractSourceFetchIndicator(address: String, network: String, status: ToolS
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Code,
-                    contentDescription = null,
-                    tint = when (status) {
-                        ToolStatus.RUNNING -> Color(0xFFF59E0B)
-                        ToolStatus.COMPLETED -> Color(0xFF10B981)
-                        ToolStatus.FAILED -> Color(0xFFEF4444)
-                    },
-                    modifier = Modifier.size(18.dp)
-                )
+                // B Logo
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(18.dp)
+                        .background(Color.Black, RoundedCornerShape(2.dp))
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    ) {
+                        Text(
+                            text = "B",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        Box(
+                            modifier = Modifier
+                                .width(8.dp)
+                                .height(2.dp)
+                                .background(Color.Red)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Contract: Fetched contract source",
+                    text = "Bankless: Fetched contract source",
                     color = Color.White.copy(alpha = 0.9f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
