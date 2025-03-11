@@ -42,8 +42,6 @@ fun SettingsDialog(
     val appConfig by remember { mutableStateOf(initialConfig) }
     var openAiKey by remember { mutableStateOf(appConfig.openAiKey) }
     var anthropicKey by remember { mutableStateOf(appConfig.anthropicKey) }
-    var etherscanBaseApiKey by remember { mutableStateOf(appConfig.etherscan.baseApiKey) }
-    var etherscanEthereumApiKey by remember { mutableStateOf(appConfig.etherscan.ethereumApiKey) }
     var currentProvider by remember { mutableStateOf(appConfig.currentProvider) }
 
     var showValidationErrors by remember { mutableStateOf(false) }
@@ -72,10 +70,6 @@ fun SettingsDialog(
                 appConfig.copy(
                     openAiKey = openAiKey,
                     anthropicKey = anthropicKey,
-                    etherscan = appConfig.etherscan.copy(
-                        baseApiKey = etherscanBaseApiKey,
-                        ethereumApiKey = etherscanEthereumApiKey
-                    ),
                     currentProvider = currentProvider
                 )
             )
@@ -185,41 +179,6 @@ fun SettingsDialog(
                                 style = MaterialTheme.typography.caption
                             )
                         }
-                    }
-                }
-
-                // Etherscan Section
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    elevation = 2.dp
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Etherscan Configuration", style = MaterialTheme.typography.subtitle1)
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = etherscanBaseApiKey,
-                            onValueChange = { etherscanBaseApiKey = it },
-                            label = { Text("Base API Key") },
-                            placeholder = { Text("Enter your Etherscan Base API key") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = etherscanEthereumApiKey,
-                            onValueChange = { etherscanEthereumApiKey = it },
-                            label = { Text("Ethereum API Key") },
-                            placeholder = { Text("Enter your Etherscan Ethereum API key") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "These API keys are required for Etherscan blockchain data integration",
-                            style = MaterialTheme.typography.caption,
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                        )
                     }
                 }
 

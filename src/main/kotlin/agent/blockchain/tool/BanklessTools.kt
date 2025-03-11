@@ -1,5 +1,6 @@
 package agent.blockchain.tool
 
+import agent.ContextManager
 import agent.blockchain.bankless.BanklessClient
 import agent.blockchain.bankless.EvmReadContractStateRequest
 import agent.blockchain.bankless.model.contract.Output
@@ -8,11 +9,14 @@ import agent.blockchain.bankless.model.event.EthLog
 import agent.blockchain.bankless.model.event.GetEventLogsRequest
 import agent.blockchain.bankless.model.token.FungibleTokenVO
 import agent.blockchain.tool.domain.*
+import agent.domain.context.ContextFile
 import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.Interactor
 import agent.tool.ToolsProvider
 import arrow.core.getOrElse
+import blockchain.etherscan.ui.ContractAbiFetchIndicator
+import blockchain.etherscan.ui.ContractSourceFetchIndicator
 import com.bankless.claimable.rest.vo.ClaimableVO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -21,8 +25,12 @@ import org.springframework.ai.tool.annotation.ToolParam
 import ui.chat.ContractReadIndicator
 import ui.chat.GetProxyIndicator
 import ui.chat.TokenInformationIndicator
+import java.util.*
 
-class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsProvider, Interactor {
+class BanklessTools(
+    private val interactionHandler: InteractionHandler,
+    private val contextManager: ContextManager,
+) : ToolsProvider, Interactor {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -243,7 +251,8 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
             required = true, description = "name of the event"
         ) eventName: String,
         @ToolParam(
-            required = true, description = """object contains a list of output parameters with type and indexed properties. 
+            required = true,
+            description = """object contains a list of output parameters with type and indexed properties. 
                 |Example: {"type": "uint256", "indexed": false}
             """
         ) methodArguments: MethodArguments
@@ -314,5 +323,121 @@ class BanklessTools(private val interactionHandler: InteractionHandler) : ToolsP
 
     override fun interactionHandler(): InteractionHandler {
         return interactionHandler
+    }
+
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "get_contract_source",
+        description = "Get the contract source for an address."
+    )
+    fun getContractSource(
+        @ToolParam(
+            required = true,
+            description = "address and network to fetch contract source for"
+        ) request: GetContractSourceRequest
+    ): GetContractSourceResponse = runBlocking(Dispatchers.IO) {
+
+        val toolId = customToolUsage {
+            ContractSourceFetchIndicator(
+                request.address, request.network, ToolStatus.RUNNING
+            )
+        }
+
+        val source = banklessClient.getSource(request.network, request.address).map {
+            it.result.joinToString {
+                it.sourceCode
+            }
+        }?.map {
+            cleanSolidityCode(it).also {
+                if (it.isNotBlank()) {
+                    contextManager.updateFiles(
+                        listOf(
+                            ContextFile(UUID.randomUUID(), request.address + "_" + request.network + "_source.sol", it)
+                        )
+                    )
+                }
+            }
+        }?.getOrElse {
+            failedContractSource(toolId, request)
+            "not a contract or no source found"
+        }
+
+        if ((source ?: "").split(" ").size > 10000) {
+            failedContractSource(toolId, request)
+            GetContractSourceResponse("source code too long, use get_contract_abi instead")
+        }
+
+        customToolUsage(toolId) {
+            ContractSourceFetchIndicator(
+                request.address, request.network, ToolStatus.COMPLETED
+            )
+        }
+        GetContractSourceResponse(source ?: "not a contract or no source found")
+    }
+
+    private fun failedContractSource(toolId: UUID, request: GetContractSourceRequest) {
+        runBlocking(Dispatchers.IO) {
+            customToolUsage(toolId) {
+                ContractSourceFetchIndicator(
+                    request.address, request.network, ToolStatus.FAILED
+                )
+            }
+        }
+    }
+
+    @org.springframework.ai.tool.annotation.Tool(
+        name = "get_contract_abi",
+        description = "Get the contract ABI for an address. Use this if the source was not available"
+    )
+    fun getContractAbi(request: GetContractAbiRequest): GetContractAbiResponse {
+        val abi = runBlocking(Dispatchers.IO) {
+            banklessClient.getAbi(request.network, request.address).map {
+                it.result
+            }?.also {
+                it.onRight {
+                    runBlocking(Dispatchers.IO) {
+                        customToolUsage(
+                            message = "Fetched contract ABI for address ${request.address} on network ${request.network}",
+                            toolIndicator = {
+                                ContractAbiFetchIndicator(
+                                    request.address, request.network, ToolStatus.COMPLETED
+                                )
+                            },
+                        )
+                    }
+
+                    if (it.isNotBlank()) {
+                        contextManager.updateFiles(
+                            listOf(
+                                ContextFile(
+                                    UUID.randomUUID(),
+                                    request.address + "_" + request.network + "_abi.json",
+                                    it
+                                )
+                            )
+                        )
+                    }
+                }
+            }?.getOrElse {
+                "not a contract or no ABI found"
+            }
+        }
+        return GetContractAbiResponse(abi ?: "not a contract or no ABI found")
+    }
+
+    fun cleanSolidityCode(code: String): String {
+        // 1. Remove multi-line comments: /* ... */
+        val withoutMultilineComments = code.replace(Regex("""/\*[\s\S]*?\*/"""), "")
+
+        // 2. Remove single-line comments: // ...
+        val withoutSingleLineComments = withoutMultilineComments.replace(Regex("""//.*"""), "")
+
+        // 3. Split into lines, trim whitespace, and remove empty lines
+        val lines = withoutSingleLineComments
+            .lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        // 4. Join the lines with a single newline (or you could join with a space)
+        return lines.joinToString("\n")
     }
 }

@@ -13,7 +13,6 @@ import ai.LLMProvider
 import ai.LLMRegistry
 import arrow.core.Either
 import arrow.core.getOrElse
-import blockchain.etherscan.EtherscanClientManager
 import config.AppConfig
 import config.Provider
 import mcp.McpManager
@@ -50,7 +49,6 @@ class KompanionBuilder {
     private var smallLlmProvider: LLMProvider? = null
     private var bigLlmProvider: LLMProvider? = null
     private var interactionHandler: InteractionHandler? = null
-    private var etherscanClientManager: EtherscanClientManager? = null
     private var mode: AgentMode = AgentMode.BLOCKCHAIN
     private var appConfig: AppConfig? = null
     private var provider: Provider? = null
@@ -74,10 +72,6 @@ class KompanionBuilder {
 
     fun withCustomCodeApplier(applier: CodeApplier) = apply {
         codeApplier = applier
-    }
-
-    fun withEtherscanClientManager(manager: EtherscanClientManager) = apply {
-        etherscanClientManager = manager
     }
 
     fun withAppConfig(config: AppConfig) = apply {

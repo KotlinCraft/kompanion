@@ -7,8 +7,6 @@ import ui.info.InfoManager
 
 fun main() = application {
     // Initialize InfoManager and check for configuration issues
-    InfoManager.checkConfigurationIssues()
-    
     Window(
         onCloseRequest = ::exitApplication,
         title = "AI Code Companion"

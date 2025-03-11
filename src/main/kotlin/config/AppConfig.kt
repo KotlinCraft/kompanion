@@ -20,7 +20,6 @@ data class AppConfig(
     val openAiKey: String = "",
     val anthropicKey: String = "",
     val latestDirectory: String = "~",
-    val etherscan: EtherscanConfig = EtherscanConfig(),
     val currentProvider: Provider = Provider.OPENAI,
     val banklessToken: String = ""
 ) {

@@ -3,7 +3,6 @@ package agent.modes
 import agent.ContextManager
 import agent.ToolManager
 import agent.blockchain.tool.BanklessTools
-import agent.blockchain.tool.EtherscanTools
 import agent.interaction.InteractionHandler
 import agent.reason.BlockchainReasoner
 import agent.tool.GeneralTools
@@ -36,11 +35,8 @@ class BlockchainMode(
     init {
         GeneralTools(interactionHandler).register(toolManager)
 
-        if (isEtherscanSupported()) {
-            EtherscanTools(interactionHandler, contextManager).register(toolManager)
-        }
         if (isBanklessSupported()) {
-            BanklessTools(interactionHandler).register(toolManager)
+            BanklessTools(interactionHandler, contextManager).register(toolManager)
         }
 
         val toolbacks = mcpManager.getMcpServers().flatMap {
@@ -81,10 +77,6 @@ class BlockchainMode(
 
     fun isBanklessSupported(): Boolean {
         return AppConfig.load().banklessToken.trim().isNotBlank()
-    }
-
-    fun isEtherscanSupported(): Boolean {
-        return AppConfig.load().etherscan.baseApiKey.isNotBlank() || AppConfig.load().etherscan.ethereumApiKey.isNotBlank()
     }
 
     override fun interactionHandler(): InteractionHandler {

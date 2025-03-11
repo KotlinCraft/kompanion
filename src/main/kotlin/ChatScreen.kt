@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import blockchain.etherscan.EtherscanClientManager
 import com.yourdomain.kompanion.ui.components.ProviderSelector
 import config.AppConfig
 import kotlinx.coroutines.*
@@ -91,16 +90,6 @@ fun ChatScreen() {
     // New state for confirmation dialog
     var showConfirmationDialog by remember { mutableStateOf(false) }
     var pendingConfirmation by remember { mutableStateOf<AgentAskConfirmation?>(null) }
-
-    // Initial check for configuration issues
-    LaunchedEffect(Unit) {
-        InfoManager.checkConfigurationIssues()
-    }
-
-    // Check configuration issues whenever configState changes
-    LaunchedEffect(configState) {
-        InfoManager.checkConfigurationIssues()
-    }
 
     val interactionHandler = object : InteractionHandler {
         override suspend fun interact(agentMessage: AgentMessage): String {
@@ -164,10 +153,6 @@ fun ChatScreen() {
         InMemoryContextManager()
     }
 
-    val etherscanClientManager = remember {
-        EtherscanClientManager()
-    }
-
     fun createCodingKompanion(handler: InteractionHandler, contextManager: InMemoryContextManager): Kompanion {
         logger.info("creating coder")
         return Kompanion.builder()
@@ -183,14 +168,12 @@ fun ChatScreen() {
     fun createBlockchainKompanion(
         handler: InteractionHandler,
         contextManager: InMemoryContextManager,
-        etherscanManager: EtherscanClientManager
     ): Kompanion {
         logger.info("creating blockchain kompanion")
         return Kompanion.builder()
             .withMode(BLOCKCHAIN)
             .withInteractionHandler(handler)
             .withContextManager(contextManager)
-            .withEtherscanClientManager(etherscanManager)
             .withAppConfig(configState)
             .withProvider(currentProvider) // Use current provider
             .build()
@@ -200,7 +183,7 @@ fun ChatScreen() {
     class AgentState {
         var codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
         var blockchainKompanion =
-            createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
+            createBlockchainKompanion(interactionHandler, inMemoryContextManager)
     }
 
 
@@ -212,7 +195,7 @@ fun ChatScreen() {
         logger.info("Recreating agents with new configuration")
         agentState.codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
         agentState.blockchainKompanion =
-            createBlockchainKompanion(interactionHandler, inMemoryContextManager, etherscanClientManager)
+            createBlockchainKompanion(interactionHandler, inMemoryContextManager)
     }
 
     val openFiles by agentState.blockchainKompanion.agent.fetchContextManager().getContext().collectAsState()
@@ -424,7 +407,6 @@ fun ChatScreen() {
                 configState = newConfig
                 // Recreate agents with the new configuration
                 recreateAgents()
-                InfoManager.checkConfigurationIssues()
                 showSettings = false
             })
         }

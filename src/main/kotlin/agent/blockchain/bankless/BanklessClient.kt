@@ -9,6 +9,8 @@ import agent.blockchain.bankless.model.proxy.Proxy
 import agent.blockchain.bankless.model.token.FungibleTokenVO
 import arrow.core.Either
 import arrow.core.left
+import blockchain.etherscan.domain.ContractAbiResponse
+import blockchain.etherscan.domain.ContractSourceResponse
 import com.bankless.claimable.rest.vo.ClaimableVO
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -36,7 +38,6 @@ class BanklessClient {
     }
 
     private val baseUrl = "https://api.bankless.com/internal/chains"
-    private val claimablesBaseUrl = "https://api.bankless.com/claimables"
 
 
     /**
@@ -91,6 +92,58 @@ class BanklessClient {
         } catch (e: Exception) {
             logger.error("Error finding proxy: ${e.message}", e)
             "Failed to find proxy: ${e.message}".left()
+        }
+    }
+
+    /**
+     * Gets the ABI for a given contract on a specific network.
+     *
+     * @param network The blockchain network (e.g., "ethereum", "base")
+     * @param contract The contract address
+     * @return Either an error message or the contract ABI response
+     */
+    suspend fun getAbi(network: String, contract: String): Either<String, ContractAbiResponse> {
+        val endpoint = "$baseUrl/$network/get_abi/$contract"
+
+        return try {
+            val response = makeGetRequest(endpoint)
+
+            // Parse the JSON response
+            Either.catch {
+                objectMapper.readValue<ContractAbiResponse>(response)
+            }.mapLeft { error ->
+                logger.error("Error parsing ABI response: ${error.message}", error)
+                "Failed to parse ABI data: ${error.message}"
+            }
+        } catch (e: Exception) {
+            logger.error("Error getting contract ABI: ${e.message}", e)
+            "Failed to get contract ABI: ${e.message}".left()
+        }
+    }
+
+    /**
+     * Gets the source code for a given contract on a specific network.
+     *
+     * @param network The blockchain network (e.g., "ethereum", "base")
+     * @param contract The contract address
+     * @return Either an error message or the contract source response
+     */
+    suspend fun getSource(network: String, contract: String): Either<String, ContractSourceResponse> {
+        val endpoint = "$baseUrl/$network/get_source/$contract"
+
+        return try {
+            val response = makeGetRequest(endpoint)
+
+            // Parse the JSON response
+            Either.catch {
+                objectMapper.readValue<ContractSourceResponse>(response)
+            }.mapLeft { error ->
+                logger.error("Error parsing source code response: ${error.message}", error)
+                "Failed to parse source code data: ${error.message}"
+            }
+        } catch (e: Exception) {
+            logger.error("Error getting contract source: ${e.message}", e)
+            "Failed to get contract source: ${e.message}".left()
         }
     }
 
@@ -151,7 +204,8 @@ class BanklessClient {
      * Builds an event topic signature based on event name and arguments.
      *
      * @param chain The blockchain network (e.g., "ethereum", "base")
-     * @param request The request containing event name and arguments
+     * @param name The event name
+     * @param arguments The list of argument types
      * @return Either an error message or the event topic signature as a string
      */
     suspend fun buildEventTopic(

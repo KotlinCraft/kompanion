@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object InfoManager {
     private val messages = ConcurrentHashMap<String, String>()
-    
+
     /**
      * Add or update an information message with a specific ID
      * @param id Unique identifier for this information message
@@ -20,7 +20,7 @@ object InfoManager {
         messages[id] = message
         return this
     }
-    
+
     /**
      * Remove an information message by ID
      * @param id The ID of the message to remove
@@ -30,7 +30,7 @@ object InfoManager {
         messages.remove(id)
         return this
     }
-    
+
     /**
      * Clear all information messages
      * @return The InfoManager instance for method chaining
@@ -39,7 +39,7 @@ object InfoManager {
         messages.clear()
         return this
     }
-    
+
     /**
      * Get all current information messages
      * @return Map of message IDs to message content
@@ -47,7 +47,7 @@ object InfoManager {
     fun getInfoMessages(): Map<String, String> {
         return messages.toMap()
     }
-    
+
     /**
      * Check if any information messages exist
      * @return True if there are any information messages
@@ -55,31 +55,5 @@ object InfoManager {
     fun hasMessages(): Boolean {
         return messages.isNotEmpty()
     }
-    
-    /**
-     * Checks the application configuration and adds appropriate
-     * information messages for missing API keys
-     */
-    fun checkConfigurationIssues() {
-        val config = AppConfig.load()
-        
-        // Check for missing Etherscan API keys
-        if (config.etherscan.baseApiKey.isBlank()) {
-            addInfo(
-                "missing_base_api_key",
-                "Etherscan Base API key is missing. Some blockchain features may not work correctly."
-            )
-        } else {
-            removeInfo("missing_base_api_key")
-        }
-        
-        if (config.etherscan.ethereumApiKey.isBlank()) {
-            addInfo(
-                "missing_ethereum_api_key",
-                "Etherscan Ethereum API key is missing. Some blockchain features may not work correctly."
-            )
-        } else {
-            removeInfo("missing_ethereum_api_key")
-        }
-    }
+
 }
