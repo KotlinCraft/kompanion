@@ -6,14 +6,14 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.nio.file.Paths
 
-enum class Provider(val small: String, val big: String) {
+enum class Provider(val normal: String, val reasoning: String) {
     ANTHROPIC(
         "claude-3-5-haiku-latest",
         "claude-3-7-sonnet-latest"
     ),
     OPENAI(
-        "gpt-4o-mini",
-        "gpt-4o"
+        "gpt-4o",
+        "o3-mini"
     )
 }
 

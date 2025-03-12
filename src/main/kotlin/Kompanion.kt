@@ -6,9 +6,7 @@ import agent.interaction.InteractionHandler
 import agent.modes.BlockchainMode
 import agent.modes.CodingMode
 import agent.modes.Mode
-import agent.reason.BlockchainReasoner
-import agent.reason.DefaultReasoner
-import agent.reason.Reasoner
+import agent.reason.*
 import ai.LLMProvider
 import ai.LLMRegistry
 import arrow.core.Either
@@ -32,9 +30,7 @@ class Kompanion(
         }
 
         fun default(interactionHandler: InteractionHandler): Kompanion {
-            return builder()
-                .withInteractionHandler(interactionHandler)
-                .build()
+            return builder().withInteractionHandler(interactionHandler).build()
         }
     }
 }
@@ -45,7 +41,6 @@ class KompanionBuilder {
         CODE, BLOCKCHAIN
     }
 
-    private var reasoner: Reasoner? = null
     private var codeGenerator: CodeGenerator? = null
     private var codeApplier: CodeApplier? = null
     private var contextManager: ContextManager? = null
@@ -67,10 +62,6 @@ class KompanionBuilder {
 
     fun withContextManager(customContextManager: ContextManager) = apply {
         contextManager = customContextManager
-    }
-
-    fun withCustomReasoner(customReasoner: Reasoner) = apply {
-        reasoner = customReasoner
     }
 
     fun withCustomCodeGenerator(generator: CodeGenerator) = apply {
@@ -98,18 +89,16 @@ class KompanionBuilder {
 
         val memoryAdvisor = PromptChatMemoryAdvisor(chatMemory)
 
-        val smallProvider = Either.catch {
-            getFinalLLMProvider(selectedProvider.small)
-        }.getOrElse { getFinalLLMProvider("gpt-4o-mini") }
-            .addAdvisor(memoryAdvisor)
 
-        val bigProvider = Either.catch {
-            getFinalLLMProvider(selectedProvider.big)
-        }.getOrElse { getFinalLLMProvider("gpt-4o") }
-            .addAdvisor(memoryAdvisor)
+        val llmProvider = Either.catch {
+            getFinalLLMProvider(selectedProvider.normal)
+        }.getOrElse { getFinalLLMProvider("gpt-4o") }.addAdvisor(memoryAdvisor)
 
-        val finalReasoner = reasoner
-        val finalGenerator = codeGenerator ?: CodeGenerator(bigProvider, finalContextManager, toolManager)
+        val reasoningProvider = Either.catch {
+            getFinalLLMProvider(selectedProvider.reasoning)
+        }.getOrElse { getFinalLLMProvider("o3-mini") }.addAdvisor(memoryAdvisor)
+
+        val finalGenerator = codeGenerator ?: CodeGenerator(llmProvider, finalContextManager, toolManager)
 
         // Ensure we have an interaction handler
         if (interactionHandler == null) {
@@ -118,24 +107,22 @@ class KompanionBuilder {
 
         val selectedMode: Mode = when (mode) {
             AgentMode.CODE -> CodingMode(
-                finalReasoner ?: DefaultReasoner(smallProvider, finalContextManager, toolManager),
-                finalGenerator,
-                interactionHandler!!,
-                toolManager,
-                McpManager(),
-                finalContextManager,
+                CodingAnalyst(finalContextManager, llmProvider, toolManager),
+                CodingPlanner(
+                    SimplePlanner(
+                        llmProvider, finalContextManager, toolManager
+                    ),
+                    DefaultReasoningStrategy(
+                        reasoningProvider, finalContextManager
+                    )
+                ),
+                finalGenerator, interactionHandler!!, toolManager, McpManager(), finalContextManager
             )
 
             AgentMode.BLOCKCHAIN -> BlockchainMode(
                 BlockchainReasoner(
-                    bigProvider,
-                    toolManager,
-                    finalContextManager
-                ),
-                toolManager,
-                McpManager(),
-                finalContextManager,
-                interactionHandler!!
+                    llmProvider, toolManager, finalContextManager
+                ), toolManager, McpManager(), finalContextManager, interactionHandler!!
             )
         }
 
@@ -150,10 +137,7 @@ class KompanionBuilder {
         }
 
         val agent = Agent(
-            finalContextManager,
-            interactionSavingWrapper,
-            chatMemory,
-            selectedMode
+            finalContextManager, interactionSavingWrapper, chatMemory, selectedMode
         )
 
         return Kompanion(agent)

@@ -8,7 +8,8 @@ import agent.domain.GenerationPlan
 import agent.fileops.KompanionFileHandler
 import agent.interaction.AgentResponse
 import agent.interaction.InteractionHandler
-import agent.reason.Reasoner
+import agent.reason.CodingAnalyst
+import agent.reason.CodingPlanner
 import agent.tool.FileTools
 import agent.tool.LoadedTool
 import agent.tool.Tool
@@ -23,7 +24,8 @@ import org.springframework.ai.mcp.SyncMcpToolCallbackProvider
 import java.util.*
 
 class CodingMode(
-    private val reasoner: Reasoner,
+    private val codingAnalyst: CodingAnalyst,
+    private val codingPlanner: CodingPlanner,
     private val codeGenerator: CodeGenerator,
     private val interactionHandler: InteractionHandler,
     private val toolManager: ToolManager,
@@ -89,15 +91,17 @@ I'm ready to help you with your coding tasks! 🚀
     }
 
     override suspend fun perform(request: String): String {
-        val understanding = reasoner.analyzeRequest(request)
+        // Step 1: Analyze the request to understand it
+        val understanding = codingAnalyst.analyzeRequest(request)
         sendMessage("I understand you want to: ${understanding.objective}")
-
         logger.debug("Understanding generated: {}", understanding)
-        val plan = reasoner.createPlan(request, understanding)
-        sendGenerationPlanToUser(plan)
 
+        // Step 2: Create a generation plan (now enhanced with reasoning)
+        val plan = codingPlanner.createPlan(request, understanding)
+        sendGenerationPlanToUser(plan)
         logger.debug("Generation plan created: {}", plan)
 
+        // Step 3: Execute the plan with the code generator
         val result = codeGenerator.execute(request, plan)
 
         return result.explanation
