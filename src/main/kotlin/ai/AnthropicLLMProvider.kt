@@ -54,7 +54,9 @@ class AnthropicLLMProvider : LLMProvider() {
     }
 
     fun createClient(): ChatClient {
-        return ChatClient.create(createModel())
+        return ChatClient.builder(createModel())
+            .defaultAdvisors(defaultAdvisors.toList())
+            .build()
     }
 
     override suspend fun <T> prompt(
