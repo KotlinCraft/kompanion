@@ -84,7 +84,7 @@ class OpenAILLMProvider : LLMProvider() {
         val messages = listOf(
             SystemMessage("Be sure to use your tools to provide the best possible answer."),
             SystemMessage(system),
-            SystemMessage(outputMessage),
+            outputMessage?.let { SystemMessage(it) },
             userMessage?.let { UserMessage(it) },
         ).filterNotNull()
 
