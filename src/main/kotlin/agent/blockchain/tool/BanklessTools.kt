@@ -220,7 +220,8 @@ class BanklessTools(
             required = true, description = "network to fetch logs for"
         ) network: String,
         @ToolParam(
-            required = true, description = "contract addresses to fetch logs for. In case of proxy, use the proxy address, not the implementation."
+            required = true,
+            description = "contract addresses to fetch logs for. In case of proxy, use the proxy address, not the implementation."
         ) addresses: List<String>,
         @ToolParam(
             required = true,
@@ -418,7 +419,12 @@ class BanklessTools(
                 if (it.isNotBlank()) {
                     contextManager.updateFiles(
                         listOf(
-                            ContextFile(UUID.randomUUID(), request.address + "_" + request.network + "_source.sol", it)
+                            ContextFile(
+                                UUID.randomUUID(),
+                                request.address + "_" + request.network + "_source.sol",
+                                request.address + "_" + request.network + "_source.sol",
+                                it
+                            )
                         )
                     )
                 }
@@ -477,6 +483,7 @@ class BanklessTools(
                             listOf(
                                 ContextFile(
                                     UUID.randomUUID(),
+                                    request.address + "_" + request.network + "_abi.json",
                                     request.address + "_" + request.network + "_abi.json",
                                     it
                                 )

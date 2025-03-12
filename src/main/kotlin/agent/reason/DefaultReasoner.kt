@@ -50,7 +50,7 @@ class DefaultReasoner(
         }
     }
 
-    override suspend fun createPlan(understanding: Understanding): GenerationPlan {
+    override suspend fun createPlan(request: String, understanding: Understanding): GenerationPlan {
         val prompt = """
             ${contextManager.currentContextPrompt(true)}
             
@@ -87,7 +87,7 @@ class DefaultReasoner(
 
         return LLMProvider.prompt(
             system = prompt,
-            userMessage = null,
+            userMessage = request,
             actions = toolManager.tools.map { it.toolCallback },
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {})

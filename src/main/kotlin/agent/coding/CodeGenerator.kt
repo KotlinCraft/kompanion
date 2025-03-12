@@ -15,6 +15,7 @@ class CodeGenerator(
 ) {
 
     suspend fun execute(
+        request: String,
         plan: GenerationPlan,
     ): CodingResult {
         val prompt = """
@@ -69,7 +70,7 @@ class CodeGenerator(
 
         return LLMProvider.prompt(
             system = prompt,
-            userMessage = null,
+            userMessage = request,
             actions = toolManager.tools.map { it.toolCallback },
             temperature = 0.5,
             parameterizedTypeReference = object : ParameterizedTypeReference<CodingResult>() {},

@@ -54,7 +54,8 @@ class FileTools(
                     ContextFile(
                         id = UUID.randomUUID(),
                         name = path.absolutePathString(),
-                        content = content
+                        content = content,
+                        displayName = path.fileName.toString()
                     )
                 )
             )

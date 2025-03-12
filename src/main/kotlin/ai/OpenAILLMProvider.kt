@@ -34,10 +34,6 @@ class OpenAILLMProvider : LLMProvider() {
     }
 
 
-    val client by lazy {
-        createClient()
-    }
-
     fun createModel(): OpenAiChatModel {
         val key = AppConfig.load().openAiKey
         if (key.isBlank()) {
@@ -87,7 +83,7 @@ class OpenAILLMProvider : LLMProvider() {
             userMessage?.let { UserMessage(it) },
         ).filterNotNull()
 
-        var prompt = client.prompt(
+        var prompt = createClient().prompt(
             Prompt(
                 messages,
             )
@@ -103,7 +99,7 @@ class OpenAILLMProvider : LLMProvider() {
             if (retry) {
                 logger.info("response was: $content")
                 logger.info("retrying, because we got the following error: $it")
-                val prompt = client.prompt(
+                val prompt = createClient().prompt(
                     Prompt(
                         UserMessage(system),
                         UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
@@ -127,7 +123,6 @@ class OpenAILLMProvider : LLMProvider() {
             "gpt-4o-mini",
             "o3-mini",
             "o1",
-            "gpt-4.5-preview"
         )
     }
 }

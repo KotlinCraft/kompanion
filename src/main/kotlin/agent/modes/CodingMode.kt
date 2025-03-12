@@ -3,7 +3,7 @@ package agent.modes
 import agent.ContextManager
 import agent.ToolManager
 import agent.coding.CodeGenerator
-import agent.coding.tool.LocalFileCodingTools
+import agent.coding.tool.LocalCodingTools
 import agent.domain.GenerationPlan
 import agent.fileops.KompanionFileHandler
 import agent.interaction.AgentResponse
@@ -12,7 +12,6 @@ import agent.reason.Reasoner
 import agent.tool.FileTools
 import agent.tool.LoadedTool
 import agent.tool.Tool
-import agent.tool.ToolAllowedStatus
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.nel
@@ -28,7 +27,7 @@ class CodingMode(
     private val codeGenerator: CodeGenerator,
     private val interactionHandler: InteractionHandler,
     private val toolManager: ToolManager,
-    private val mcpManager: McpManager,
+    mcpManager: McpManager,
     contextManager: ContextManager,
 ) : Mode, Interactor {
 
@@ -82,7 +81,7 @@ I'm ready to help you with your coding tasks! 🚀
                     )
                 )
             }
-            LocalFileCodingTools(interactionHandler, contextManager).register(toolManager)
+            LocalCodingTools(interactionHandler, contextManager).register(toolManager)
             FileTools(contextManager).register(toolManager)
         } catch (ex: Exception) {
             logger.error("Failed to connect to MCP server, no intellij support")
@@ -94,12 +93,12 @@ I'm ready to help you with your coding tasks! 🚀
         sendMessage("I understand you want to: ${understanding.objective}")
 
         logger.debug("Understanding generated: {}", understanding)
-        val plan = reasoner.createPlan(understanding)
+        val plan = reasoner.createPlan(request, understanding)
         sendGenerationPlanToUser(plan)
 
         logger.debug("Generation plan created: {}", plan)
 
-        val result = codeGenerator.execute(plan)
+        val result = codeGenerator.execute(request, plan)
 
         return result.explanation
     }
@@ -109,7 +108,7 @@ I'm ready to help you with your coding tasks! 🚀
             """
 Here's the detailed plan: 
 Steps: 
-${plan.steps.joinToString("\n") { "👉 ${it.action})" }}
+${plan.steps.joinToString("\n") { "👉 ${it.action}" }}
             
 Expected Outcome: 
 ${plan.expectedOutcome}

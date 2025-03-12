@@ -503,7 +503,7 @@ fun ChatScreen() {
                     ) {
                         openFiles.forEach { file ->
                             FilePill(
-                                fileName = file.name,
+                                fileName = file.displayName,
                                 fileId = file.id,
                                 onRemove = { fileId ->
                                     activeContextManager.removeFile(fileId)
