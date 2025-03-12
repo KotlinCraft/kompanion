@@ -36,6 +36,7 @@ import com.yourdomain.kompanion.ui.components.ProviderSelector
 import config.AppConfig
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import org.springframework.ai.chat.memory.InMemoryChatMemory
 import ui.FilePill
 import ui.SettingsDialog
 import ui.ToolCounter
@@ -149,8 +150,16 @@ fun ChatScreen() {
         }
     }
 
-    val inMemoryContextManager = remember {
-        InMemoryContextManager()
+    val inMemoryContextManager by remember {
+        mutableStateOf(InMemoryContextManager())
+    }
+
+    var chatMemory by remember {
+        mutableStateOf(InMemoryChatMemory())
+    }
+
+    fun clearChatMemory() {
+        chatMemory.clear("default")
     }
 
     fun createCodingKompanion(handler: InteractionHandler, contextManager: InMemoryContextManager): Kompanion {
@@ -158,6 +167,7 @@ fun ChatScreen() {
         return Kompanion.builder()
             .withMode(CODE)
             .withInteractionHandler(handler)
+            .withChatMemory(chatMemory)
             .withContextManager(contextManager)
             .withAppConfig(configState)
             .withProvider(currentProvider) // Use current provider
@@ -172,6 +182,7 @@ fun ChatScreen() {
         logger.info("creating blockchain kompanion")
         return Kompanion.builder()
             .withMode(BLOCKCHAIN)
+            .withChatMemory(chatMemory)
             .withInteractionHandler(handler)
             .withContextManager(contextManager)
             .withAppConfig(configState)
@@ -244,6 +255,7 @@ fun ChatScreen() {
         },
         SlashCommand("/clear", "Clear chat history") {
             messages = emptyList()
+            clearChatMemory()
         }
     )
 

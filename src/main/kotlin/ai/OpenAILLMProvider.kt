@@ -10,9 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor
-import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.InMemoryChatMemory
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
@@ -61,7 +59,7 @@ class OpenAILLMProvider : LLMProvider() {
 
     fun createClient(): ChatClient {
         return ChatClient.builder(createModel())
-            .defaultAdvisors(PromptChatMemoryAdvisor(InMemoryChatMemory()))
+            .defaultAdvisors(defaultAdvisors.toList())
             .build()
     }
 

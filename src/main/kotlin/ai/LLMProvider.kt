@@ -1,6 +1,7 @@
 package ai
 
 import org.reflections.Reflections
+import org.springframework.ai.chat.client.advisor.api.Advisor
 import org.springframework.ai.tool.ToolCallback
 import org.springframework.core.ParameterizedTypeReference
 
@@ -11,6 +12,8 @@ abstract class LLMProvider {
 
     lateinit var model: String
 
+    val defaultAdvisors = mutableSetOf<Advisor>()
+
     fun setModel(model: String): LLMProvider {
         if (getSupportedModels().contains(model)) {
             this.model = model
@@ -18,6 +21,11 @@ abstract class LLMProvider {
         } else {
             throw IllegalArgumentException("Model $model is not supported by this provider")
         }
+    }
+
+    fun addAdvisor(advisor: Advisor): LLMProvider {
+        this.defaultAdvisors.add(advisor)
+        return this
     }
 
     companion object {

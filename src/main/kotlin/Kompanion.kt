@@ -16,6 +16,9 @@ import arrow.core.getOrElse
 import config.AppConfig
 import config.Provider
 import mcp.McpManager
+import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor
+import org.springframework.ai.chat.memory.ChatMemory
+import org.springframework.ai.chat.memory.InMemoryChatMemory
 import java.util.*
 
 class Kompanion(
@@ -52,10 +55,14 @@ class KompanionBuilder {
     private var mode: AgentMode = AgentMode.BLOCKCHAIN
     private var appConfig: AppConfig? = null
     private var provider: Provider? = null
-
+    private var chatMemory: ChatMemory = InMemoryChatMemory()
 
     fun withMode(mode: AgentMode) = apply {
         this.mode = mode
+    }
+
+    fun withChatMemory(memory: ChatMemory) = apply {
+        this.chatMemory = memory
     }
 
     fun withContextManager(customContextManager: ContextManager) = apply {
@@ -84,20 +91,22 @@ class KompanionBuilder {
 
     fun build(): Kompanion {
         val toolManager = ToolManager()
-        val finalAppConfig = appConfig ?: AppConfig.load()
         val finalContextManager = contextManager ?: InMemoryContextManager()
 
         // Determine which provider to use
         val selectedProvider = this.provider ?: Provider.OPENAI
 
+        val memoryAdvisor = PromptChatMemoryAdvisor(chatMemory)
 
         val smallProvider = Either.catch {
             getFinalLLMProvider(selectedProvider.small)
         }.getOrElse { getFinalLLMProvider("gpt-4o-mini") }
+            .addAdvisor(memoryAdvisor)
 
         val bigProvider = Either.catch {
             getFinalLLMProvider(selectedProvider.big)
         }.getOrElse { getFinalLLMProvider("gpt-4o") }
+            .addAdvisor(memoryAdvisor)
 
         val finalReasoner = reasoner
         val finalGenerator = codeGenerator ?: CodeGenerator(bigProvider, finalContextManager, toolManager)
@@ -143,6 +152,7 @@ class KompanionBuilder {
         val agent = Agent(
             finalContextManager,
             interactionSavingWrapper,
+            chatMemory,
             selectedMode
         )
 
