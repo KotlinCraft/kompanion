@@ -218,11 +218,15 @@ class BanklessTools(
     fun getEventLogs(
         @ToolParam(
             required = true, description = "network to fetch logs for"
-        ) network: String, @ToolParam(
-            required = true, description = "addresses to fetch logs for"
-        ) addresses: List<String>, @ToolParam(
-            required = true, description = "topic to fetch logs for. Use tool to create topic from abi event. Don't assume topics, but build them using build_event_topic"
-        ) topic: String, @ToolParam(
+        ) network: String,
+        @ToolParam(
+            required = true, description = "contract addresses to fetch logs for. In case of proxy, use the proxy address, not the implementation."
+        ) addresses: List<String>,
+        @ToolParam(
+            required = true,
+            description = "topic to fetch logs for. Use tool to create topic from abi event. Don't assume topics, but build them using build_event_topic"
+        ) topic: String,
+        @ToolParam(
             required = false, description = "optional topics to fetch logs for"
         ) optionalTopics: List<String?>? = emptyList()
     ): GetEventLogsResponse {
