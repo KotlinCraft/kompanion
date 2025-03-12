@@ -76,7 +76,7 @@ class FlowCodeGenerator(
                 }
 
                 is FlowAction.Complete -> {
-                    // We'll never reach this case in the while loop, but Kotlin needs it for exhaustive when
+                    // We'll never reach this case in the while loop, but Kotlin requires it for exhaustiveness
                     break
                 }
             }
@@ -100,68 +100,69 @@ class FlowCodeGenerator(
         }
         val validationCriteria = plan.validationCriteria.joinToString("\n") { "- $it" }
         val feedbackSection = if (!feedback.isNullOrBlank()) "\n\n## Feedback from previous action:\n$feedback" else ""
-        
+
         val prompt = """
-            |$contextPrompt
-            |
-            |You're an amazing developer, with many years of experience and a deep understanding of clean code and architecture.
-            |Based on the following generation plan you will make the necessary code changes.
-            |Use files in your current context to understand your changes.
-            |
-            |If the user doesn't ask for it specifically, don't add tests.
-            |
-            |## Project Context:
-            |Based on the files in your current context, you understand the existing code structure and patterns.
-            |Look for similar implementations in the current codebase to maintain consistency.
-            |
-            |## Coding Task:
-            |Based on the following generation plan, implement the necessary code changes.
-            |First explore the codebase to understand the current structure before making changes.
-            |
-            |Plan Steps:
-            |$planSteps
-            |
-            |Expected Outcome:
-            |${plan.expectedOutcome}
-            |
-            |Validation Criteria:
-            |$validationCriteria
-            |
-            |## Implementation Approach:
-            |1. You will be implementing changes one action at a time
-            |2. For each action, you must return ONE of the following responses:
-            |   - EDIT_FILE: To modify an existing file
-            |   - CREATE_FILE: To create a new file
-            |   - COMPLETE: When all changes are done
-            |
-            |## Response Format:
-            |You must respond with ONE of these formats:
-            |
-            |1. To edit a file:
-            |```
-            |ACTION: EDIT_FILE
-            |FILE_PATH: /absolute/path/to/file
-            |EXPLANATION: Brief explanation of changes
-            |CONTENT:
-            |// Complete new content of the file
-            |```
-            |
-            |2. To create a file:
-            |```
-            |ACTION: CREATE_FILE
-            |FILE_PATH: /absolute/path/to/file
-            |EXPLANATION: Brief explanation of the file purpose
-            |CONTENT:
-            |// Complete content of the new file
-            |```
-            |
-            |3. When complete:
-            |```
-            |ACTION: COMPLETE
-            |SUMMARY: Detailed explanation of all changes made
-            |```
-            |$feedbackSection
-        """.trimMargin()
+            $contextPrompt
+
+            You're an amazing developer, with many years of experience and a deep understanding of clean code and architecture.
+            Based on the following generation plan you will make the necessary code changes.
+            Use files in your current context to understand your changes.
+
+            If the user doesn't ask for it specifically, don't add tests.
+
+            ## Project Context:
+            Based on the files in your current context, you understand the existing code structure and patterns.
+            Look for similar implementations in the current codebase to maintain consistency.
+
+            ## Coding Task:
+            Based on the following generation plan, implement the necessary code changes.
+            First explore the codebase to understand the current structure before making changes.
+
+            Plan Steps:
+            $planSteps
+
+            Expected Outcome:
+            ${plan.expectedOutcome}
+
+            Validation Criteria:
+            $validationCriteria
+
+            ## Implementation Approach:
+            1. You will be implementing changes one action at a time
+            2. For each action, you must return ONE of the following responses:
+               - EDIT_FILE: To modify an existing file
+               - CREATE_FILE: To create a new file
+               - COMPLETE: When all changes are done
+            3. You only change or create what planned and asked. No freewheeling.
+
+            ## Response Format:
+            You must respond with ONE of these formats:
+
+            1. To edit a file:
+            ```
+            ACTION: EDIT_FILE
+            FILE_PATH: /absolute/path/to/file
+            EXPLANATION: Brief explanation of changes
+            CONTENT:
+            // Complete new content of the file
+            ```
+            
+            2. To create a file:
+            ```
+            ACTION: CREATE_FILE
+            FILE_PATH: /absolute/path/to/file
+            EXPLANATION: Brief explanation of the file purpose
+            CONTENT:
+            // Complete content of the new file
+            ```
+            
+            3. When complete:
+            ```
+            ACTION: COMPLETE
+            SUMMARY: Detailed explanation of all changes made
+            ```
+            $feedbackSection
+        """.trimIndent()
 
         val response = LLMProvider.prompt<String>(
             system = prompt,
