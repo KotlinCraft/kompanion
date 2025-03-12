@@ -134,6 +134,7 @@ class FlowCodeGenerator(
                - CREATE_FILE: To create a new file
                - COMPLETE: When all changes are done
             3. You only change or create what planned and asked. No freewheeling.
+            4. Definitely do not overengineer things. Keep it simple and clean in as few steps as possible.
 
             ## Response Format:
             You must respond with ONE of these formats:

@@ -16,7 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+// Retain the original filled send import for fallback if needed
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -197,7 +199,6 @@ fun ChatScreen() {
             createBlockchainKompanion(interactionHandler, inMemoryContextManager)
     }
 
-
     // Create agents state and remember it
     val agentState = remember { AgentState() }
 
@@ -213,7 +214,6 @@ fun ChatScreen() {
 
     // Get the current active mode based on the mode state
     val activeMode: Mode = remember(mode) {
-
         when (mode) {
             "code" -> agentState.codingKompanion.agent.mode
             "blockchain" -> agentState.blockchainKompanion.agent.mode
@@ -624,8 +624,7 @@ fun ChatScreen() {
 
                     // Box wrapper to apply the glisten effect
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
+                        modifier = Modifier.weight(1f)
                     ) {
                         // Input field
                         OutlinedTextField(
@@ -660,8 +659,6 @@ fun ChatScreen() {
                                                     Color.Gray.copy(alpha = 0.5f),
                                                     Color.Gray.copy(alpha = 0.3f)
                                                 ),
-                                                // Center the animation on the text area with the shimmerOffsetX 
-                                                // determining the movement direction
                                                 start = Offset(shimmerOffsetX.value - 150f, 0f),
                                                 end = Offset(shimmerOffsetX.value + 150f, 0f)
                                             )
@@ -669,7 +666,6 @@ fun ChatScreen() {
                                         fontSize = 16.sp
                                     )
                                 } else {
-                                    // Regular placeholder text
                                     Text(
                                         text = placeholderText,
                                         color = Color.Gray,
@@ -724,12 +720,15 @@ fun ChatScreen() {
 
                     Spacer(Modifier.width(12.dp))
 
-                    // Send button
+                    // Modified Send button with a flat design and minimalistic styling
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(if (isProcessing) successColor else accentColor)
+                            .background(
+                                if (isProcessing) successColor.copy(alpha = 0.6f)
+                                else Color(0xFF3A3A3A)
+                            )
                             .clickable {
                                 if (!isProcessing) {
                                     sendCurrentMessage()
@@ -737,20 +736,18 @@ fun ChatScreen() {
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Crossfade(targetState = isProcessing) { processing ->
-                            if (processing) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Default.Send,
-                                    contentDescription = "Send",
-                                    tint = Color.White
-                                )
-                            }
+                        if (isProcessing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Outlined.Send,
+                                contentDescription = "Send",
+                                tint = Color.White
+                            )
                         }
                     }
                 }
