@@ -2,7 +2,7 @@ package agent.modes
 
 import agent.ContextManager
 import agent.ToolManager
-import agent.coding.CodeGenerator
+import agent.coding.ToolingCodeGenerator
 import agent.coding.tool.LocalCodingTools
 import agent.domain.GenerationPlan
 import agent.fileops.KompanionFileHandler
@@ -26,7 +26,7 @@ import java.util.*
 class CodingMode(
     private val codingAnalyst: CodingAnalyst,
     private val codingPlanner: CodingPlanner,
-    private val codeGenerator: CodeGenerator,
+    private val toolingCodeGenerator: ToolingCodeGenerator,
     private val interactionHandler: InteractionHandler,
     private val toolManager: ToolManager,
     mcpManager: McpManager,
@@ -102,7 +102,7 @@ I'm ready to help you with your coding tasks! 🚀
         logger.debug("Generation plan created: {}", plan)
 
         // Step 3: Execute the plan with the code generator
-        val result = codeGenerator.execute(request, plan)
+        val result = toolingCodeGenerator.execute(request, plan)
 
         return result.explanation
     }

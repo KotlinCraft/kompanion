@@ -37,6 +37,7 @@ class SimplePlanner(
             6. When changing functions or methods, pull in the relevant code into the context as to not break anything.
             7. Use the context to ensure the plan is relevant and accurate.
             8. Make sure to include dependencies and imports as needed.
+            9. Use the related files and code snippets to ensure the plan is accurate.
             
             Ensure the response is structured to match:
             {

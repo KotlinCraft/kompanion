@@ -20,11 +20,11 @@ class CodingPlanner(
         logger.debug("Initial plan created: {}", initialPlan)
 
         // Enhance it with the reasoning strategy (no tools used)
-        val enhancedPlan = reasoningStrategy.reason(request, initialPlan)
-        logger.debug("Enhanced plan created: {}", enhancedPlan)
-
-        logger.info(initialPlan.toString())
-        logger.info(enhancedPlan.toString())
-        return enhancedPlan
+        // val enhancedPlan = reasoningStrategy.reason(request, initialPlan)
+        //logger.debug("Enhanced plan created: {}", enhancedPlan)
+//
+        //logger.info(initialPlan.toString())
+        //logger.info(enhancedPlan.toString())
+        return initialPlan
     }
 }

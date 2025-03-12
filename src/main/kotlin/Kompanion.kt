@@ -1,5 +1,5 @@
 import agent.*
-import agent.coding.CodeGenerator
+import agent.coding.ToolingCodeGenerator
 import agent.domain.CodeApplier
 import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler
@@ -41,7 +41,7 @@ class KompanionBuilder {
         CODE, BLOCKCHAIN
     }
 
-    private var codeGenerator: CodeGenerator? = null
+    private var toolingCodeGenerator: ToolingCodeGenerator? = null
     private var codeApplier: CodeApplier? = null
     private var contextManager: ContextManager? = null
     private var smallLlmProvider: LLMProvider? = null
@@ -64,8 +64,8 @@ class KompanionBuilder {
         contextManager = customContextManager
     }
 
-    fun withCustomCodeGenerator(generator: CodeGenerator) = apply {
-        codeGenerator = generator
+    fun withCustomCodeGenerator(generator: ToolingCodeGenerator) = apply {
+        toolingCodeGenerator = generator
     }
 
     fun withCustomCodeApplier(applier: CodeApplier) = apply {
@@ -98,7 +98,7 @@ class KompanionBuilder {
             getFinalLLMProvider(selectedProvider.reasoning)
         }.getOrElse { getFinalLLMProvider("o3-mini") }.addAdvisor(memoryAdvisor)
 
-        val finalGenerator = codeGenerator ?: CodeGenerator(llmProvider, finalContextManager, toolManager)
+        val finalGenerator = toolingCodeGenerator ?: ToolingCodeGenerator(llmProvider, finalContextManager, toolManager)
 
         // Ensure we have an interaction handler
         if (interactionHandler == null) {
