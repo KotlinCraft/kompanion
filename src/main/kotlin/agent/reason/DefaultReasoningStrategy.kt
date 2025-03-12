@@ -55,7 +55,7 @@ class DefaultReasoningStrategy(
         return LLMProvider.prompt(
             system = prompt,
             userMessage = "Please provide an improved generation plan based on the context.",
-            temperature = 0.3,
+            temperature = 0.7,
             actions = emptyList(),
             parameterizedTypeReference = object : ParameterizedTypeReference<GenerationPlan>() {}
         )

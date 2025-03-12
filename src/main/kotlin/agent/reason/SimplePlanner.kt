@@ -33,6 +33,10 @@ class SimplePlanner(
             2. A clear description of the expected final outcome
             3. A list of specific validation criteria to verify the implementation
             4. Ask questions if things are unclear.
+            5. Use your tools to assist in creating the plan.
+            6. When changing functions or methods, pull in the relevant code into the context as to not break anything.
+            7. Use the context to ensure the plan is relevant and accurate.
+            8. Make sure to include dependencies and imports as needed.
             
             Ensure the response is structured to match:
             {
