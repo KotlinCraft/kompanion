@@ -1,7 +1,6 @@
 package agent.reason
 
 import agent.domain.*
-import ai.Action
 
 interface Reasoner {
     suspend fun analyzeRequest(request: String): Understanding
