@@ -94,77 +94,74 @@ class FlowCodeGenerator(
         plan: GenerationPlan,
         feedback: String?
     ): Pair<FlowAction, String> {
-        val prompt = buildString {
-            append(contextManager.currentContextPrompt(true))
-            appendLine()
-            appendLine("You're an amazing developer, with many years of experience and a deep understanding of clean code and architecture.")
-            appendLine("Based on the following generation plan you will make the necessary code changes.")
-            appendLine("Use files in your current context to understand your changes.")
-            appendLine()
-            appendLine("If the user doesn't ask for it specifically, don't add tests.")
-            appendLine()
-            appendLine("## Project Context:")
-            appendLine("Based on the files in your current context, you understand the existing code structure and patterns.")
-            appendLine("Look for similar implementations in the current codebase to maintain consistency.")
-            appendLine()
-            appendLine("## Coding Task:")
-            appendLine("Based on the following generation plan, implement the necessary code changes.")
-            appendLine("First explore the codebase to understand the current structure before making changes.")
-            appendLine()
-            appendLine("Plan Steps:")
-            plan.steps.forEach { step ->
-                appendLine("- Action: ${step.action}")
-                appendLine("  Input: ${step.input}")
-                appendLine("  Expected Output: ${step.expectedOutput}")
-            }
-            appendLine()
-            appendLine("Expected Outcome:")
-            appendLine(plan.expectedOutcome)
-            appendLine()
-            appendLine("Validation Criteria:")
-            plan.validationCriteria.forEach { appendLine("- $it") }
-            appendLine()
-            appendLine("## Implementation Approach:")
-            appendLine("1. You will be implementing changes one action at a time")
-            appendLine("2. For each action, you must return ONE of the following responses:")
-            appendLine("   - EDIT_FILE: To modify an existing file")
-            appendLine("   - CREATE_FILE: To create a new file")
-            appendLine("   - COMPLETE: When all changes are done")
-            appendLine()
-            appendLine("## Response Format:")
-            appendLine("You must respond with ONE of these formats:")
-            appendLine()
-            appendLine("1. To edit a file:")
-            appendLine("```")
-            appendLine("ACTION: EDIT_FILE")
-            appendLine("FILE_PATH: /absolute/path/to/file")
-            appendLine("EXPLANATION: Brief explanation of changes")
-            appendLine("CONTENT:")
-            appendLine("// Complete new content of the file")
-            appendLine("```")
-            appendLine()
-            appendLine("2. To create a file:")
-            appendLine("```")
-            appendLine("ACTION: CREATE_FILE")
-            appendLine("FILE_PATH: /absolute/path/to/file")
-            appendLine("EXPLANATION: Brief explanation of the file purpose")
-            appendLine("CONTENT:")
-            appendLine("// Complete content of the new file")
-            appendLine("```")
-            appendLine()
-            appendLine("3. When complete:")
-            appendLine("```")
-            appendLine("ACTION: COMPLETE")
-            appendLine("SUMMARY: Detailed explanation of all changes made")
-            appendLine("```")
-
-            // Add the feedback from previous action if available
-            if (!feedback.isNullOrBlank()) {
-                appendLine()
-                appendLine("## Feedback from previous action:")
-                appendLine(feedback)
-            }
+        val contextPrompt = contextManager.currentContextPrompt(true)
+        val planSteps = plan.steps.joinToString("\n") { step ->
+            "- Action: ${step.action}\n  Input: ${step.input}\n  Expected Output: ${step.expectedOutput}"
         }
+        val validationCriteria = plan.validationCriteria.joinToString("\n") { "- $it" }
+        val feedbackSection = if (!feedback.isNullOrBlank()) "\n\n## Feedback from previous action:\n$feedback" else ""
+        
+        val prompt = """
+            |$contextPrompt
+            |
+            |You're an amazing developer, with many years of experience and a deep understanding of clean code and architecture.
+            |Based on the following generation plan you will make the necessary code changes.
+            |Use files in your current context to understand your changes.
+            |
+            |If the user doesn't ask for it specifically, don't add tests.
+            |
+            |## Project Context:
+            |Based on the files in your current context, you understand the existing code structure and patterns.
+            |Look for similar implementations in the current codebase to maintain consistency.
+            |
+            |## Coding Task:
+            |Based on the following generation plan, implement the necessary code changes.
+            |First explore the codebase to understand the current structure before making changes.
+            |
+            |Plan Steps:
+            |$planSteps
+            |
+            |Expected Outcome:
+            |${plan.expectedOutcome}
+            |
+            |Validation Criteria:
+            |$validationCriteria
+            |
+            |## Implementation Approach:
+            |1. You will be implementing changes one action at a time
+            |2. For each action, you must return ONE of the following responses:
+            |   - EDIT_FILE: To modify an existing file
+            |   - CREATE_FILE: To create a new file
+            |   - COMPLETE: When all changes are done
+            |
+            |## Response Format:
+            |You must respond with ONE of these formats:
+            |
+            |1. To edit a file:
+            |```
+            |ACTION: EDIT_FILE
+            |FILE_PATH: /absolute/path/to/file
+            |EXPLANATION: Brief explanation of changes
+            |CONTENT:
+            |// Complete new content of the file
+            |```
+            |
+            |2. To create a file:
+            |```
+            |ACTION: CREATE_FILE
+            |FILE_PATH: /absolute/path/to/file
+            |EXPLANATION: Brief explanation of the file purpose
+            |CONTENT:
+            |// Complete content of the new file
+            |```
+            |
+            |3. When complete:
+            |```
+            |ACTION: COMPLETE
+            |SUMMARY: Detailed explanation of all changes made
+            |```
+            |$feedbackSection
+        """.trimMargin()
 
         val response = LLMProvider.prompt<String>(
             system = prompt,
