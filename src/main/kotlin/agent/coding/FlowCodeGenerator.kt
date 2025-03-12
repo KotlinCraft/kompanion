@@ -166,12 +166,12 @@ class FlowCodeGenerator(
             }
         }
 
-        val response = LLMProvider.prompt(
+        val response = LLMProvider.prompt<String>(
             system = prompt,
             userMessage = request,
             actions = emptyList(),
             temperature = 0.5,
-            parameterizedTypeReference = object : ParameterizedTypeReference<String>() {},
+            parameterizedTypeReference = null
         )
 
         // Parse the response to extract the action

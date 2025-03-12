@@ -65,7 +65,7 @@ abstract class LLMProvider {
         userMessage: String?,
         actions: List<ToolCallback>,
         temperature: Double,
-        parameterizedTypeReference: ParameterizedTypeReference<T>,
+        parameterizedTypeReference: ParameterizedTypeReference<T>?,
         retry: Boolean = true,
     ): T
 

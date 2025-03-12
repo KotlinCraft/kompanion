@@ -64,16 +64,21 @@ class OpenAILLMProvider : LLMProvider() {
         userMessage: String?,
         actions: List<ToolCallback>,
         temperature: Double,
-        parameterizedTypeReference: ParameterizedTypeReference<T>,
+        parameterizedTypeReference: ParameterizedTypeReference<T>?,
         retry: Boolean
     ): T {
 
-        val converter = BeanOutputConverter(parameterizedTypeReference, objectmapper)
+        var converter: BeanOutputConverter<T>? = null
+        var outputMessage: String? = null
 
-        val outputMessage =
-            PromptTemplate(
-                "{format}", mapOf("format" to converter.format)
-            ).createMessage().text
+        if (parameterizedTypeReference != null) {
+            converter = BeanOutputConverter(parameterizedTypeReference, objectmapper)
+
+            outputMessage =
+                PromptTemplate(
+                    "{format}", mapOf("format" to converter.format)
+                ).createMessage().text
+        }
 
 
         val messages = listOf(
@@ -83,7 +88,7 @@ class OpenAILLMProvider : LLMProvider() {
             userMessage?.let { UserMessage(it) },
         ).filterNotNull()
 
-        var prompt = createClient().prompt(
+        val prompt = createClient().prompt(
             Prompt(
                 messages,
             )
@@ -94,7 +99,7 @@ class OpenAILLMProvider : LLMProvider() {
         }.mapLeft { logger.error("problem trying to call LLM", it) }.getOrElse { "" }
 
         return Either.catch {
-            converter.convert(content)
+            converter?.convert(content) ?: content as T
         }.fold({
             if (retry) {
                 logger.info("response was: $content")
@@ -108,7 +113,7 @@ class OpenAILLMProvider : LLMProvider() {
                 ).tools(actions)
 
                 val content = prompt.call().content() ?: ""
-                converter.convert(content)
+                converter?.convert(content) ?: content as T
             } else {
                 throw it
             }

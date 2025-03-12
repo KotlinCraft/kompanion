@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import config.AppConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.ai.anthropic.AnthropicChatModel
 import org.springframework.ai.anthropic.AnthropicChatOptions
@@ -64,51 +66,58 @@ class AnthropicLLMProvider : LLMProvider() {
         userMessage: String?,
         actions: List<ToolCallback>,
         temperature: Double,
-        parameterizedTypeReference: ParameterizedTypeReference<T>,
+        parameterizedTypeReference: ParameterizedTypeReference<T>?,
         retry: Boolean,
     ): T {
         this.temperature = temperature
 
-        val converter = BeanOutputConverter(parameterizedTypeReference, objectmapper)
+        var converter: BeanOutputConverter<T>? = null
+        var outputMessage: String? = null
 
-        val outputMessage = PromptTemplate(
-            "{format}", mapOf("format" to converter.format)
-        ).createMessage()
+        if (parameterizedTypeReference != null) {
+            converter = BeanOutputConverter(parameterizedTypeReference, objectmapper)
+
+            outputMessage =
+                PromptTemplate(
+                    "{format}", mapOf("format" to converter.format)
+                ).createMessage().text
+        }
 
         val messages = listOf(
+            SystemMessage("Be sure to use your tools to provide the best possible answer."),
             SystemMessage(system),
+            SystemMessage(outputMessage),
             userMessage?.let { UserMessage(it) },
-            outputMessage
         ).filterNotNull()
 
-        var prompt = client.prompt(
+        val prompt = client.prompt(
             Prompt(
                 messages
             )
         ).tools(actions)
 
+        val content = Either.catch {
+            withContext(Dispatchers.IO) { prompt.call() }.content() ?: ""
+        }.mapLeft { logger.error("problem trying to call LLM", it) }.getOrElse { "" }
+
         return Either.catch {
-            val content = prompt.call().content() ?: ""
-            Either.catch { converter.convert(content) }.getOrElse { throw InvalidStructuredResponse() }
+            converter?.convert(content) ?: content as T
         }.fold({
             if (retry) {
                 if (it.message?.contains("429") == true) {
                     throw LLMException("Rate limit exceeded. Make sure you're on a higher tier than Tier 1 when using anthropic.")
                 }
                 logger.info("retrying, because we got the following error: $it")
-                var prompt = client.prompt(
+                val prompt = createClient().prompt(
                     Prompt(
                         UserMessage(system),
-                        if (it is InvalidStructuredResponse) UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again")
-                        else SystemMessage(
-                            ""
-                        ),
-                        outputMessage
+                        UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
+                        SystemMessage(outputMessage)
                     )
                 ).tools(actions)
 
                 val content = prompt.call().content() ?: ""
-                converter.convert(content)
+                converter?.convert(content) ?: content as T
             } else {
                 throw it
             }
