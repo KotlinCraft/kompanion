@@ -66,23 +66,25 @@ I'm ready to help you with your coding tasks! 🚀
     init {
 
         try {
+            /*
             val toolbacks = mcpManager.getMcpServers().flatMap {
-                Either.catch {
-                    SyncMcpToolCallbackProvider.syncToolCallbacks(it.nel())
-                }.mapLeft {
-                    logger.error("unable to initialize mcp server: {}", it.message)
-                }.getOrElse { emptyList() }
-            }.distinctBy { it.toolDefinition.name() }
+                    Either.catch {
+                        SyncMcpToolCallbackProvider.syncToolCallbacks(it.nel())
+                    }.mapLeft {
+                        logger.error("unable to initialize mcp server: {}", it.message)
+                    }.getOrElse { emptyList() }
+                }.distinctBy { it.toolDefinition.name() }
 
-            toolbacks.forEach {
-                toolManager.registerTool(
-                    Tool(
-                        id = UUID.randomUUID().toString(),
-                        toolCallback = it,
-                        showUpInTools = true
+                toolbacks.forEach {
+                    toolManager.registerTool(
+                        Tool(
+                            id = UUID.randomUUID().toString(),
+                            toolCallback = it,
+                            showUpInTools = true
+                        )
                     )
-                )
-            }
+                }
+             */
             LocalCodingTools(interactionHandler, contextManager).register(toolManager)
             FileTools(contextManager).register(toolManager)
         } catch (ex: Exception) {

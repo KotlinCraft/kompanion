@@ -598,31 +598,3 @@ class KotlinCodeGraphBuilder {
         // - Property usages (USES relationships)
     }
 }
-
-/**
- * Example usage of KotlinCodeGraphBuilder
- */
-fun main(args: Array<String>) {
-    val sourceDirectory = args.getOrElse(0) { "src" }
-    val outputFile = args.getOrElse(1) { "kotlin_code_graph.json" }
-    
-    println("Analyzing Kotlin source code in: $sourceDirectory")
-    println("Output will be saved to: $outputFile")
-    
-    try {
-        val builder = KotlinCodeGraphBuilder()
-        val codeGraph = builder.buildFromDirectory(sourceDirectory)
-        
-        // Save the graph to a file
-        codeGraph.saveToFile(outputFile)
-        
-        // Print some statistics
-        val stats = codeGraph.exportStatistics()
-        println("\nGraph Statistics:")
-        stats.forEach { (key, value) -> println("$key: $value") }
-        
-    } catch (e: Exception) {
-        println("Error building code graph: ${e.message}")
-        e.printStackTrace()
-    }
-}

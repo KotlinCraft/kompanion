@@ -39,7 +39,7 @@ class BlockchainMode(
             BanklessTools(interactionHandler, contextManager).register(toolManager)
         }
 
-        val toolbacks = mcpManager.getMcpServers().flatMap {
+      /*  val toolbacks = mcpManager.getMcpServers().flatMap {
             Either.catch {
                 SyncMcpToolCallbackProvider.syncToolCallbacks(it.nel())
             }.mapLeft {
@@ -56,6 +56,8 @@ class BlockchainMode(
                 )
             )
         }
+        
+       */
     }
 
 

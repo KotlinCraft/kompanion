@@ -55,7 +55,7 @@ private data class SlashCommand(
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalTextApi::class)
 @Composable
-fun ChatScreen() {
+fun ChatScreen(initialMessage: String) {
 
     val logger = LoggerFactory.getLogger("ChatScreen")
 
@@ -319,6 +319,16 @@ fun ChatScreen() {
         }
     }
 
+    // Process the initial message if provided
+    LaunchedEffect(initialMessage) {
+        if (initialMessage.isNotBlank()) {
+            // Add the user message to the chat
+            messages = messages + ChatMessage(UUID.randomUUID(), initialMessage, true)
+            // Send the message to the bot
+            sendToBot(initialMessage)
+        }
+    }
+
     // Confirmation Dialog
     if (showConfirmationDialog && pendingConfirmation != null) {
         Dialog(onDismissRequest = {
@@ -445,13 +455,12 @@ fun ChatScreen() {
 
         // Listen for changes in the working directory and recreate agents
         LaunchedEffect(key1 = workingDirectory) {
-            recreateAgents()
             isProcessing = false
             isWaitingForAnswer = false
         }
 
         // Recreate agents when the provider changes
-        LaunchedEffect(key1 = currentProvider) {
+        LaunchedEffect(key1 = currentProvider, key2 = workingDirectory) {
             recreateAgents()
         }
 

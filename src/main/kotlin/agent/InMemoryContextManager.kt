@@ -16,7 +16,9 @@ class InMemoryContextManager : ContextManager {
     private val _files = MutableStateFlow<Set<ContextFile>>(emptySet())
     val files: StateFlow<Set<ContextFile>> = _files.asStateFlow()
 
-    val graph = KotlinCodeGraphBuilder().buildFromDirectory(AppConfig.load().latestDirectory)
+    val graph by lazy {
+        KotlinCodeGraphBuilder().buildFromDirectory(AppConfig.load().latestDirectory)
+    }
 
     override fun getContext(): StateFlow<Set<ContextFile>> = files
 
