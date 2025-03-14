@@ -3,6 +3,7 @@ package agent.blockchain.tool
 import agent.ContextManager
 import agent.blockchain.bankless.BanklessClient
 import agent.blockchain.bankless.EvmReadContractStateRequest
+import agent.blockchain.bankless.model.contract.Input
 import agent.blockchain.bankless.model.contract.Output
 import agent.blockchain.bankless.model.contract.ReadContractRequest
 import agent.blockchain.bankless.model.event.EthLog
@@ -37,24 +38,67 @@ class BanklessTools(
 
     val banklessClient = BanklessClient()
 
+    fun convert(readContractOutput: ReadContractOutput): List<Output> {
+        return when (readContractOutput.type) {
+            "tuple" -> {
+                readContractOutput.components.flatMap { convert(it) }
+            }
+
+            else -> {
+                listOf(
+                    Output(
+                        type = readContractOutput.type
+                    )
+                )
+            }
+        }
+    }
+
+    fun convert(readContractOutputs: List<ReadContractOutput>): List<Output> {
+        return readContractOutputs.flatMap {
+            convert(it)
+        }
+    }
+
     @org.springframework.ai.tool.annotation.Tool(
         name = "read_contract",
-        description = """ Call to the Bankless API to read a contract's state and interact with it. Use the Abi types and function to interact (read only) with a contract."""
+        description = """ Call to the Bankless API to read a contract's state and interact with it. 
+            |Use the Abi types and function to interact (read only) with a contract."""
     )
     fun readContract(
         @ToolParam(
-            required = true,
-            description = """read and interact with a contract based on the address, method, network, inputs, and outputs"""
-        ) request: ReadContractRequest
+            required = true, description = "network to read contract from."
+        )
+        network: String,
+        @ToolParam(
+            required = true, description = "address of the contract to read."
+        )
+        address: String,
+        @ToolParam(
+            required = true, description = "method to call on the contract."
+        )
+        method: String,
+        @ToolParam(
+            required = false, description = "inputs to the method."
+        )
+        inputs: List<Input> = emptyList(),
+        @ToolParam(
+            required = false, description = """expects outputs from the method.
+                | list of output parameters with type and indexed properties. 
+                |Example: {"type": "uint256", "indexed": false}
+                |Example: {"type": "tuple", "components": [{"type": "uint256", "indexed": false}]}
+            """
+        )
+        outputs: List<ReadContractOutput> = emptyList(),
     ): ReadContractResponse {
         // Show RUNNING indicator
         val toolId = runBlocking(Dispatchers.IO) {
             customToolUsage(
                 toolIndicator = {
                     ContractReadIndicator(
-                        request.address,
-                        request.method,
-                        request.network,
+                        address,
+                        method,
+                        network,
                         ToolStatus.RUNNING,
                     )
                 })
@@ -62,11 +106,11 @@ class BanklessTools(
 
         return try {
             val banklessRequest = EvmReadContractStateRequest(
-                contract = request.address, method = request.method, inputs = request.inputs, outputs = request.outputs
+                contract = address, method = method, inputs = inputs, outputs = convert(outputs)
             )
 
             val result =
-                runBlocking(Dispatchers.IO) { banklessClient.readContractState(request.network, banklessRequest) }
+                runBlocking(Dispatchers.IO) { banklessClient.readContractState(network, banklessRequest) }
 
             result.fold({ error ->
                 // Create error response
@@ -77,9 +121,9 @@ class BanklessTools(
                     customToolUsage(
                         id = toolId, toolIndicator = {
                             ContractReadIndicator(
-                                request.address,
-                                request.method,
-                                request.network,
+                                address,
+                                method,
+                                network,
                                 ToolStatus.FAILED,
                                 null,
                                 error,
@@ -104,9 +148,9 @@ class BanklessTools(
                     customToolUsage(
                         id = toolId, toolIndicator = {
                             ContractReadIndicator(
-                                request.address,
-                                request.method,
-                                request.network,
+                                address,
+                                method,
+                                network,
                                 ToolStatus.COMPLETED,
                                 null,
                                 null,
@@ -126,9 +170,9 @@ class BanklessTools(
                 customToolUsage(
                     id = toolId, toolIndicator = {
                         ContractReadIndicator(
-                            request.address,
-                            request.method,
-                            request.network,
+                            address,
+                            method,
+                            network,
                             ToolStatus.FAILED,
                             null,
                             "Error reading contract: ${e.message}",
