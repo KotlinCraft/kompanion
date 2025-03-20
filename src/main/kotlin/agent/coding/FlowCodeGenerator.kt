@@ -6,6 +6,8 @@ import agent.coding.domain.CodingResult
 import agent.coding.domain.FlowAction
 import agent.domain.GenerationPlan
 import agent.domain.context.ContextFile
+import agent.interaction.InteractionHandler
+import agent.modes.Interactor
 import ai.LLMProvider
 import org.springframework.core.ParameterizedTypeReference
 import java.nio.file.Files
@@ -15,7 +17,8 @@ import java.util.*
 class FlowCodeGenerator(
     private val LLMProvider: LLMProvider,
     private val contextManager: ContextManager,
-) : CodeGenerator {
+    private val interactionHandler: InteractionHandler,
+) : CodeGenerator, Interactor {
 
     override suspend fun execute(
         request: String,
@@ -236,5 +239,9 @@ class FlowCodeGenerator(
                 Pair(FlowAction.Complete("Failed to parse action from LLM response. Raw response: $response"), response)
             }
         }
+    }
+
+    override fun interactionHandler(): InteractionHandler {
+        return interactionHandler
     }
 }
