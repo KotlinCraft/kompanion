@@ -54,7 +54,7 @@ private data class SlashCommand(
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalTextApi::class)
 @Composable
-fun ChatScreen(initialMessage: String) {
+fun ChatScreen() {
 
     val logger = LoggerFactory.getLogger("ChatScreen")
 
@@ -315,16 +315,6 @@ fun ChatScreen(initialMessage: String) {
             } else {
                 sendToBot(userMessage)
             }
-        }
-    }
-
-    // Process the initial message if provided
-    LaunchedEffect(initialMessage) {
-        if (initialMessage.isNotBlank()) {
-            // Add the user message to the chat
-            messages = messages + ChatMessage(UUID.randomUUID(), initialMessage, true)
-            // Send the message to the bot
-            sendToBot(initialMessage)
         }
     }
 
