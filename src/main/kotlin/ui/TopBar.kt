@@ -7,7 +7,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -66,8 +65,8 @@ fun TopBar(
     val glistenColor2: Color
     
     when (mode) {
-        "blockchain" -> {
-            // More purple shimmer for blockchain mode
+        "full-auto" -> {
+            // More purple shimmer for full-auto mode
             glistenColor1 = Color(0xFFA374D5) // Deeper purple
             glistenColor2 = Color(0xFF8A4FD0) // Rich purple
         }
@@ -163,27 +162,27 @@ fun TopBar(
                         ) {
 
 
-                            // Blockchain mode button
+                            // full-auto mode button
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .clickable { onModeChange("blockchain") }
-                                    .background(if (mode == "blockchain") Color(0xFF936FBC) else Color.Transparent)
+                                    .clickable { onModeChange("full-auto") }
+                                    .background(if (mode == "full-auto") Color(0xFF936FBC) else Color.Transparent)
                                     .padding(horizontal = 16.dp, vertical = 8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         Icons.Default.AccountBalance,
-                                        contentDescription = "Blockchain mode",
+                                        contentDescription = "Full-auto mode",
                                         tint = Color.White,
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        "Blockchain",
+                                        "Full Auto",
                                         color = Color.White,
-                                        fontWeight = if (mode == "blockchain") FontWeight.Bold else FontWeight.Normal
+                                        fontWeight = if (mode == "full-auto") FontWeight.Bold else FontWeight.Normal
                                     )
                                 }
                             }

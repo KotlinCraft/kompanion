@@ -4,7 +4,7 @@ import agent.coding.ToolingCodeGenerator
 import agent.domain.CodeApplier
 import agent.interaction.AgentMessage
 import agent.interaction.InteractionHandler
-import agent.modes.BlockchainMode
+import agent.modes.AutoMode
 import agent.modes.CodingMode
 import agent.modes.Mode
 import agent.reason.*
@@ -39,7 +39,7 @@ class Kompanion(
 class KompanionBuilder {
 
     enum class AgentMode {
-        CODE, BLOCKCHAIN
+        CODE, FULL_AUTO
     }
 
     private var codeApplier: CodeApplier? = null
@@ -47,7 +47,7 @@ class KompanionBuilder {
     private var smallLlmProvider: LLMProvider? = null
     private var bigLlmProvider: LLMProvider? = null
     private var interactionHandler: InteractionHandler? = null
-    private var mode: AgentMode = AgentMode.BLOCKCHAIN
+    private var mode: AgentMode = AgentMode.FULL_AUTO
     private var appConfig: AppConfig? = null
     private var provider: Provider? = null
     private var chatMemory: ChatMemory = InMemoryChatMemory()
@@ -117,10 +117,10 @@ class KompanionBuilder {
                 finalGenerator, interactionHandler!!, toolManager, McpManager(), finalContextManager
             )
 
-            AgentMode.BLOCKCHAIN -> BlockchainMode(
-                BlockchainReasoner(
+            AgentMode.FULL_AUTO -> AutoMode(
+                AutoModeReasoner(
                     llmProvider, toolManager, finalContextManager
-                ), toolManager, McpManager(), finalContextManager, interactionHandler!!
+                ), toolManager, interactionHandler!!
             )
         }
 

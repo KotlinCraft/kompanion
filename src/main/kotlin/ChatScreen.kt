@@ -1,4 +1,4 @@
-import KompanionBuilder.AgentMode.BLOCKCHAIN
+import KompanionBuilder.AgentMode.FULL_AUTO
 import KompanionBuilder.AgentMode.CODE
 import agent.InMemoryContextManager
 import agent.interaction.*
@@ -71,8 +71,8 @@ fun ChatScreen(initialMessage: String) {
     var isProcessing by remember { mutableStateOf(false) }
     var isWaitingForAnswer by remember { mutableStateOf(false) }
 
-    // Mode state variable: "code", or "blockchain"
-    var mode by remember { mutableStateOf("blockchain") }
+    // Mode state variable: "code", or "full auto"
+    var mode by remember { mutableStateOf("full-auto") }
 
     // Current AI provider state
     var currentProvider by remember { mutableStateOf(AppConfig.load().currentProvider) }
@@ -175,14 +175,14 @@ fun ChatScreen(initialMessage: String) {
             .build()
     }
 
-    // Function to create a blockchain Kompanion
-    fun createBlockchainKompanion(
+    // Function to create a fullAuto Kompanion
+    fun createFullAutoKompanion(
         handler: InteractionHandler,
         contextManager: InMemoryContextManager,
     ): Kompanion {
-        logger.info("creating blockchain kompanion")
+        logger.info("creating full-auto kompanion")
         return Kompanion.builder()
-            .withMode(BLOCKCHAIN)
+            .withMode(FULL_AUTO)
             .withChatMemory(chatMemory)
             .withInteractionHandler(handler)
             .withContextManager(contextManager)
@@ -194,8 +194,8 @@ fun ChatScreen(initialMessage: String) {
     // Agent state to hold the three Kompanion agents
     class AgentState {
         var codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
-        var blockchainKompanion =
-            createBlockchainKompanion(interactionHandler, inMemoryContextManager)
+        var fullAutoCompanion =
+            createFullAutoKompanion(interactionHandler, inMemoryContextManager)
     }
 
     // Create agents state and remember it
@@ -205,18 +205,18 @@ fun ChatScreen(initialMessage: String) {
     fun recreateAgents() {
         logger.info("Recreating agents with new configuration")
         agentState.codingKompanion = createCodingKompanion(interactionHandler, inMemoryContextManager)
-        agentState.blockchainKompanion =
-            createBlockchainKompanion(interactionHandler, inMemoryContextManager)
+        agentState.fullAutoCompanion =
+            createFullAutoKompanion(interactionHandler, inMemoryContextManager)
     }
 
-    val openFiles by agentState.blockchainKompanion.agent.fetchContextManager().getContext().collectAsState()
+    val openFiles by agentState.fullAutoCompanion.agent.fetchContextManager().getContext().collectAsState()
 
     // Get the current active mode based on the mode state
     val activeMode: Mode = remember(mode) {
         when (mode) {
             "code" -> agentState.codingKompanion.agent.mode
-            "blockchain" -> agentState.blockchainKompanion.agent.mode
-            else -> agentState.blockchainKompanion.agent.mode
+            "full-auto" -> agentState.fullAutoCompanion.agent.mode
+            else -> agentState.fullAutoCompanion.agent.mode
         }
     }
 
@@ -224,15 +224,15 @@ fun ChatScreen(initialMessage: String) {
     val activeContextManager = remember(mode) {
         when (mode) {
             "code" -> agentState.codingKompanion.agent.fetchContextManager()
-            "blockchain" -> agentState.blockchainKompanion.agent.fetchContextManager()
-            else -> agentState.blockchainKompanion.agent.fetchContextManager()
+            "full-auto" -> agentState.fullAutoCompanion.agent.fetchContextManager()
+            else -> agentState.fullAutoCompanion.agent.fetchContextManager()
         }
     }
 
     // Local slash commands with callbacks to update the mode.
     val slashCommands = listOf(
         SlashCommand("/clear-context", "Clear the file context") {
-            agentState.blockchainKompanion.agent.fetchContextManager().clearContext()
+            agentState.fullAutoCompanion.agent.fetchContextManager().clearContext()
             messages = messages + ChatMessage(UUID.randomUUID(), "File context cleared.", false)
         },
         SlashCommand("/code", "Switch to code mode") { mode = "code" },
@@ -266,7 +266,7 @@ fun ChatScreen(initialMessage: String) {
                 withContext(Dispatchers.IO) {
                     val response = when (mode) {
                         "code" -> agentState.codingKompanion.agent.perform(userMessage)
-                        "blockchain" -> agentState.blockchainKompanion.agent.perform(userMessage)
+                        "full-auto" -> agentState.fullAutoCompanion.agent.perform(userMessage)
                         else -> "Invalid mode"
                     }
                     messages = messages + ChatMessage(UUID.randomUUID(), response, false)
