@@ -3,6 +3,7 @@ import KompanionBuilder.AgentMode.CODE
 import agent.InMemoryContextManager
 import agent.interaction.*
 import agent.modes.Mode
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,13 +16,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -33,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import com.yourdomain.kompanion.ui.components.ProviderSelector
 import config.AppConfig
 import kotlinx.coroutines.*
@@ -40,12 +43,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.memory.InMemoryChatMemory
 import ui.FilePill
 import ui.SettingsDialog
-import ui.TaskDrawer
+import ui.TaskView
 import ui.ToolCounter
 import ui.chat.ChatMessage
 import ui.chat.ToolMessage
 import ui.chat.WorkingDirectorySelector
 import ui.info.InfoTooltip
+import ui.task.TaskItem
+import ui.task.TaskStatus
 import java.util.*
 
 private data class SlashCommand(
@@ -54,19 +59,19 @@ private data class SlashCommand(
     val run: () -> Unit = {}
 )
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalTextApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalTextApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun ChatScreen() {
-
     val logger = LoggerFactory.getLogger("ChatScreen")
 
     // Theme colors
-    val darkBackground = Color(0xFF1E1E2E) // Darker background for better contrast
-    val darkSecondary = Color(0xFF2D2D3F) // Slightly lighter for components
-    val accentColor = Color(0xFF7289DA) // Discord-like accent color
-    val successColor = Color(0xFF43B581) // Green for success indicators
-    val glistenColor1 = Color(0xFF94A6E6) // Light blue-purple for glow start
-    val glistenColor2 = Color(0xFF61DAFB) // Light cyan-blue for glow end
+    val darkBackground = Color(0xFF1E1E2E)
+    val darkSecondary = Color(0xFF2D2D3F)
+    val accentColor = Color(0xFF7289DA)
+    val successColor = Color(0xFF43B581)
+    val warningColor = Color(0xFFFAA61A)
+    val glistenColor1 = Color(0xFF94A6E6)
+    val glistenColor2 = Color(0xFF61DAFB)
 
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var inputText by remember { mutableStateOf("") }
@@ -95,8 +100,20 @@ fun ChatScreen() {
     var showConfirmationDialog by remember { mutableStateOf(false) }
     var pendingConfirmation by remember { mutableStateOf<AgentAskConfirmation?>(null) }
 
-    // New state for task drawer visibility
-    var showTaskDrawer by remember { mutableStateOf(false) }
+    // Task panel state and animation
+    var showTaskPanel by remember { mutableStateOf(false) }
+
+    // Sample tasks for demonstration - would be populated from actual LLM tasks
+    val tasks = remember { mutableStateListOf<TaskItem>() }
+
+    // Animation for the task panel
+    val taskPanelWidth = 300.dp
+
+    // FAB rotation animation
+    val fabRotation by animateFloatAsState(
+        targetValue = if (showTaskPanel) 45f else 0f, // 45-degree rotation 
+        animationSpec = tween(300)
+    )
 
     val interactionHandler = object : InteractionHandler {
         override suspend fun interact(agentMessage: AgentMessage): String {
@@ -116,9 +133,28 @@ fun ChatScreen() {
                     response
                 }
 
+                is TaskStatusMessage -> {
+
+                    tasks.find { it.id == agentMessage.id.toString() }?.let {
+                        tasks[tasks.indexOf(it)] = it.copy(status = agentMessage.status)
+                    } ?:  tasks.add(
+                        TaskItem(
+                            agentMessage.id.toString(),
+                            agentMessage.message,
+                            agentMessage.status,
+                            System.currentTimeMillis()
+                        )
+                    )
+                    ""
+                }
+
                 is ToolUsageMessage -> {
                     messages =
-                        messages.filter { it.id != agentMessage.id } + ToolMessage(agentMessage.id, agentMessage.message, agentMessage.toolIndicator)
+                        messages.filter { it.id != agentMessage.id } + ToolMessage(
+                            agentMessage.id,
+                            agentMessage.message,
+                            agentMessage.toolIndicator
+                        )
                     ""
                 }
 
@@ -223,7 +259,8 @@ fun ChatScreen() {
         SlashCommand("/ask", "Switch to ask mode") { mode = "ask" },
         SlashCommand("/blockchain", "Switch to blockchain mode") { mode = "blockchain" },
         SlashCommand("/help", "Show available commands") {
-            messages = messages + ChatMessage(UUID.randomUUID(), """
+            messages = messages + ChatMessage(
+                UUID.randomUUID(), """
                 Available commands:
                 /code - Switch to code mode
                 /ask - Switch to ask mode
@@ -231,7 +268,8 @@ fun ChatScreen() {
                 /help - Show available commands
                 /clear - Clear chat history
                 /clear-context - Clear the file context
-            """.trimIndent(), false)
+            """.trimIndent(), false
+            )
         },
         SlashCommand("/clear", "Clear chat history") {
             messages = emptyList()
@@ -241,6 +279,12 @@ fun ChatScreen() {
 
     fun sendToBot(userMessage: String) {
         isProcessing = true
+
+        // Show task panel when processing starts
+        if (!showTaskPanel) {
+            showTaskPanel = true
+        }
+
         currentJob = coroutineScope.launch {
             try {
                 withContext(Dispatchers.IO) {
@@ -250,6 +294,7 @@ fun ChatScreen() {
                         else -> "Invalid mode"
                     }
                     messages = messages + ChatMessage(UUID.randomUUID(), response, false)
+
                     currentJob = null
                     isProcessing = false
                 }
@@ -269,6 +314,14 @@ fun ChatScreen() {
         currentJob?.cancel()
         currentJob = null
         isProcessing = false
+
+        // Mark all in-progress tasks as cancelled
+        for (i in tasks.indices) {
+            if (tasks[i].status == TaskStatus.IN_PROGRESS) {
+                tasks[i] = tasks[i].copy(status = TaskStatus.CANCELLED)
+            }
+        }
+
         messages = messages + ChatMessage(UUID.randomUUID(), "Operation cancelled by user", false)
     }
 
@@ -356,7 +409,9 @@ fun ChatScreen() {
         }
     }
 
+    // Main layout with task panel overlay
     Box(modifier = Modifier.fillMaxSize()) {
+        // Main chat content 
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -649,7 +704,11 @@ fun ChatScreen() {
                             contentAlignment = Alignment.Center
                         ) {
                             if (isProcessing) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
                             } else {
                                 Icon(Icons.Outlined.Send, contentDescription = "Send", tint = Color.White)
                             }
@@ -679,7 +738,11 @@ fun ChatScreen() {
                                 }
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                ToolCounter(accentColor = accentColor, backgroundColor = darkBackground, activeMode = activeMode)
+                                ToolCounter(
+                                    accentColor = accentColor,
+                                    backgroundColor = darkBackground,
+                                    activeMode = activeMode
+                                )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 InfoTooltip(accentColor = accentColor, backgroundColor = darkBackground)
                             }
@@ -689,28 +752,175 @@ fun ChatScreen() {
             }
         }
 
-        // Right-hand side Drawer for tasks using the TaskDrawer composable
-        if (showTaskDrawer) {
+        // Task toggle button
+        FloatingActionButton(
+            onClick = { showTaskPanel = !showTaskPanel },
+            backgroundColor = accentColor,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 72.dp, end = 16.dp)
+                .size(48.dp)
+                .shadow(
+                    elevation = 6.dp,
+                    shape = CircleShape,
+                    ambientColor = Color.Black.copy(alpha = 0.2f),
+                    spotColor = Color.Black.copy(alpha = 0.3f)
+                )
+                .zIndex(10f)
+        ) {
+            Icon(
+                imageVector = if (showTaskPanel) Icons.Filled.Close else Icons.Filled.Add,
+                contentDescription = if (showTaskPanel) "Hide Tasks" else "Show Tasks",
+                modifier = Modifier.rotate(fabRotation)
+            )
+        }
+
+        // Active task indicator (pulsing dot when tasks are in progress)
+        if (tasks.any { it.status == TaskStatus.IN_PROGRESS }) {
+            val infiniteTransition = rememberInfiniteTransition()
+            val pulseAnimation by infiniteTransition.animateFloat(
+                initialValue = 0.4f,
+                targetValue = 1.0f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(600, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .align(Alignment.TopEnd)
+                    .offset(x = (-12).dp, y = 72.dp)
+                    .background(warningColor, CircleShape)
+                    .alpha(pulseAnimation)
+                    .zIndex(11f)
+            )
+        }
+
+        // Task Panel (overlaid on the right side)
+        AnimatedVisibility(
+            visible = showTaskPanel,
+            enter = slideInHorizontally(initialOffsetX = { it }),
+            exit = slideOutHorizontally(targetOffsetX = { it }),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .zIndex(5f)
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(250.dp)
-                    .align(Alignment.CenterEnd)
-                    .background(darkSecondary, shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
+                    .width(taskPanelWidth)
+                    .background(
+                        color = darkSecondary.copy(alpha = 0.95f),
+                        shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                    )
+                    .shadow(8.dp)
+                    .padding(top = 64.dp) // Leave space for the top bar
             ) {
-                TaskDrawer() // Displays dummy tasks with status indicators
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    // Task panel header
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "AI Tasks",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        IconButton(
+                            onClick = {
+                                // Clear completed tasks
+                                tasks.removeAll { it.status == TaskStatus.COMPLETED || it.status == TaskStatus.FAILED }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Clear Completed Tasks",
+                                tint = Color.White.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
+                    // Task count by status
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp)
+                    ) {
+                        TaskStatusCounter(
+                            count = tasks.count { it.status == TaskStatus.IN_PROGRESS },
+                            label = "Active",
+                            color = warningColor,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TaskStatusCounter(
+                            count = tasks.count { it.status == TaskStatus.COMPLETED },
+                            label = "Done",
+                            color = successColor,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TaskStatusCounter(
+                            count = tasks.count { it.status == TaskStatus.FAILED || it.status == TaskStatus.CANCELLED },
+                            label = "Failed",
+                            color = Color.Red,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Divider(color = Color.White.copy(alpha = 0.1f))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Task list
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(tasks.sortedByDescending { it.timestamp }) { task ->
+                            TaskView(
+                                task = task,
+                                onDelete = { taskId ->
+                                    tasks.removeAll { it.id == taskId }
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }
+    }
+}
 
-        // Floating Action Button to toggle the Task Drawer
-        FloatingActionButton(
-            onClick = { showTaskDrawer = !showTaskDrawer },
-            backgroundColor = accentColor,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(imageVector = Icons.Filled.Menu, contentDescription = "Toggle Task Drawer")
-        }
+@Composable
+fun TaskStatusCounter(
+    count: Int,
+    label: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = count.toString(),
+            color = color,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.7f),
+            fontSize = 12.sp
+        )
     }
 }

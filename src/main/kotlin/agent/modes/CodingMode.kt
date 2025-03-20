@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import mcp.McpManager
 import org.slf4j.LoggerFactory
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider
+import ui.task.TaskStatus
 import java.util.*
 
 class CodingMode(
@@ -29,7 +30,6 @@ class CodingMode(
     private val codeGenerator: CodeGenerator,
     private val interactionHandler: InteractionHandler,
     private val toolManager: ToolManager,
-    mcpManager: McpManager,
     contextManager: ContextManager,
 ) : Mode, Interactor {
 
@@ -66,25 +66,6 @@ I'm ready to help you with your coding tasks! 🚀
     init {
 
         try {
-            /*
-            val toolbacks = mcpManager.getMcpServers().flatMap {
-                    Either.catch {
-                        SyncMcpToolCallbackProvider.syncToolCallbacks(it.nel())
-                    }.mapLeft {
-                        logger.error("unable to initialize mcp server: {}", it.message)
-                    }.getOrElse { emptyList() }
-                }.distinctBy { it.toolDefinition.name() }
-
-                toolbacks.forEach {
-                    toolManager.registerTool(
-                        Tool(
-                            id = UUID.randomUUID().toString(),
-                            toolCallback = it,
-                            showUpInTools = true
-                        )
-                    )
-                }
-             */
             LocalCodingTools(interactionHandler, contextManager).register(toolManager)
             FileTools(contextManager).register(toolManager)
         } catch (ex: Exception) {
@@ -94,9 +75,11 @@ I'm ready to help you with your coding tasks! 🚀
 
     override suspend fun perform(request: String): String {
         // Step 1: Analyze the request to understand it
+        val analyzingTask = taskUpdated(status = TaskStatus.IN_PROGRESS, message = "Analyzing request")
         val understanding = codingAnalyst.analyzeRequest(request)
         sendMessage("I understand you want to: ${understanding.objective}")
-        logger.debug("Understanding generated: {}", understanding)
+        taskUpdated(id = analyzingTask, status = TaskStatus.COMPLETED, message = "Analyzing request")
+
 
         // Step 2: Create a generation plan (now enhanced with reasoning)
         val plan = codingPlanner.createPlan(request, understanding)

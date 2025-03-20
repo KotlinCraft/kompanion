@@ -2,6 +2,7 @@ package agent.interaction
 
 import androidx.compose.runtime.Composable
 import ui.chat.ToolUsageIndicator
+import ui.task.TaskStatus
 import java.util.UUID
 
 sealed class AgentMessage(val id: UUID, val message: String, val important: Boolean)
@@ -14,6 +15,12 @@ class ToolUsageMessage(
     id: UUID = UUID.randomUUID(),
     val toolIndicator: @Composable () -> Unit
 ) : AgentMessage(id, action, important = false)
+
+class TaskStatusMessage(
+    id: UUID = UUID.randomUUID(),
+    val status: TaskStatus,
+    message: String
+) : AgentMessage(id, message, important = false)
 
 enum class ToolStatus {
     RUNNING, COMPLETED, FAILED

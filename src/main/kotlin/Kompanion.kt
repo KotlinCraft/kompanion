@@ -114,7 +114,7 @@ class KompanionBuilder {
                         reasoningProvider, finalContextManager
                     )
                 ),
-                finalGenerator, interactionHandler!!, toolManager, McpManager(), finalContextManager
+                finalGenerator, interactionHandler!!, toolManager, finalContextManager
             )
 
             AgentMode.FULL_AUTO -> AutoMode(
