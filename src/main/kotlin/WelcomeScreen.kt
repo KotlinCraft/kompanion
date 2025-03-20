@@ -34,6 +34,8 @@ fun WelcomeScreen(
     val glistenColor1 = Color(0xFF94A6E6)
     val glistenColor2 = Color(0xFF61DAFB)
 
+    // State variable for mode selection ("full-auto" or "code")
+    var mode by remember { mutableStateOf("full-auto") }
     var inputText by remember { mutableStateOf("") }
 
     // Create animation for glisten effect
@@ -78,120 +80,129 @@ fun WelcomeScreen(
         }
     }
 
+    // Main container with TopBar integrated at the top for mode selection
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(darkBackground),
-        contentAlignment = Alignment.Center
+            .background(darkBackground)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .padding(16.dp)
-        ) {
-            // Logo or welcome text could go here
-            Text(
-                "Kompanion",
-                color = Color.White,
-                style = MaterialTheme.typography.h4,
-                modifier = Modifier.padding(bottom = 32.dp)
+        Column {
+            // TopBar for mode selection (active type: "full-auto" or "code")
+            TopBar(
+                darkBackground = darkBackground,
+                mode = mode,
+                onSettingsClick = { /* Settings not applicable in WelcomeScreen */ },
+                onModeChange = { newMode -> mode = newMode },
+                isProcessing = false
             )
-
-            // Input field with send button
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            // Rest of the WelcomeScreen content
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally)
             ) {
-                // Input field
-                Box(
-                    modifier = Modifier.weight(1f)
+                // Display app title
+                Text(
+                    "Kompanion",
+                    color = Color.White,
+                    style = MaterialTheme.typography.h4,
+                    modifier = Modifier.padding(bottom = 32.dp)
+                )
+
+                // Input field with send button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedTextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            textColor = Color.White,
-                            cursorColor = accentColor,
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                            backgroundColor = darkSecondary
-                        ),
-                        placeholder = {
-                            // Animated gradient text for placeholder
-                            Text(
-                                text = "Ask me something...",
-                                style = TextStyle(
+                    Box(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = inputText,
+                            onValueChange = { inputText = it },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                textColor = Color.White,
+                                cursorColor = accentColor,
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                                backgroundColor = darkSecondary
+                            ),
+                            placeholder = {
+                                // Animated gradient placeholder text
+                                Text(
+                                    text = "Ask me something...",
+                                    style = TextStyle(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                Color.Gray.copy(alpha = 0.3f),
+                                                Color.Gray.copy(alpha = 0.5f),
+                                                glistenColor1.copy(alpha = 0.7f),
+                                                glistenColor2,
+                                                glistenColor1.copy(alpha = 0.7f),
+                                                Color.Gray.copy(alpha = 0.5f),
+                                                Color.Gray.copy(alpha = 0.3f)
+                                            ),
+                                            start = Offset(shimmerOffsetX.value - 150f, 0f),
+                                            end = Offset(shimmerOffsetX.value + 150f, 0f)
+                                        )
+                                    ),
+                                    fontSize = 16.sp
+                                )
+                            },
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(
+                                    elevation = shadowElevation.value.dp,
+                                    shape = RoundedCornerShape(24.dp),
+                                    ambientColor = glistenColor1,
+                                    spotColor = glistenColor2
+                                )
+                                .border(
+                                    width = 2.dp,
                                     brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            Color.Gray.copy(alpha = 0.3f),
-                                            Color.Gray.copy(alpha = 0.5f),
-                                            glistenColor1.copy(alpha = 0.7f),
-                                            glistenColor2,
-                                            glistenColor1.copy(alpha = 0.7f),
-                                            Color.Gray.copy(alpha = 0.5f),
-                                            Color.Gray.copy(alpha = 0.3f)
-                                        ),
-                                        start = Offset(shimmerOffsetX.value - 150f, 0f),
-                                        end = Offset(shimmerOffsetX.value + 150f, 0f)
-                                    )
-                                ),
-                                fontSize = 16.sp
-                            )
-                        },
-                        shape = RoundedCornerShape(24.dp),
+                                        colors = listOf(glistenColor1, glistenColor2, glistenColor1),
+                                        start = Offset(gradientPosition.value * 200, 0f),
+                                        end = Offset(gradientPosition.value * 200 + 100, 100f)
+                                    ),
+                                    shape = RoundedCornerShape(24.dp)
+                                )
+                                .onKeyEvent { event ->
+                                    if (event.key == Key.Enter && !event.isShiftPressed && event.type == KeyEventType.KeyUp) {
+                                        sendCurrentMessage()
+                                        true
+                                    } else false
+                                }
+                        )
+                    }
+
+                    Spacer(Modifier.width(12.dp))
+
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(
-                                elevation = shadowElevation.value.dp,
-                                shape = RoundedCornerShape(24.dp),
-                                ambientColor = glistenColor1,
-                                spotColor = glistenColor2
-                            )
-                            .border(
-                                width = 2.dp,
-                                brush = Brush.linearGradient(
-                                    colors = listOf(glistenColor1, glistenColor2, glistenColor1),
-                                    start = Offset(gradientPosition.value * 200, 0f),
-                                    end = Offset(gradientPosition.value * 200 + 100, 100f)
-                                ),
-                                shape = RoundedCornerShape(24.dp)
-                            )
-                            .onKeyEvent { event ->
-                                if (event.key == Key.Enter && !event.isShiftPressed && event.type == KeyEventType.KeyUp) {
-                                    sendCurrentMessage()
-                                    true
-                                } else false
-                            }
-                    )
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF3A3A3A))
+                            .clickable { sendCurrentMessage() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Outlined.Send,
+                            contentDescription = "Send",
+                            tint = Color.White
+                        )
+                    }
                 }
 
-                Spacer(Modifier.width(12.dp))
-
-                // Send button
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF3A3A3A))
-                        .clickable { sendCurrentMessage() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.Send,
-                        contentDescription = "Send",
-                        tint = Color.White
-                    )
-                }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Press Enter to send",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
             }
-
-            // Keyboard shortcuts hint
-            Spacer(Modifier.height(12.dp))
-            Text(
-                "Press Enter to send",
-                color = Color.Gray,
-                fontSize = 12.sp
-            )
         }
     }
 }
