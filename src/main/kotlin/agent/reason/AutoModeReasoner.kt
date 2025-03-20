@@ -1,13 +1,12 @@
 package agent.reason
 
 import agent.ContextManager
-import agent.InMemoryContextManager
 import agent.ToolManager
 import agent.domain.CodebaseQuestionResponse
 import ai.LLMProvider
 import org.springframework.core.ParameterizedTypeReference
 
-class BlockchainReasoner(
+class AutoModeReasoner(
     private val LLMProvider: LLMProvider,
     private val toolManager: ToolManager,
     private val contextManager: ContextManager
