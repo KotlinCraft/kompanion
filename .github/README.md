@@ -6,6 +6,9 @@ AI-powered code assistant that iteratively generates and improves Kotlin code th
 
 Kompanion is currently under active development. Stay tuned for the first release!
 
+<img width="801" alt="image" src="https://github.com/user-attachments/assets/09bd15bf-169e-4657-ad41-2fbe6780539e" />
+
+
 ## Overview
 
 Kompanion is an intelligent coding assistant that helps you generate, improve, and understand Kotlin code. It uses a multi-step reasoning approach to:
