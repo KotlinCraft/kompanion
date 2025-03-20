@@ -1,8 +1,8 @@
-import KompanionBuilder.AgentMode.*
+import KompanionBuilder.AgentMode.BLOCKCHAIN
+import KompanionBuilder.AgentMode.CODE
 import agent.InMemoryContextManager
 import agent.interaction.*
 import agent.modes.Mode
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,8 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-// Retain the original filled send import for fallback if needed
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,8 +40,9 @@ import org.springframework.ai.chat.memory.InMemoryChatMemory
 import ui.FilePill
 import ui.SettingsDialog
 import ui.ToolCounter
-import ui.chat.*
-import ui.info.InfoManager
+import ui.chat.ChatMessage
+import ui.chat.ToolMessage
+import ui.chat.WorkingDirectorySelector
 import ui.info.InfoTooltip
 import java.util.*
 
