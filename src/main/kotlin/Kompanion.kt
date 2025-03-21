@@ -43,8 +43,6 @@ class KompanionBuilder {
 
     private var codeApplier: CodeApplier? = null
     private var contextManager: ContextManager? = null
-    private var smallLlmProvider: LLMProvider? = null
-    private var bigLlmProvider: LLMProvider? = null
     private var interactionHandler: InteractionHandler? = null
     private var mode: AgentMode = AgentMode.FULL_AUTO
     private var appConfig: AppConfig? = null
