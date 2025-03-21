@@ -12,8 +12,8 @@ enum class Provider(val normal: String, val reasoning: String) {
         "claude-3-7-sonnet-latest"
     ),
     OPENAI(
-        "gpt4o",
-        "o1"
+        "gpt-4o",
+        "o3-mini"
     )
 }
 

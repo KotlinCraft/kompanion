@@ -7,6 +7,7 @@ import agent.interaction.ToolStatus
 import agent.modes.Interactor
 import agent.modes.fullauto.FullAutoBreakdown
 import agent.modes.fullauto.Step
+import agent.modes.fullauto.StepType
 import ai.LLMProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -42,6 +43,9 @@ Please follow these instructions to break down the question or instruction:
 7. Use clear and concise language for each step, avoiding ambiguity.
 8. Use the tools available to you to ask for clarification or additional information if needed.
 9. You already have the full outline of all files we're working with. There are no additional local files.
+10. Don't ask for questions if everything is clear
+11. Every Step is either a General Action or a Coding Action. General Actions are simple instructions that don't require coding. Coding Actions are instructions that require coding. Reading and writing files are general actions, unless they require actual code to be written.
+12. Don't write any files, you are only to respond.
 
 When handling repetitive tasks:
 - Identify the repeating element (e.g., files, items, sections)
@@ -83,11 +87,12 @@ Your final output should consist of only the breakdown, without any additional e
     }
 
     data class FullAutoBreakdownResponse(
-        val steps: List<StepResponse>
+        val steps: List<StepResponse>,
     )
 
     data class StepResponse(
         val instruction: String,
+        val stepType: StepType,
         val subTasks: List<String>
     )
 }

@@ -8,6 +8,7 @@ import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.fullauto.FullAutoBreakdown
 import agent.modes.fullauto.Step
+import agent.modes.fullauto.StepType
 import agent.reason.AutomodeExecutor
 import agent.reason.AutomodePlanner
 import agent.tool.FileTools
@@ -24,7 +25,7 @@ class AutoMode(
     private val executor: AutomodeExecutor,
     private val flowCodeGenerator: FlowCodeGenerator,
     private val toolManager: ToolManager,
-    contextManager: ContextManager,
+    private val contextManager: ContextManager,
     private val interactionHandler: InteractionHandler,
 ) : Mode, Interactor {
 
@@ -45,7 +46,8 @@ class AutoMode(
                     UUID.randomUUID(),
                     stepNumber = index + 1,
                     it.instruction,
-                    it.subTasks
+                    it.subTasks,
+                    type = it.stepType
                 )
             }
         ).also {
@@ -57,6 +59,7 @@ class AutoMode(
             val stepResult = executor.executeStep(
                 breakdown, step, acc
             )
+            contextManager.clearContext()
             acc + stepResult
         }
         return """
@@ -70,7 +73,8 @@ ${result.joinToString("\n") { "👉 ${it.taskCompletion}" }}
                 Step(
                     stepNumber = 0,
                     instruction = "Planning out the task, breaking down the task into steps.",
-                    subTasks = emptyList()
+                    subTasks = emptyList(),
+                    type = StepType.GENERAL_ACTION
                 ),
                 stepNumber = 0,
                 status = ToolStatus.COMPLETED
@@ -84,7 +88,8 @@ ${result.joinToString("\n") { "👉 ${it.taskCompletion}" }}
                 UUID.randomUUID(),
                 stepNumber = 0,
                 instruction = "Planning out the task, breaking down the task into steps.",
-                subTasks = emptyList()
+                subTasks = emptyList(),
+                type = StepType.GENERAL_ACTION
             ),
             stepNumber = 0,
             status = ToolStatus.RUNNING

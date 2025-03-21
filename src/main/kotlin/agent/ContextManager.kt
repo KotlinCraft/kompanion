@@ -48,10 +48,9 @@ interface ContextManager {
         val fullFileList = run {
             if (includeFolderOutline) {
                 """
-                    The full codebase outline looks like this:
-                    ${getFullFileList()}
-                """.trimIndent()
-
+The full codebase outline looks like this:
+${getFullFileList()}
+""".trimIndent()
             } else {
                 ""
             }

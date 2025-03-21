@@ -12,5 +12,10 @@ data class Step(
     val id: UUID = UUID.randomUUID(),
     val stepNumber: Int,
     val instruction: String,
-    val subTasks: List<String>
+    val subTasks: List<String>,
+    val type: StepType
 )
+
+enum class StepType {
+    GENERAL_ACTION, CODING_ACTION
+}
