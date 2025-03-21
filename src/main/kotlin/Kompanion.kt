@@ -120,7 +120,7 @@ class KompanionBuilder {
             AgentMode.FULL_AUTO -> AutoMode(
                 AutoModeReasoner(
                     llmProvider, toolManager, finalContextManager
-                ), toolManager, interactionHandler!!
+                ), toolManager, finalContextManager, interactionHandler!!
             )
         }
 
