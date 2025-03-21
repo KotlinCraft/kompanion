@@ -4,6 +4,7 @@ import agent.ContextManager
 import agent.ToolManager
 import agent.coding.tool.LocalCodingTools
 import agent.interaction.InteractionHandler
+import agent.interaction.ToolStatus
 import agent.modes.fullauto.FullAutoBreakdown
 import agent.modes.fullauto.Step
 import agent.reason.AutoModeReasoner
@@ -11,6 +12,7 @@ import agent.tool.FileTools
 import agent.tool.GeneralTools
 import agent.tool.LoadedTool
 import org.slf4j.LoggerFactory
+import ui.chat.StepExecutionIndicator
 import java.util.*
 
 val logger = LoggerFactory.getLogger(AutoMode::class.java)
@@ -30,24 +32,58 @@ class AutoMode(
     }
 
     override suspend fun perform(request: String): String {
+
+        val planningId = planningIndicator()
+
         val breakdown = FullAutoBreakdown(
-            id = UUID.randomUUID(),
             steps = reasoner.generatePlan(request).steps.mapIndexed { index, it ->
                 Step(
                     UUID.randomUUID(),
-                    stepNumber = index,
+                    stepNumber = index + 1,
                     it.instruction,
                     it.subTasks
                 )
             }
-        )
+        ).also {
+            completePlanning(planningId)
+        }
 
-        breakdown.steps.map {
-            val result = reasoner.executeStep(
+
+        val result = breakdown.steps.map {
+            reasoner.executeStep(
                 breakdown, it
             )
         }
-        return "Task broken down into ${breakdown.steps.size} steps."
+        return """
+${result.joinToString("\n") { "👉 ${it.taskCompletion}" }}
+        """.trimIndent()
+    }
+
+    private suspend fun AutoMode.completePlanning(planningId: UUID) {
+        customToolUsage(id = planningId) {
+            StepExecutionIndicator(
+                Step(
+                    stepNumber = 0,
+                    instruction = "Planning out the task, breaking down the task into steps.",
+                    subTasks = emptyList()
+                ),
+                stepNumber = 0,
+                status = ToolStatus.COMPLETED
+            )
+        }
+    }
+
+    private suspend fun AutoMode.planningIndicator() = customToolUsage {
+        StepExecutionIndicator(
+            Step(
+                UUID.randomUUID(),
+                stepNumber = 0,
+                instruction = "Planning out the task, breaking down the task into steps.",
+                subTasks = emptyList()
+            ),
+            stepNumber = 0,
+            status = ToolStatus.RUNNING
+        )
     }
 
 

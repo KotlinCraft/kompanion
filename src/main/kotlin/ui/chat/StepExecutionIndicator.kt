@@ -88,7 +88,7 @@ fun StepExecutionIndicator(
                 Spacer(modifier = Modifier.width(8.dp))
                 
                 Text(
-                    text = "Step $stepNumber: Executing Task",
+                    text = "Step $stepNumber: Performing Step",
                     color = Color.White.copy(alpha = 0.9f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
