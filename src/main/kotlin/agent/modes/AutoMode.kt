@@ -4,6 +4,7 @@ import agent.ContextManager
 import agent.ToolManager
 import agent.coding.FlowCodeGenerator
 import agent.coding.tool.LocalCodingTools
+import agent.domain.GenerationPlan
 import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.fullauto.FullAutoBreakdown
@@ -23,7 +24,7 @@ val logger = LoggerFactory.getLogger(AutoMode::class.java)
 class AutoMode(
     private val planner: AutomodePlanner,
     private val executor: AutomodeExecutor,
-    private val flowCodeGenerator: FlowCodeGenerator,
+    private val codingMode: CodingMode,
     private val toolManager: ToolManager,
     private val contextManager: ContextManager,
     private val interactionHandler: InteractionHandler,
@@ -56,11 +57,23 @@ class AutoMode(
 
 
         val result = breakdown.steps.fold(emptyList<AutomodeExecutor.TaskInstructionResult>()) { acc, step ->
-            val stepResult = executor.executeStep(
-                breakdown, step, acc
-            )
-            contextManager.clearContext()
-            acc + stepResult
+
+
+            when (step.type) {
+                StepType.GENERAL_ACTION -> {
+                    val stepResult = executor.executeStep(
+                        breakdown, step, acc
+                    )
+                    acc + stepResult
+                }
+
+                StepType.CODING_ACTION -> {
+                    val result = codingMode.perform(request = step.instructionAsString())
+                    acc + AutomodeExecutor.TaskInstructionResult(step.id, result)
+                }
+            }.also {
+                contextManager.clearContext()
+            }
         }
         return """
 ${result.joinToString("\n") { "👉 ${it.taskCompletion}" }}

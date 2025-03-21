@@ -14,7 +14,14 @@ data class Step(
     val instruction: String,
     val subTasks: List<String>,
     val type: StepType
-)
+) {
+    fun instructionAsString(): String {
+        return """
+            $id: $instruction
+            ${subTasks.joinToString("\n")}
+        """.trimIndent()
+    }
+}
 
 enum class StepType {
     GENERAL_ACTION, CODING_ACTION
