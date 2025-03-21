@@ -9,6 +9,7 @@ import agent.domain.context.ContextFile
 import agent.interaction.InteractionHandler
 import agent.modes.Interactor
 import ai.LLMProvider
+import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import java.nio.file.Files
 import java.nio.file.Path
@@ -19,6 +20,8 @@ class FlowCodeGenerator(
     private val contextManager: ContextManager,
     private val interactionHandler: InteractionHandler,
 ) : CodeGenerator, Interactor {
+
+    val logger = LoggerFactory.getLogger(this::class.java)
 
     override suspend fun execute(
         request: String,
@@ -32,6 +35,7 @@ class FlowCodeGenerator(
         while (action !is FlowAction.Complete) {
             when (action) {
                 is FlowAction.EditFile -> {
+                    logger.info("File edited: {}", action.filePath)
                     // Update the file
                     val file = Path.of(action.filePath).toFile()
                     Files.writeString(file.toPath(), action.content)
@@ -55,6 +59,7 @@ class FlowCodeGenerator(
                 }
 
                 is FlowAction.CreateFile -> {
+                    logger.info("New file created: {}", action.filePath)
                     // Create the file
                     val file = Path.of(action.filePath).toFile()
                     file.parentFile?.mkdirs() // Create parent directories if they don't exist
@@ -103,6 +108,8 @@ class FlowCodeGenerator(
         }
         val validationCriteria = plan.validationCriteria.joinToString("\n") { "- $it" }
         val feedbackSection = if (!feedback.isNullOrBlank()) "\n\n## Feedback from previous action:\n$feedback" else ""
+
+        logger.info("feedback or request: " + (feedback ?: request))
 
         val prompt = """
             $contextPrompt
@@ -170,7 +177,7 @@ class FlowCodeGenerator(
 
         val response = LLMProvider.prompt<String>(
             system = prompt,
-            userMessage = request,
+            userMessage = feedback ?: request,
             actions = emptyList(),
             temperature = 0.5,
             parameterizedTypeReference = null

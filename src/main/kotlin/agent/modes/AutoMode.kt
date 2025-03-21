@@ -95,7 +95,7 @@ class AutoMode(
                     acc + AutomodeExecutor.TaskInstructionResult(step.id, result)
                 }
             }.also {
-                contextManager.clearContext()
+               // contextManager.clearContext()
             }
         }
         return """

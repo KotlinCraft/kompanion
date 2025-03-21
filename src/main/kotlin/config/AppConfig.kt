@@ -13,7 +13,7 @@ enum class Provider(val normal: String, val reasoning: String) {
     ),
     OPENAI(
         "gpt-4o",
-        "o3-mini"
+        "o3"
     )
 }
 
