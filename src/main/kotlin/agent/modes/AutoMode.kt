@@ -2,12 +2,14 @@ package agent.modes
 
 import agent.ContextManager
 import agent.ToolManager
+import agent.coding.FlowCodeGenerator
 import agent.coding.tool.LocalCodingTools
 import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.fullauto.FullAutoBreakdown
 import agent.modes.fullauto.Step
-import agent.reason.AutoModeReasoner
+import agent.reason.AutomodeExecutor
+import agent.reason.AutomodePlanner
 import agent.tool.FileTools
 import agent.tool.GeneralTools
 import agent.tool.LoadedTool
@@ -18,7 +20,9 @@ import java.util.*
 val logger = LoggerFactory.getLogger(AutoMode::class.java)
 
 class AutoMode(
-    private val reasoner: AutoModeReasoner,
+    private val planner: AutomodePlanner,
+    private val executor: AutomodeExecutor,
+    private val flowCodeGenerator: FlowCodeGenerator,
     private val toolManager: ToolManager,
     contextManager: ContextManager,
     private val interactionHandler: InteractionHandler,
@@ -36,7 +40,7 @@ class AutoMode(
         val planningId = planningIndicator()
 
         val breakdown = FullAutoBreakdown(
-            steps = reasoner.generatePlan(request).steps.mapIndexed { index, it ->
+            steps = planner.generatePlan(request).steps.mapIndexed { index, it ->
                 Step(
                     UUID.randomUUID(),
                     stepNumber = index + 1,
@@ -50,7 +54,7 @@ class AutoMode(
 
 
         val result = breakdown.steps.map {
-            reasoner.executeStep(
+            executor.executeStep(
                 breakdown, it
             )
         }

@@ -14,7 +14,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import config.AppConfig
 import config.Provider
-import mcp.McpManager
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.InMemoryChatMemory
@@ -95,8 +94,8 @@ class KompanionBuilder {
         }.getOrElse { getFinalLLMProvider("o3-mini") }.addAdvisor(memoryAdvisor)
 
         val toolingCode = ToolingCodeGenerator(llmProvider, finalContextManager, toolManager)
-        val flowCode = FlowCodeGenerator(reasoningProvider, finalContextManager, interactionHandler!!)
-        val finalGenerator = flowCode
+        val codeGenerator = FlowCodeGenerator(reasoningProvider, finalContextManager, interactionHandler!!)
+        val finalGenerator = codeGenerator
 
         // Ensure we have an interaction handler
         if (interactionHandler == null) {
@@ -118,9 +117,16 @@ class KompanionBuilder {
             )
 
             AgentMode.FULL_AUTO -> AutoMode(
-                AutoModeReasoner(
+                AutomodePlanner(
+                    reasoningProvider, toolManager, finalContextManager, interactionHandler!!
+                ),
+
+                AutomodeExecutor(
                     llmProvider, toolManager, finalContextManager, interactionHandler!!
-                ), toolManager, finalContextManager, interactionHandler!!
+                ),
+                codeGenerator,
+                toolManager,
+                finalContextManager, interactionHandler!!,
             )
         }
 
