@@ -3,9 +3,11 @@ package agent
 import agent.tool.Tool
 
 class ToolManager {
-    val tools = mutableListOf<Tool>()
+    val tools = mutableSetOf<Tool>()
 
     fun registerTool(tool: Tool) {
-        tools.add(tool)
+        if (tools.none { it.toolCallback.toolDefinition.name() == tool.toolCallback.toolDefinition.name() }) {
+            tools.add(tool)
+        }
     }
 }

@@ -103,17 +103,12 @@ class KompanionBuilder {
         }
 
         val selectedMode: Mode = when (mode) {
-            AgentMode.CODE -> CodingMode(
-                CodingAnalyst(finalContextManager, llmProvider, toolManager),
-                CodingPlanner(
-                    SimplePlanner(
-                        llmProvider, finalContextManager, toolManager
-                    ),
-                    DefaultReasoningStrategy(
-                        reasoningProvider, finalContextManager
-                    )
-                ),
-                finalGenerator, interactionHandler!!, toolManager, finalContextManager
+            AgentMode.CODE -> buildCodingMode(
+                finalContextManager,
+                llmProvider,
+                toolManager,
+                reasoningProvider,
+                finalGenerator
             )
 
             AgentMode.FULL_AUTO -> AutoMode(
@@ -124,7 +119,13 @@ class KompanionBuilder {
                 AutomodeExecutor(
                     llmProvider, toolManager, finalContextManager, interactionHandler!!
                 ),
-                codeGenerator,
+                codingMode = buildCodingMode(
+                    finalContextManager,
+                    llmProvider,
+                    toolManager,
+                    reasoningProvider,
+                    finalGenerator
+                ),
                 toolManager,
                 finalContextManager, interactionHandler!!,
             )
@@ -146,6 +147,25 @@ class KompanionBuilder {
 
         return Kompanion(agent)
     }
+
+    private fun buildCodingMode(
+        finalContextManager: ContextManager,
+        llmProvider: LLMProvider,
+        toolManager: ToolManager,
+        reasoningProvider: LLMProvider,
+        finalGenerator: FlowCodeGenerator
+    ) = CodingMode(
+        CodingAnalyst(finalContextManager, llmProvider, toolManager),
+        CodingPlanner(
+            SimplePlanner(
+                llmProvider, finalContextManager, toolManager
+            ),
+            DefaultReasoningStrategy(
+                reasoningProvider, finalContextManager
+            )
+        ),
+        finalGenerator, interactionHandler!!, toolManager, finalContextManager
+    )
 
     private fun getFinalLLMProvider(name: String): LLMProvider {
         return LLMRegistry.getProviderForModel(name)
