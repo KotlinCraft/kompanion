@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.springframework.core.ParameterizedTypeReference
 import ui.chat.StepExecutionIndicator
+import java.util.UUID
 
 class AutomodeExecutor(
     private val LLMProvider: LLMProvider,
@@ -23,17 +24,19 @@ class AutomodeExecutor(
     suspend fun executeStep(
         fullAutoBreakdown: FullAutoBreakdown,
         step: Step,
+        acc: List<TaskInstructionResult>,
     ): TaskInstructionResult {
 
         val fullAutoBreakdownText = fullAutoBreakdown.steps.joinToString("\n") {
             """
-                ${it.instruction}
+                ${it.id}: ${it.instruction}
                 ${it.subTasks.joinToString("\n")}
             """.trimIndent()
         }
 
         val task = """
-                ${step.instruction}
+            
+                ${step.id}: ${step.instruction}
                 ${step.subTasks.joinToString("\n")}
             """.trimIndent()
 
@@ -48,6 +51,13 @@ class AutomodeExecutor(
             }
         }
 
+        val previousTaskResults = if (acc.isNotEmpty()) {
+            """
+                Here are the task results of the previous invocations: 
+                ${acc.joinToString("\n") { """${it.stepId}: ${it.taskCompletion}""" }}
+            """.trimIndent()
+        } else ""
+
         val prompt = """
             
             You are an AI assistant tasked with completing a specific step from a larger task breakdown. The full task breakdown has been provided to you, along with the specific step you need to complete. Your goal is to focus solely on completing the current task to the best of your ability.
@@ -61,12 +71,12 @@ class AutomodeExecutor(
             $fullAutoBreakdownText
             </task_breakdown>
             
-•           Your context already includes: ${contextManager.currentContextPrompt(false)}  
-
+            ${previousTaskResults}
+            
             Please follow these instructions to complete the current task:
 
             1. Carefully read and understand the current task.
-            2. If the task requires any input or information that is not provided, assume it is available to you or has been completed in previous steps.
+            2. If the task requires any input or information that is not provided, make it available by pulling it in your context using your tools.
             3. Execute the task as described, focusing only on the specific action required.
             4. If the task involves creating or modifying content, provide the exact content or changes that would result from completing the task.
             5. If the task involves a decision or analysis, provide a clear explanation of your reasoning and the outcome.
@@ -91,22 +101,24 @@ class AutomodeExecutor(
                 """.trimIndent(),
                 actions = toolManager.tools.map { it.toolCallback },
                 temperature = 0.7,
-                parameterizedTypeReference = object : ParameterizedTypeReference<TaskInstructionResult>() {},
+                parameterizedTypeReference = object : ParameterizedTypeReference<TaskInstructionResponse>() {},
             )
 
             // Show COMPLETED indicator
-            runBlocking(Dispatchers.IO) {
-                customToolUsage(id = toolId) {
-                    StepExecutionIndicator(
-                        step = step,
-                        stepNumber = step.stepNumber,
-                        status = ToolStatus.COMPLETED,
-                        result = result.taskCompletion
-                    )
-                }
+            customToolUsage(id = toolId) {
+                StepExecutionIndicator(
+                    step = step,
+                    stepNumber = step.stepNumber,
+                    status = ToolStatus.COMPLETED,
+                    result = result.taskCompletion
+                )
             }
 
-            return result
+            return TaskInstructionResult(
+                stepId = step.id,
+                taskCompletion = result.taskCompletion
+            )
+
         } catch (e: Exception) {
             // Show FAILED indicator
             runBlocking(Dispatchers.IO) {
@@ -120,7 +132,10 @@ class AutomodeExecutor(
                 }
             }
 
-            return TaskInstructionResult("Error: ${e.message}")
+            return TaskInstructionResult(
+                stepId = step.id,
+                "Error: ${e.message}"
+            )
         }
     }
 
@@ -129,15 +144,11 @@ class AutomodeExecutor(
     }
 
     data class TaskInstructionResult(
+        val stepId: UUID,
         val taskCompletion: String
     )
 
-    data class FullAutoBreakdownResponse(
-        val steps: List<StepResponse>
-    )
-
-    data class StepResponse(
-        val instruction: String,
-        val subTasks: List<String>
+    data class TaskInstructionResponse(
+        val taskCompletion: String
     )
 }

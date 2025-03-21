@@ -82,10 +82,6 @@ Your final output should consist of only the breakdown, without any additional e
         return interactionHandler
     }
 
-    data class TaskInstructionResult(
-        val taskCompletion: String
-    )
-
     data class FullAutoBreakdownResponse(
         val steps: List<StepResponse>
     )

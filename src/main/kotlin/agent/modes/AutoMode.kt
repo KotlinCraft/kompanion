@@ -53,10 +53,11 @@ class AutoMode(
         }
 
 
-        val result = breakdown.steps.map {
-            executor.executeStep(
-                breakdown, it
+        val result = breakdown.steps.fold(emptyList<AutomodeExecutor.TaskInstructionResult>()) { acc, step ->
+            val stepResult = executor.executeStep(
+                breakdown, step, acc
             )
+            acc + stepResult
         }
         return """
 ${result.joinToString("\n") { "👉 ${it.taskCompletion}" }}
