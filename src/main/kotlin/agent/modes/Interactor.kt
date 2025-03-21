@@ -3,7 +3,6 @@ package agent.modes
 import agent.interaction.*
 import androidx.compose.runtime.Composable
 import ui.chat.ToolUsageIndicator
-import ui.task.TaskStatus
 import java.util.UUID
 
 interface Interactor {
@@ -30,21 +29,6 @@ interface Interactor {
             )
         )
         return id
-    }
-
-    suspend fun removeToolUsage(id: UUID) {
-        interactionHandler().removeChat(id)
-    }
-
-    suspend fun taskUpdated(
-        id: UUID = UUID.randomUUID(),
-        status: TaskStatus,
-        message: String
-    ): UUID {
-        interactionHandler().interact(
-            TaskStatusMessage(id, status, message)
-        )
-        return  id
     }
 
     suspend fun customToolUsage(

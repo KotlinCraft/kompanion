@@ -102,13 +102,12 @@ class OpenAILLMProvider : LLMProvider() {
             converter?.convert(content) ?: content as T
         }.fold({
             if (retry) {
-                logger.info("response was: $content")
-                logger.info("retrying, because we got the following error: $it")
+                logger.info("Retrying, response was: $content")
                 val prompt = createClient().prompt(
                     Prompt(
-                        UserMessage(system),
-                        UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
-                        SystemMessage(outputMessage)
+                        messages + listOf(
+                            UserMessage("we previously asked you this question as well, but when trying to parse your result, we got the following exception: ${it.message}. Please make sure this error doesn't happen again"),
+                        )
                     )
                 ).tools(actions)
 

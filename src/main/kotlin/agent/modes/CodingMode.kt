@@ -12,16 +12,9 @@ import agent.reason.CodingAnalyst
 import agent.reason.CodingPlanner
 import agent.tool.FileTools
 import agent.tool.LoadedTool
-import agent.tool.Tool
-import arrow.core.Either
-import arrow.core.getOrElse
-import arrow.core.nel
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import mcp.McpManager
 import org.slf4j.LoggerFactory
-import org.springframework.ai.mcp.SyncMcpToolCallbackProvider
-import ui.task.TaskStatus
 import java.util.*
 
 class CodingMode(
@@ -75,11 +68,8 @@ I'm ready to help you with your coding tasks! 🚀
 
     override suspend fun perform(request: String): String {
         // Step 1: Analyze the request to understand it
-        val analyzingTask = taskUpdated(status = TaskStatus.IN_PROGRESS, message = "Analyzing request")
         val understanding = codingAnalyst.analyzeRequest(request)
         sendMessage("I understand you want to: ${understanding.objective}")
-        taskUpdated(id = analyzingTask, status = TaskStatus.COMPLETED, message = "Analyzing request")
-
 
         // Step 2: Create a generation plan (now enhanced with reasoning)
         val plan = codingPlanner.createPlan(request, understanding)

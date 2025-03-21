@@ -2,17 +2,23 @@ package agent.reason
 
 import agent.ContextManager
 import agent.ToolManager
+import agent.interaction.InteractionHandler
+import agent.interaction.ToolStatus
+import agent.modes.Interactor
 import agent.modes.fullauto.FullAutoBreakdown
 import agent.modes.fullauto.Step
 import ai.LLMProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.springframework.core.ParameterizedTypeReference
-import java.util.*
+import ui.chat.StepExecutionIndicator
 
 class AutoModeReasoner(
     private val LLMProvider: LLMProvider,
     private val toolManager: ToolManager,
-    private val contextManager: ContextManager
-) {
+    private val contextManager: ContextManager,
+    private val interactionHandler: InteractionHandler
+) : Interactor {
 
     suspend fun generatePlan(
         question: String
@@ -75,7 +81,7 @@ Your final output should consist of only the breakdown, without any additional e
 
     suspend fun executeStep(
         fullAutoBreakdown: FullAutoBreakdown,
-        step: Step
+        step: Step,
     ): TaskInstructionResult {
 
         val fullAutoBreakdownText = fullAutoBreakdown.steps.joinToString("\n") {
@@ -89,6 +95,17 @@ Your final output should consist of only the breakdown, without any additional e
                 ${step.instruction}
                 ${step.subTasks.joinToString("\n")}
             """.trimIndent()
+
+        // Show RUNNING indicator
+        val toolId = runBlocking(Dispatchers.IO) {
+            customToolUsage {
+                StepExecutionIndicator(
+                    step = step,
+                    stepNumber = step.stepNumber,
+                    status = ToolStatus.RUNNING
+                )
+            }
+        }
 
         val prompt = """
             
@@ -122,24 +139,57 @@ Your final output should consist of only the breakdown, without any additional e
         """.trimIndent()
 
         // Attempt to leverage the same LLM approach used in DefaultReasoner, if available
-        return LLMProvider.prompt(
-            system = prompt,
-            userMessage = """
-                The current task you need to complete is:
-            <current_task>
-            $task
-            </current_task>
-            """.trimIndent(),
-            actions = toolManager.tools.map { it.toolCallback },
-            temperature = 0.7,
-            parameterizedTypeReference = object : ParameterizedTypeReference<TaskInstructionResult>() {},
-        )
+        try {
+            val result = LLMProvider.prompt(
+                system = prompt,
+                userMessage = """
+                    The current task you need to complete is:
+                <current_task>
+                $task
+                </current_task>
+                """.trimIndent(),
+                actions = toolManager.tools.map { it.toolCallback },
+                temperature = 0.7,
+                parameterizedTypeReference = object : ParameterizedTypeReference<TaskInstructionResult>() {},
+            )
+
+            // Show COMPLETED indicator
+            runBlocking(Dispatchers.IO) {
+                customToolUsage(id = toolId) {
+                    StepExecutionIndicator(
+                        step = step,
+                        stepNumber = step.stepNumber,
+                        status = ToolStatus.COMPLETED,
+                        result = result.taskCompletion
+                    )
+                }
+            }
+
+            return result
+        } catch (e: Exception) {
+            // Show FAILED indicator
+            runBlocking(Dispatchers.IO) {
+                customToolUsage(id = toolId) {
+                    StepExecutionIndicator(
+                        step = step,
+                        stepNumber = step.stepNumber,
+                        status = ToolStatus.FAILED,
+                        error = "Error executing step: ${e.message}"
+                    )
+                }
+            }
+
+            return TaskInstructionResult("Error: ${e.message}")
+        }
+    }
+
+    override fun interactionHandler(): InteractionHandler {
+        return interactionHandler
     }
 
     data class TaskInstructionResult(
         val taskCompletion: String
     )
-
 
     data class FullAutoBreakdownResponse(
         val steps: List<StepResponse>

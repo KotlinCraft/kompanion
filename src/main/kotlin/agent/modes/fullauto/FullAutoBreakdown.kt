@@ -10,6 +10,7 @@ data class FullAutoBreakdown(
 
 data class Step(
     val id: UUID,
+    val stepNumber: Int,
     val instruction: String,
     val subTasks: List<String>
 )
