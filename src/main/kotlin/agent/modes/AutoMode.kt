@@ -15,7 +15,14 @@ import agent.reason.AutomodePlanner
 import agent.tool.FileTools
 import agent.tool.GeneralTools
 import agent.tool.LoadedTool
+import agent.tool.Tool
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.nel
+import mcp.McpManager
+import mcp.McpManager.Companion.mcpManager
 import org.slf4j.LoggerFactory
+import org.springframework.ai.mcp.SyncMcpToolCallbackProvider
 import ui.chat.StepExecutionIndicator
 import java.util.*
 
@@ -35,6 +42,23 @@ class AutoMode(
         GeneralTools(interactionHandler).register(toolManager)
         FileTools(contextManager).register(toolManager)
         LocalCodingTools(interactionHandler, contextManager).register(toolManager)
+        val toolbacks = mcpManager.loadMcpServers().flatMap {
+            Either.catch {
+                SyncMcpToolCallbackProvider.syncToolCallbacks(it.nel())
+            }.mapLeft {
+                logger.error("unable to initialize mcp server: {}", it.message)
+            }.getOrElse { emptyList() }
+        }.distinctBy { it.toolDefinition.name() }
+
+        toolbacks.forEach {
+            toolManager.registerTool(
+                Tool(
+                    id = UUID.randomUUID().toString(),
+                    toolCallback = it,
+                    showUpInTools = true
+                )
+            )
+        }
     }
 
     override suspend fun perform(request: String): String {
@@ -57,7 +81,6 @@ class AutoMode(
 
 
         val result = breakdown.steps.fold(emptyList<AutomodeExecutor.TaskInstructionResult>()) { acc, step ->
-
 
             when (step.type) {
                 StepType.GENERAL_ACTION -> {

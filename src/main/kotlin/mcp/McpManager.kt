@@ -9,7 +9,11 @@ import java.time.Duration
 
 class McpManager {
 
-    fun getMcpServers(): List<McpSyncClient> {
+    companion object {
+        val mcpManager = McpManager()
+    }
+
+    fun loadMcpServers(): List<McpSyncClient> {
         val servers = McpReader.readMcpServers()
         return servers.map {
             val params: ServerParameters = ServerParameters.builder(it.command)

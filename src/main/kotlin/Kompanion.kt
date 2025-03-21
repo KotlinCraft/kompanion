@@ -14,6 +14,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import config.AppConfig
 import config.Provider
+import mcp.McpManager
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.InMemoryChatMemory
