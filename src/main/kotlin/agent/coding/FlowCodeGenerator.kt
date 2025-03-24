@@ -147,7 +147,7 @@ class FlowCodeGenerator(
             4. Definitely do not overengineer things. Keep it simple and clean in as few steps as possible.
 
             ## Response Format:
-            You must respond with ONE of these formats:
+            You must respond with EXACTLY ONE of these formats:
 
             1. To edit a file:
             ```

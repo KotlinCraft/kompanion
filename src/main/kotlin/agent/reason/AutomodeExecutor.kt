@@ -40,17 +40,6 @@ class AutomodeExecutor(
                 ${step.subTasks.joinToString("\n")}
             """.trimIndent()
 
-        // Show RUNNING indicator
-        val toolId = runBlocking(Dispatchers.IO) {
-            customToolUsage {
-                StepExecutionIndicator(
-                    step = step,
-                    stepNumber = step.stepNumber,
-                    status = ToolStatus.RUNNING
-                )
-            }
-        }
-
         val previousTaskResults = if (acc.isNotEmpty()) {
             """
                 Here are the task results of the previous invocations: 
@@ -104,34 +93,12 @@ class AutomodeExecutor(
                 parameterizedTypeReference = object : ParameterizedTypeReference<TaskInstructionResponse>() {},
             )
 
-            // Show COMPLETED indicator
-            customToolUsage(id = toolId) {
-                StepExecutionIndicator(
-                    step = step,
-                    stepNumber = step.stepNumber,
-                    status = ToolStatus.COMPLETED,
-                    result = result.taskCompletion
-                )
-            }
-
             return TaskInstructionResult(
                 stepId = step.id,
                 taskCompletion = result.taskCompletion
             )
 
         } catch (e: Exception) {
-            // Show FAILED indicator
-            runBlocking(Dispatchers.IO) {
-                customToolUsage(id = toolId) {
-                    StepExecutionIndicator(
-                        step = step,
-                        stepNumber = step.stepNumber,
-                        status = ToolStatus.FAILED,
-                        error = "Error executing step: ${e.message}"
-                    )
-                }
-            }
-
             return TaskInstructionResult(
                 stepId = step.id,
                 "Error: ${e.message}"

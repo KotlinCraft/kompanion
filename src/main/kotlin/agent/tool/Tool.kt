@@ -10,7 +10,11 @@ class Tool(
     val showUpInTools: Boolean,
 ) {
     companion object {
-        fun from(toolCallback: ToolCallback, allowedStatus: ToolAllowedStatus? = null, showUpInTools: Boolean = true): Tool {
+        fun from(
+            toolCallback: ToolCallback,
+            allowedStatus: ToolAllowedStatus? = null,
+            showUpInTools: Boolean = true
+        ): Tool {
             return Tool(UUID.randomUUID().toString(), toolCallback, allowedStatus, showUpInTools)
         }
     }

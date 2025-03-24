@@ -19,6 +19,8 @@ import agent.tool.Tool
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.nel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import mcp.McpManager
 import mcp.McpManager.Companion.mcpManager
 import org.slf4j.LoggerFactory
@@ -81,7 +83,13 @@ class AutoMode(
 
 
         val result = breakdown.steps.fold(emptyList<AutomodeExecutor.TaskInstructionResult>()) { acc, step ->
-
+            val toolId = customToolUsage {
+                StepExecutionIndicator(
+                    step = step,
+                    stepNumber = step.stepNumber,
+                    status = ToolStatus.RUNNING
+                )
+            }
             when (step.type) {
                 StepType.GENERAL_ACTION -> {
                     val stepResult = executor.executeStep(
@@ -95,7 +103,14 @@ class AutoMode(
                     acc + AutomodeExecutor.TaskInstructionResult(step.id, result)
                 }
             }.also {
-               // contextManager.clearContext()
+                customToolUsage(id = toolId) {
+                    StepExecutionIndicator(
+                        step = step,
+                        stepNumber = step.stepNumber,
+                        status = ToolStatus.COMPLETED,
+                        result = it.last().taskCompletion
+                    )
+                }
             }
         }
         return """

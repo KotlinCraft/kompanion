@@ -14,7 +14,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import config.AppConfig
 import config.Provider
-import mcp.McpManager
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.InMemoryChatMemory
@@ -84,7 +83,7 @@ class KompanionBuilder {
         val memoryAdvisor = PromptChatMemoryAdvisor(chatMemory)
 
 
-        val llmProvider = Either.catch {
+        val normalLLMProvider = Either.catch {
             getFinalLLMProvider(selectedProvider.normal)
         }.getOrElse { getFinalLLMProvider("gpt-4o") }.addAdvisor(memoryAdvisor)
 
@@ -92,8 +91,8 @@ class KompanionBuilder {
             getFinalLLMProvider(selectedProvider.reasoning)
         }.getOrElse { getFinalLLMProvider("o3-mini") }.addAdvisor(memoryAdvisor)
 
-        val toolingCode = ToolingCodeGenerator(llmProvider, finalContextManager, toolManager)
-        val codeGenerator = FlowCodeGenerator(llmProvider, finalContextManager, interactionHandler!!)
+        val toolingCode = ToolingCodeGenerator(normalLLMProvider, finalContextManager, toolManager)
+        val codeGenerator = FlowCodeGenerator(reasoningProvider, finalContextManager, interactionHandler!!)
         val finalGenerator = codeGenerator
 
         // Ensure we have an interaction handler
@@ -104,7 +103,7 @@ class KompanionBuilder {
         val selectedMode: Mode = when (mode) {
             AgentMode.CODE -> buildCodingMode(
                 finalContextManager,
-                llmProvider,
+                normalLLMProvider,
                 toolManager,
                 reasoningProvider,
                 finalGenerator
@@ -116,11 +115,11 @@ class KompanionBuilder {
                 ),
 
                 AutomodeExecutor(
-                    llmProvider, toolManager, finalContextManager, interactionHandler!!
+                    normalLLMProvider, toolManager, finalContextManager, interactionHandler!!
                 ),
                 codingMode = buildCodingMode(
                     finalContextManager,
-                    llmProvider,
+                    normalLLMProvider,
                     toolManager,
                     reasoningProvider,
                     finalGenerator
