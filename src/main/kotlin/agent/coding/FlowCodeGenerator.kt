@@ -175,16 +175,79 @@ class FlowCodeGenerator(
             $feedbackSection
         """.trimIndent()
 
-        val response = LLMProvider.prompt<String>(
+        var response = LLMProvider.prompt<String>(
             system = prompt,
             userMessage = feedback ?: request,
+            actions = emptyList(),
+            temperature = 0.7,
+            parameterizedTypeReference = null
+        )
+
+        // Check if the response contains multiple actions and handle accordingly
+        val actionCount = countActionsInResponse(response)
+        if (actionCount > 1) {
+            logger.info(
+                "Multiple actions detected in response ({}). Reinstructing LLM to provide only one action.",
+                actionCount
+            )
+            response = reinstructWithSingleActionPrompt(prompt)
+        }
+
+        // Parse the response to extract the action
+        return parseActionResponse(response)
+    }
+
+    private suspend fun reinstructWithSingleActionPrompt(prompt: String): String {
+        // Reinvoke the LLM with a clarifying message
+        val clarificationPrompt = """
+                    I noticed that you provided multiple actions in your previous response. Please provide EXACTLY ONE action.
+                    Choose the most important or logical next step only. You can perform additional actions in subsequent steps.
+                    
+                    Remember to follow ONE of these formats:
+                    
+                    1. For editing a file:
+                    ```
+                    ACTION: EDIT_FILE
+                    FILE_PATH: /absolute/path/to/file
+                    EXPLANATION: Brief explanation of changes
+                    CONTENT:
+                    // Complete new content of the file
+                    ```
+                    
+                    2. For creating a file:
+                    ```
+                    ACTION: CREATE_FILE
+                    FILE_PATH: /absolute/path/to/file
+                    EXPLANATION: Brief explanation of the file purpose
+                    CONTENT:
+                    // Complete content of the new file
+                    ```
+                    
+                    3. When complete:
+                    ```
+                    ACTION: COMPLETE
+                    SUMMARY: Detailed explanation of all changes made
+                    ```
+                """.trimIndent()
+
+        return LLMProvider.prompt(
+            system = prompt,
+            userMessage = clarificationPrompt,
             actions = emptyList(),
             temperature = 0.5,
             parameterizedTypeReference = null
         )
+    }
 
-        // Parse the response to extract the action
-        return parseActionResponse(response)
+    /**
+     * Counts the number of action directives in the response
+     */
+    private fun countActionsInResponse(response: String): Int {
+        val lines = response.split("\n")
+
+        // Look for ACTION: lines in the response
+        val actionLines = lines.filter { it.trim().startsWith("ACTION:") }
+        return actionLines.size
     }
 
     private fun parseActionResponse(response: String): Pair<FlowAction, String> {
