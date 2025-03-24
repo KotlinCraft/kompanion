@@ -18,6 +18,7 @@ tasks.test {
     useJUnitPlatform()
 }
 
+
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.materialIconsExtended)
