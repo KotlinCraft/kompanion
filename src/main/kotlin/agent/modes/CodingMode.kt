@@ -68,7 +68,6 @@ I'm ready to help you with your coding tasks! 🚀
     override suspend fun perform(request: String): String {
         // Step 1: Analyze the request to understand it
         val understanding = codingAnalyst.analyzeRequest(request)
-        sendMessage("I understand you want to: ${understanding.objective}")
 
         // Step 2: Create a generation plan (now enhanced with reasoning)
         val plan = codingPlanner.createPlan(request, understanding)
