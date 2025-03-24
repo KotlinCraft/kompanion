@@ -93,7 +93,7 @@ class KompanionBuilder {
         }.getOrElse { getFinalLLMProvider("o3-mini") }.addAdvisor(memoryAdvisor)
 
         val toolingCode = ToolingCodeGenerator(llmProvider, finalContextManager, toolManager)
-        val codeGenerator = FlowCodeGenerator(reasoningProvider, finalContextManager, interactionHandler!!)
+        val codeGenerator = FlowCodeGenerator(llmProvider, finalContextManager, interactionHandler!!)
         val finalGenerator = codeGenerator
 
         // Ensure we have an interaction handler
