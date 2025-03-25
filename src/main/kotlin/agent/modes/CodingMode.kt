@@ -23,6 +23,7 @@ class CodingMode(
     private val interactionHandler: InteractionHandler,
     private val toolManager: ToolManager,
     contextManager: ContextManager,
+    private val analyze: Boolean = true,
 ) : Mode, Interactor {
 
 
@@ -66,13 +67,17 @@ I'm ready to help you with your coding tasks! 🚀
     }
 
     override suspend fun perform(request: String): String {
-        // Step 1: Analyze the request to understand it
-        val understanding = codingAnalyst.analyzeRequest(request)
 
-        // Step 2: Create a generation plan (now enhanced with reasoning)
-        val plan = codingPlanner.createPlan(request, understanding)
-        sendGenerationPlanToUser(plan)
-        logger.debug("Generation plan created: {}", plan)
+        val plan = if (analyze) {
+            // Step 1: Analyze the request to understand it
+            val understanding = codingAnalyst.analyzeRequest(request)
+
+            // Step 2: Create a generation plan (now enhanced with reasoning)
+            val plan = codingPlanner.createPlan(request, understanding)
+            sendGenerationPlanToUser(plan)
+            plan
+        } else null
+
 
         // Step 3: Execute the plan with the code generator
         val result = codeGenerator.execute(request, plan)
