@@ -1,9 +1,9 @@
-import KompanionBuilder.AgentMode.FULL_AUTO
 import KompanionBuilder.AgentMode.CODE
+import KompanionBuilder.AgentMode.FULL_AUTO
 import agent.InMemoryContextManager
 import agent.interaction.*
 import agent.modes.Mode
-import androidx.compose.animation.*
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,14 +16,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -35,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.zIndex
 import com.yourdomain.kompanion.ui.components.ProviderSelector
 import config.AppConfig
 import kotlinx.coroutines.*
@@ -275,6 +272,7 @@ fun ChatScreen() {
 
     fun cancelProcessing() {
         currentJob?.cancel()
+        currentJob?.cancelChildren()
         currentJob = null
         isProcessing = false
 
@@ -654,6 +652,8 @@ fun ChatScreen() {
                                 .clickable {
                                     if (!isProcessing) {
                                         sendCurrentMessage()
+                                    } else if (!isWaitingForAnswer) {
+                                        cancelProcessing()
                                     }
                                 },
                             contentAlignment = Alignment.Center
