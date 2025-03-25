@@ -73,7 +73,9 @@ class AutomodeExecutor(
 
             Please provide your detailed response to the current task in the taskCompletion section below. Your response should include the specific output or changes resulting from completing the task. Do not include any additional information or commentary outside of the task_completion tags.:
 
-            Remember, your output should consist of only the task completion content within the specified tags. Do not repeat the task description or provide any additional commentary outside of the task_completion tags.
+            Remember, your output should consist of only the task completion content within the specified tags. 
+            Do not repeat the task description or provide any additional commentary outside of the task_completion tags.
+            Be concise in your response. Time is money, and we value your efficiency.
 
             Focus solely on completing the current task as specified. Do not attempt to complete other steps in the task breakdown or provide information beyond what is required for the current task.
         """.trimIndent()
