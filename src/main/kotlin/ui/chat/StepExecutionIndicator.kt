@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,6 +34,7 @@ fun StepExecutionIndicator(
     status: ToolStatus,
     result: String? = null,
     error: String? = null,
+    vectorIcon: ImageVector = Icons.Filled.Psychology,
 ) {
     var isExpanded by remember { mutableStateOf(status == ToolStatus.RUNNING) }
     
@@ -78,7 +80,7 @@ fun StepExecutionIndicator(
                         .background(Color(0xFF2A3655), RoundedCornerShape(4.dp))
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Psychology,
+                        imageVector = vectorIcon,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
