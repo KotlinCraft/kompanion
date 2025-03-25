@@ -106,7 +106,8 @@ class KompanionBuilder {
                 normalLLMProvider,
                 toolManager,
                 reasoningProvider,
-                finalGenerator
+                finalGenerator,
+                true
             )
 
             AgentMode.FULL_AUTO -> AutoMode(
@@ -122,7 +123,8 @@ class KompanionBuilder {
                     normalLLMProvider,
                     toolManager,
                     reasoningProvider,
-                    finalGenerator
+                    finalGenerator,
+                    false
                 ),
                 toolManager,
                 finalContextManager, interactionHandler!!,
@@ -151,7 +153,8 @@ class KompanionBuilder {
         llmProvider: LLMProvider,
         toolManager: ToolManager,
         reasoningProvider: LLMProvider,
-        finalGenerator: FlowCodeGenerator
+        finalGenerator: FlowCodeGenerator,
+        analyze: Boolean,
     ) = CodingMode(
         CodingAnalyst(finalContextManager, llmProvider, toolManager),
         CodingPlanner(
@@ -162,7 +165,7 @@ class KompanionBuilder {
                 reasoningProvider, finalContextManager
             )
         ),
-        finalGenerator, interactionHandler!!, toolManager, finalContextManager
+        finalGenerator, interactionHandler!!, toolManager, finalContextManager, analyze
     )
 
     private fun getFinalLLMProvider(name: String): LLMProvider {
