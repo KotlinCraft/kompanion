@@ -46,6 +46,7 @@ Please follow these instructions to break down the question or instruction:
 10. Don't ask for questions if everything is clear
 11. Every Step is either a General Action or a Coding Action. General Actions are simple instructions that don't require coding. Coding Actions are instructions that require coding. Reading and writing files are general actions, unless they require actual code to be written.
 12. Don't write any files, you are only to respond.
+13. Edits will be made without having to save, so no need to plan 'saving' steps.
 
 When handling repetitive tasks:
 - Identify the repeating element (e.g., files, items, sections)
