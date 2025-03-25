@@ -14,6 +14,9 @@ class ActionHandler(private val contextManager: ContextManager) {
     // Registry of action implementations by action type
     private val actionRegistry = mutableMapOf<String, ActionFactory>()
     
+    // Store action format descriptions
+    private val actionFormats = mutableMapOf<String, String>()
+    
     /**
      * Interface for action factory functions
      */
@@ -24,8 +27,9 @@ class ActionHandler(private val contextManager: ContextManager) {
     /**
      * Register a new action type with its factory
      */
-    fun registerAction(actionType: String, factory: ActionFactory) {
+    fun registerAction(actionType: String, factory: ActionFactory, formatDescription: String) {
         actionRegistry[actionType] = factory
+        actionFormats[actionType] = formatDescription
     }
     
     /**
@@ -37,31 +41,82 @@ class ActionHandler(private val contextManager: ContextManager) {
     }
     
     /**
+     * Get all registered action types
+     */
+    fun getRegisteredActionTypes(): List<String> {
+        return actionRegistry.keys.toList()
+    }
+    
+    /**
+     * Get format description for a specific action type
+     */
+    fun getActionFormat(actionType: String): String? {
+        return actionFormats[actionType]
+    }
+    
+    /**
+     * Get all action formats
+     */
+    fun getAllActionFormats(): Map<String, String> {
+        return actionFormats.toMap()
+    }
+    
+    /**
      * Initialize with default actions
      */
     init {
-        // Register built-in actions
-        registerAction("EDIT_FILE") { params, rawResponse ->
-            val filePath = params["FILE_PATH"] ?: ""
-            val content = params["CONTENT"] ?: ""
-            val explanation = params["EXPLANATION"] ?: ""
-            
-            EditFileAction(filePath, content, explanation, contextManager)
-        }
+        // Register built-in actions with format descriptions
+        registerAction(
+            "EDIT_FILE",
+            { params, rawResponse ->
+                val filePath = params["FILE_PATH"] ?: ""
+                val content = params["CONTENT"] ?: ""
+                val explanation = params["EXPLANATION"] ?: ""
+                
+                EditFileAction(filePath, content, explanation, contextManager)
+            },
+            """To edit a file:
+            ```
+            ACTION: EDIT_FILE
+            FILE_PATH: /absolute/path/to/file
+            EXPLANATION: Brief explanation of changes
+            CONTENT:
+            // Complete new content of the file
+            ```"""
+        )
         
-        registerAction("CREATE_FILE") { params, rawResponse ->
-            val filePath = params["FILE_PATH"] ?: ""
-            val content = params["CONTENT"] ?: ""
-            val explanation = params["EXPLANATION"] ?: ""
-            
-            CreateFileAction(filePath, content, explanation, contextManager)
-        }
+        registerAction(
+            "CREATE_FILE",
+            { params, rawResponse ->
+                val filePath = params["FILE_PATH"] ?: ""
+                val content = params["CONTENT"] ?: ""
+                val explanation = params["EXPLANATION"] ?: ""
+                
+                CreateFileAction(filePath, content, explanation, contextManager)
+            },
+            """To create a file:
+            ```
+            ACTION: CREATE_FILE
+            FILE_PATH: /absolute/path/to/file
+            EXPLANATION: Brief explanation of the file purpose
+            CONTENT:
+            // Complete content of the new file
+            ```"""
+        )
         
-        registerAction("COMPLETE") { params, rawResponse ->
-            val summary = params["SUMMARY"] ?: ""
-            
-            CompleteAction(summary)
-        }
+        registerAction(
+            "COMPLETE",
+            { params, rawResponse ->
+                val summary = params["SUMMARY"] ?: ""
+                
+                CompleteAction(summary)
+            },
+            """When complete:
+            ```
+            ACTION: COMPLETE
+            SUMMARY: Detailed explanation of all changes made
+            ```"""
+        )
     }
 }
 

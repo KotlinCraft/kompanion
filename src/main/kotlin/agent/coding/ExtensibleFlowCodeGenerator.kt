@@ -87,6 +87,9 @@ class ExtensibleFlowCodeGenerator(
         } else {
             ""
         }
+        
+        // Generate dynamic action formats based on registered actions
+        val actionFormats = generateActionFormats()
 
         val feedbackSection = if (!feedback.isNullOrBlank()) "\n\n## Feedback from previous action:\n$feedback" else ""
 
@@ -117,39 +120,14 @@ class ExtensibleFlowCodeGenerator(
 
             ## Implementation Approach:
             1. You will be implementing changes one action at a time
-            2. For each action, you must return ONE of the following responses:
-               - EDIT_FILE: To modify an existing file
-               - CREATE_FILE: To create a new file
-               - COMPLETE: When all changes are done
+            2. For each action, you must return ONE of the available actions
             3. You only change or create what planned and asked. No freewheeling.
             4. Definitely do not overengineer things. Keep it simple and clean in as few steps as possible.
 
             ## Response Format:
             You must respond with EXACTLY ONE of these formats:
 
-            1. To edit a file:
-            ```
-            ACTION: EDIT_FILE
-            FILE_PATH: /absolute/path/to/file
-            EXPLANATION: Brief explanation of changes
-            CONTENT:
-            // Complete new content of the file
-            ```
-            
-            2. To create a file:
-            ```
-            ACTION: CREATE_FILE
-            FILE_PATH: /absolute/path/to/file
-            EXPLANATION: Brief explanation of the file purpose
-            CONTENT:
-            // Complete content of the new file
-            ```
-            
-            3. When complete:
-            ```
-            ACTION: COMPLETE
-            SUMMARY: Detailed explanation of all changes made
-            ```
+            $actionFormats
             $feedbackSection
         """.trimIndent()
 
@@ -184,8 +162,31 @@ class ExtensibleFlowCodeGenerator(
 
         return Pair(action, response)
     }
+    
+    /**
+     * Generate action format descriptions based on registered actions
+     */
+    private fun generateActionFormats(): String {
+        // Get all format descriptions from the ActionHandler
+        val formatMap = actionHandler.getAllActionFormats()
+        
+        // Generate numbering for the formats
+        val formatBuilder = StringBuilder()
+        
+        // Number the actions in the format description
+        formatMap.values.forEachIndexed { index, formatDesc ->
+            val numberedDesc = "${index + 1}. $formatDesc"
+            formatBuilder.append(numberedDesc)
+            formatBuilder.append("\n\n")
+        }
+        
+        return formatBuilder.toString().trim()
+    }
 
     private suspend fun reinstructWithSingleActionPrompt(prompt: String): String {
+        // Generate dynamic action formats for the reinstructing prompt
+        val actionFormats = generateActionFormats()
+        
         // Reinvoke the LLM with a clarifying message
         val clarificationPrompt = """
                     I noticed that you provided multiple actions in your previous response. Please provide EXACTLY ONE action.
@@ -193,29 +194,7 @@ class ExtensibleFlowCodeGenerator(
                     
                     Remember to follow ONE of these formats:
                     
-                    1. For editing a file:
-                    ```
-                    ACTION: EDIT_FILE
-                    FILE_PATH: /absolute/path/to/file
-                    EXPLANATION: Brief explanation of changes
-                    CONTENT:
-                    // Complete new content of the file
-                    ```
-                    
-                    2. For creating a file:
-                    ```
-                    ACTION: CREATE_FILE
-                    FILE_PATH: /absolute/path/to/file
-                    EXPLANATION: Brief explanation of the file purpose
-                    CONTENT:
-                    // Complete content of the new file
-                    ```
-                    
-                    3. When complete:
-                    ```
-                    ACTION: COMPLETE
-                    SUMMARY: Detailed explanation of all changes made
-                    ```
+                    $actionFormats
                 """.trimIndent()
 
         return LLMProvider.prompt(
