@@ -1,27 +1,30 @@
 package agent.coding
 
 import agent.ContextManager
-import agent.ToolManager
 import agent.coding.domain.CodingResult
-import agent.coding.domain.FlowAction
 import agent.domain.GenerationPlan
-import agent.domain.context.ContextFile
+import agent.domain.action.ActionHandler
+import agent.domain.action.ActionParser
+import agent.domain.action.CompleteAction
+import agent.domain.action.LLMAction
 import agent.interaction.InteractionHandler
 import agent.modes.Interactor
 import ai.LLMProvider
 import org.slf4j.LoggerFactory
-import org.springframework.core.ParameterizedTypeReference
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.*
 
-class FlowCodeGenerator(
+/**
+ * Refactored code generator with extensible action system
+ */
+class ExtensibleFlowCodeGenerator(
     private val LLMProvider: LLMProvider,
     private val contextManager: ContextManager,
     private val interactionHandler: InteractionHandler,
 ) : CodeGenerator, Interactor {
 
-    val logger = LoggerFactory.getLogger(this::class.java)
+    val actionHandler = ActionHandler(contextManager)
+
+    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val actionParser = ActionParser()
 
     override suspend fun execute(
         request: String,
@@ -32,62 +35,20 @@ class FlowCodeGenerator(
         var action = result.first
 
         // Continue interaction until we get a Complete action
-        while (action !is FlowAction.Complete) {
-            when (action) {
-                is FlowAction.EditFile -> {
-                    logger.info("File edited: {}", action.filePath)
-                    // Update the file
-                    val file = Path.of(action.filePath).toFile()
-                    Files.writeString(file.toPath(), action.content)
+        while (action !is CompleteAction) {
+            // Process the action
+            val success = action.process()
 
-                    // Update the context
-                    contextManager.updateFiles(
-                        listOf(
-                            ContextFile(
-                                id = UUID.randomUUID(),
-                                name = file.absolutePath,
-                                content = action.content,
-                                displayName = file.name
-                            )
-                        )
-                    )
-
-                    // Prompt for the next action with feedback about the edit
-                    val feedback = "File ${file.name} has been updated successfully."
-                    result = promptForNextAction(request, plan, feedback)
-                    action = result.first
-                }
-
-                is FlowAction.CreateFile -> {
-                    logger.info("New file created: {}", action.filePath)
-                    // Create the file
-                    val file = Path.of(action.filePath).toFile()
-                    file.parentFile?.mkdirs() // Create parent directories if they don't exist
-                    Files.writeString(file.toPath(), action.content)
-
-                    // Update the context
-                    contextManager.updateFiles(
-                        listOf(
-                            ContextFile(
-                                id = UUID.randomUUID(),
-                                name = file.absolutePath,
-                                content = action.content,
-                                displayName = file.name
-                            )
-                        )
-                    )
-
-                    // Prompt for the next action with feedback about the creation
-                    val feedback = "File ${file.name} has been created successfully."
-                    result = promptForNextAction(request, plan, feedback)
-                    action = result.first
-                }
-
-                is FlowAction.Complete -> {
-                    // We'll never reach this case in the while loop, but Kotlin requires it for exhaustiveness
-                    break
-                }
+            // Prepare feedback based on the action result
+            val feedback = if (success) {
+                "${action.actionType} executed successfully: ${action.summary()}"
+            } else {
+                "Failed to execute ${action.actionType}. Please try again with corrected parameters."
             }
+
+            // Prompt for the next action with feedback
+            result = promptForNextAction(request, plan, feedback)
+            action = result.first
         }
 
         // Return the final result with the completion summary
@@ -101,7 +62,7 @@ class FlowCodeGenerator(
         request: String,
         plan: GenerationPlan?,
         feedback: String?
-    ): Pair<FlowAction, String> {
+    ): Pair<LLMAction, String> {
         val contextPrompt = contextManager.currentContextPrompt(true)
         val planSteps = plan?.steps?.joinToString("\n") { step ->
             "- Action: ${step.action}\n  Input: ${step.input}\n  Expected Output: ${step.expectedOutput}"
@@ -121,7 +82,6 @@ class FlowCodeGenerator(
         }
 
         val validationCriteria = plan?.validationCriteria?.joinToString("\n") { "- $it" } ?: ""
-
         val validationCriteriaText = if (validationCriteria.isNotBlank()) {
             "Validation Criteria:\n$validationCriteria"
         } else {
@@ -202,7 +162,7 @@ class FlowCodeGenerator(
         )
 
         // Check if the response contains multiple actions and handle accordingly
-        val actionCount = countActionsInResponse(response)
+        val actionCount = actionParser.countActionsInResponse(response)
         if (actionCount > 1) {
             logger.info(
                 "Multiple actions detected in response ({}). Reinstructing LLM to provide only one action.",
@@ -211,8 +171,18 @@ class FlowCodeGenerator(
             response = reinstructWithSingleActionPrompt(prompt)
         }
 
-        // Parse the response to extract the action
-        return parseActionResponse(response)
+        // Parse the response to extract the action type and parameters
+        val (actionType, parameters) = actionParser.parseResponse(response)
+
+        // Create the action object using the handler
+        val action = try {
+            actionHandler.createAction(actionType, parameters, response)
+        } catch (e: Exception) {
+            // If we can't parse the action, return a Complete action with an error message
+            CompleteAction("Failed to parse action from LLM response: ${e.message}. Raw response: $response")
+        }
+
+        return Pair(action, response)
     }
 
     private suspend fun reinstructWithSingleActionPrompt(prompt: String): String {
@@ -255,78 +225,6 @@ class FlowCodeGenerator(
             temperature = 0.5,
             parameterizedTypeReference = null
         )
-    }
-
-    /**
-     * Counts the number of action directives in the response
-     */
-    private fun countActionsInResponse(response: String): Int {
-        val lines = response.split("\n")
-
-        // Look for ACTION: lines in the response
-        val actionLines = lines.filter { it.trim().startsWith("ACTION:") }
-        return actionLines.size
-    }
-
-    private fun parseActionResponse(response: String): Pair<FlowAction, String> {
-        val lines = response.split("\n")
-
-        // Extract action type
-        val actionLine = lines.firstOrNull { it.startsWith("ACTION:") }?.substringAfter("ACTION:") ?: ""
-        val action = actionLine.trim()
-
-        return when {
-            action.equals("EDIT_FILE", ignoreCase = true) -> {
-                val filePath =
-                    lines.firstOrNull { it.startsWith("FILE_PATH:") }?.substringAfter("FILE_PATH:")?.trim() ?: ""
-                val explanation =
-                    lines.firstOrNull { it.startsWith("EXPLANATION:") }?.substringAfter("EXPLANATION:")?.trim() ?: ""
-
-                // Extract content between CONTENT: and the next ``` or end of string
-                val contentStart = response.indexOf("CONTENT:")
-                val contentEnd = response.lastIndexOf("```")
-                val content = if (contentStart != -1 && contentEnd != -1 && contentStart < contentEnd) {
-                    response.substring(contentStart + "CONTENT:".length, contentEnd).trim()
-                } else if (contentStart != -1) {
-                    response.substring(contentStart + "CONTENT:".length).trim()
-                } else {
-                    ""
-                }
-
-                Pair(FlowAction.EditFile(filePath, content, explanation), response)
-            }
-
-            action.equals("CREATE_FILE", ignoreCase = true) -> {
-                val filePath =
-                    lines.firstOrNull { it.startsWith("FILE_PATH:") }?.substringAfter("FILE_PATH:")?.trim() ?: ""
-                val explanation =
-                    lines.firstOrNull { it.startsWith("EXPLANATION:") }?.substringAfter("EXPLANATION:")?.trim() ?: ""
-
-                // Extract content between CONTENT: and the next ``` or end of string
-                val contentStart = response.indexOf("CONTENT:")
-                val contentEnd = response.lastIndexOf("```")
-                val content = if (contentStart != -1 && contentEnd != -1 && contentStart < contentEnd) {
-                    response.substring(contentStart + "CONTENT:".length, contentEnd).trim()
-                } else if (contentStart != -1) {
-                    response.substring(contentStart + "CONTENT:".length).trim()
-                } else {
-                    ""
-                }
-
-                Pair(FlowAction.CreateFile(filePath, content, explanation), response)
-            }
-
-            action.equals("COMPLETE", ignoreCase = true) -> {
-                val summary = lines.firstOrNull { it.startsWith("SUMMARY:") }?.substringAfter("SUMMARY:")?.trim() ?: ""
-
-                Pair(FlowAction.Complete(summary), response)
-            }
-
-            else -> {
-                // If we can't parse the action, return a Complete action with an error message
-                Pair(FlowAction.Complete("Failed to parse action from LLM response. Raw response: $response"), response)
-            }
-        }
     }
 
     override fun interactionHandler(): InteractionHandler {
