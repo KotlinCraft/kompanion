@@ -25,7 +25,7 @@ class FlowCodeGenerator(
 
     override suspend fun execute(
         request: String,
-        plan: GenerationPlan,
+        plan: GenerationPlan?,
     ): CodingResult {
         // Starting point - initial prompt to the LLM
         var result = promptForNextAction(request, plan, null)
@@ -99,14 +99,35 @@ class FlowCodeGenerator(
 
     private suspend fun promptForNextAction(
         request: String,
-        plan: GenerationPlan,
+        plan: GenerationPlan?,
         feedback: String?
     ): Pair<FlowAction, String> {
         val contextPrompt = contextManager.currentContextPrompt(true)
-        val planSteps = plan.steps.joinToString("\n") { step ->
+        val planSteps = plan?.steps?.joinToString("\n") { step ->
             "- Action: ${step.action}\n  Input: ${step.input}\n  Expected Output: ${step.expectedOutput}"
+        } ?: ""
+
+        val planStepsText = if (planSteps.isNotBlank()) {
+            "Plan Steps:\n$planSteps"
+        } else {
+            ""
         }
-        val validationCriteria = plan.validationCriteria.joinToString("\n") { "- $it" }
+
+        val expectedOutcome = plan?.expectedOutcome ?: ""
+        val expectedOutcomeText = if (expectedOutcome.isNotBlank()) {
+            "Expected Outcome:\n$expectedOutcome"
+        } else {
+            ""
+        }
+
+        val validationCriteria = plan?.validationCriteria?.joinToString("\n") { "- $it" } ?: ""
+
+        val validationCriteriaText = if (validationCriteria.isNotBlank()) {
+            "Validation Criteria:\n$validationCriteria"
+        } else {
+            ""
+        }
+
         val feedbackSection = if (!feedback.isNullOrBlank()) "\n\n## Feedback from previous action:\n$feedback" else ""
 
         logger.info("feedback or request: " + (feedback ?: request))
@@ -128,14 +149,11 @@ class FlowCodeGenerator(
             Based on the following generation plan, implement the necessary code changes.
             First explore the codebase to understand the current structure before making changes.
 
-            Plan Steps:
-            $planSteps
+            $planStepsText
 
-            Expected Outcome:
-            ${plan.expectedOutcome}
+            $expectedOutcomeText
 
-            Validation Criteria:
-            $validationCriteria
+            $validationCriteriaText
 
             ## Implementation Approach:
             1. You will be implementing changes one action at a time
