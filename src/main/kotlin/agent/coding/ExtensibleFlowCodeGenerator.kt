@@ -87,7 +87,7 @@ class ExtensibleFlowCodeGenerator(
         } else {
             ""
         }
-        
+
         // Generate dynamic action formats based on registered actions
         val actionFormats = generateActionFormats()
 
@@ -162,31 +162,22 @@ class ExtensibleFlowCodeGenerator(
 
         return Pair(action, response)
     }
-    
+
     /**
      * Generate action format descriptions based on registered actions
      */
     private fun generateActionFormats(): String {
-        // Get all format descriptions from the ActionHandler
-        val formatMap = actionHandler.getAllActionFormats()
-        
-        // Generate numbering for the formats
-        val formatBuilder = StringBuilder()
-        
-        // Number the actions in the format description
-        formatMap.values.forEachIndexed { index, formatDesc ->
-            val numberedDesc = "${index + 1}. $formatDesc"
-            formatBuilder.append(numberedDesc)
-            formatBuilder.append("\n\n")
-        }
-        
-        return formatBuilder.toString().trim()
+        return actionHandler.getAllActionFormats()
+            .values
+            .mapIndexed { index, formatDesc -> "${index + 1}. $formatDesc" }
+            .joinToString("\n\n")
+            .trim()
     }
 
     private suspend fun reinstructWithSingleActionPrompt(prompt: String): String {
         // Generate dynamic action formats for the reinstructing prompt
         val actionFormats = generateActionFormats()
-        
+
         // Reinvoke the LLM with a clarifying message
         val clarificationPrompt = """
                     I noticed that you provided multiple actions in your previous response. Please provide EXACTLY ONE action.
