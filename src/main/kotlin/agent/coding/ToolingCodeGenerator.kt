@@ -15,7 +15,7 @@ class ToolingCodeGenerator(
 
     override suspend fun execute(
         request: String,
-        plan: GenerationPlan,
+        plan: GenerationPlan?,
     ): CodingResult {
         val prompt = """
             ${contextManager.currentContextPrompt(true)}
@@ -39,16 +39,16 @@ class ToolingCodeGenerator(
             
             Plan Steps:
                         ${
-            plan.steps.joinToString("\n") { step ->
+            plan?.steps?.joinToString("\n") { step ->
                 "- Action: ${step.action}\n  Input: ${step.input}\n  Expected Output: ${step.expectedOutput}"
-            }
+            } ?: ""
         }
         
             Expected Outcome:
-            ${plan.expectedOutcome}
+            ${plan?.expectedOutcome ?: ""}
             
              Validation Criteria:
-            ${plan.validationCriteria.joinToString("\n") { "- $it" }}
+            ${plan?.validationCriteria?.joinToString("\n") { "- $it" } ?: ""}
     
             ## Implementation Approach:
             1. First use the project structure and file search tools to understand the codebase
