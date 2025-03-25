@@ -2,9 +2,7 @@ package agent.modes
 
 import agent.ContextManager
 import agent.ToolManager
-import agent.coding.FlowCodeGenerator
 import agent.coding.tool.LocalCodingTools
-import agent.domain.GenerationPlan
 import agent.interaction.InteractionHandler
 import agent.interaction.ToolStatus
 import agent.modes.fullauto.FullAutoBreakdown
@@ -16,12 +14,13 @@ import agent.tool.FileTools
 import agent.tool.GeneralTools
 import agent.tool.LoadedTool
 import agent.tool.Tool
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.PlaylistAddCheck
+import androidx.compose.material.icons.filled.Psychology
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.nel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import mcp.McpManager
 import mcp.McpManager.Companion.mcpManager
 import org.slf4j.LoggerFactory
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider
@@ -83,11 +82,18 @@ class AutoMode(
 
 
         val result = breakdown.steps.fold(emptyList<AutomodeExecutor.TaskInstructionResult>()) { acc, step ->
+            // Select icon based on step type
+            val stepIcon = when (step.type) {
+                StepType.CODING_ACTION -> Icons.Filled.Code
+                StepType.GENERAL_ACTION -> Icons.Filled.Psychology
+            }
+            
             val toolId = customToolUsage {
                 StepExecutionIndicator(
                     step = step,
                     stepNumber = step.stepNumber,
-                    status = ToolStatus.RUNNING
+                    status = ToolStatus.RUNNING,
+                    vectorIcon = stepIcon
                 )
             }
             when (step.type) {
@@ -108,7 +114,8 @@ class AutoMode(
                         step = step,
                         stepNumber = step.stepNumber,
                         status = ToolStatus.COMPLETED,
-                        result = it.last().taskCompletion
+                        result = it.last().taskCompletion,
+                        vectorIcon = stepIcon
                     )
                 }
             }
@@ -128,7 +135,8 @@ ${result.joinToString("\n") { "👉 ${it.taskCompletion}" }}
                     type = StepType.GENERAL_ACTION
                 ),
                 stepNumber = 0,
-                status = ToolStatus.COMPLETED
+                status = ToolStatus.COMPLETED,
+                vectorIcon = Icons.Filled.PlaylistAddCheck
             )
         }
     }
@@ -143,7 +151,8 @@ ${result.joinToString("\n") { "👉 ${it.taskCompletion}" }}
                 type = StepType.GENERAL_ACTION
             ),
             stepNumber = 0,
-            status = ToolStatus.RUNNING
+            status = ToolStatus.RUNNING,
+            vectorIcon = Icons.Filled.PlaylistAddCheck
         )
     }
 
